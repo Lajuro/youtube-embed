@@ -6,6 +6,7 @@ import { Music2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { thumbnailUrl, type ThumbnailQuality } from "@/lib/youtube";
+import { useLibrary } from "@/stores/library-store";
 
 /** Gera um gradiente estável a partir do ID (usado quando a imagem não carrega). */
 export function gradientFor(seed: string) {
@@ -21,6 +22,8 @@ interface VideoThumbnailProps {
   quality?: ThumbnailQuality;
   className?: string;
   imgClassName?: string;
+  /** Imagem alternativa se a do i.ytimg.com não carregar (ex.: miniatura servida pelo Google). */
+  fallbackSrc?: string;
   children?: React.ReactNode;
 }
 
@@ -30,9 +33,15 @@ export function VideoThumbnail({
   quality = "mqdefault",
   className,
   imgClassName,
+  fallbackSrc,
   children,
 }: VideoThumbnailProps) {
-  const [failed, setFailed] = useState(false);
+  const stored = useLibrary((s) => s.videos[id]?.thumbnail);
+  const alternative = fallbackSrc ?? stored;
+  // 0 = i.ytimg.com, 1 = imagem alternativa, 2 = gradiente
+  const [attempt, setAttempt] = useState(0);
+  const src = attempt === 0 ? thumbnailUrl(id, quality) : alternative;
+  const failed = attempt >= 2 || !src;
 
   return (
     <div
@@ -45,12 +54,12 @@ export function VideoThumbnail({
         </div>
       ) : (
         <img
-          src={thumbnailUrl(id, quality)}
+          src={src}
           alt={alt}
           loading="lazy"
           decoding="async"
           draggable={false}
-          onError={() => setFailed(true)}
+          onError={() => setAttempt((a) => (a === 0 && alternative ? 1 : 2))}
           className={cn("size-full object-cover", imgClassName)}
         />
       )}

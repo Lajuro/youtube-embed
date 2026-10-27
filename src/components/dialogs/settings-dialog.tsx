@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useTheme } from "next-themes";
-import { Download, Monitor, Moon, ShieldCheck, Sun, Trash2, Tv, Upload } from "lucide-react";
+import { Download, ExternalLink, Globe, Monitor, Moon, Server, ShieldCheck, Sun, Trash2, Tv, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -21,6 +21,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { CREATE_ENGINE_URL, GoogleCxForm } from "@/components/search/google-setup";
 import { downloadBackup } from "@/lib/actions";
 import { cn, pluralize } from "@/lib/utils";
 import type { EmbedHost } from "@/lib/youtube";
@@ -181,6 +182,47 @@ export function SettingsDialog() {
               </span>
               <Switch checked={settings.autoSkipErrors} onCheckedChange={settings.setAutoSkipErrors} />
             </Label>
+          </Section>
+
+          <Separator />
+
+          <Section title="Busca" description="Como o app procura vídeos quando você pesquisa algo.">
+            <div className="grid gap-2 sm:grid-cols-2">
+              <OptionCard
+                selected={settings.searchProvider === "google"}
+                onClick={() => settings.setSearchProvider("google")}
+                icon={Globe}
+                title="Google (recomendado)"
+                description="Roda no navegador. Funciona mesmo com o youtube.com bloqueado."
+              />
+              <OptionCard
+                selected={settings.searchProvider === "server"}
+                onClick={() => settings.setSearchProvider("server")}
+                icon={Server}
+                title="Direto no YouTube"
+                description="Roda no servidor do app. Precisa que ele alcance o youtube.com."
+              />
+            </div>
+            {settings.searchProvider === "google" && (
+              <div className="grid gap-2 rounded-xl border p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-sm font-medium">ID do mecanismo de pesquisa (cx)</span>
+                  <a
+                    href={CREATE_ENGINE_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    Criar um mecanismo <ExternalLink className="size-3" />
+                  </a>
+                </div>
+                <GoogleCxForm />
+                <p className="text-xs text-muted-foreground">
+                  Crie um mecanismo gratuito restrito a <code>youtube.com</code> e cole o ID aqui. Não é chave de API. O passo
+                  a passo completo aparece na tela Buscar.
+                </p>
+              </div>
+            )}
           </Section>
 
           <Separator />

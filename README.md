@@ -130,31 +130,30 @@ Como o servidor não tem acesso ao `localStorage`, os dados são carregados só 
 
 ### 6. Busca sem API
 
-A API oficial de busca do YouTube exige criar um projeto no Google Cloud e uma chave. Em vez disso, o app faz o mesmo que o site do YouTube faz quando você pesquisa: chama o endpoint interno `youtubei/v1/search` (o "InnerTube"), que devolve os resultados em JSON. Se essa chamada falhar, ele baixa a página `youtube.com/results` e lê o JSON que vem embutido nela (`ytInitialData`). Veja [`src/lib/youtube-search.ts`](src/lib/youtube-search.ts).
+A API oficial de busca do YouTube exige criar um projeto no Google Cloud e gerar uma chave. O app tem dois caminhos que dispensam isso — escolha em **Configurações → Busca**.
 
-Dois detalhes importantes:
+#### Pelo Google, no navegador (padrão — funciona com o youtube.com bloqueado)
 
-- **A busca roda no servidor do app** (a rota [`/api/search`](src/app/api/search/route.ts)), não no navegador. O navegador não pode ler respostas de `youtube.com` vindas de outro site — é a regra de segurança chamada **CORS**. O servidor não tem essa limitação.
-- Por isso, **quem precisa alcançar o youtube.com é o computador que roda o `npm run dev`**, não o seu navegador. Em rede corporativa isso costuma exigir o proxy da empresa (veja abaixo).
+O Google oferece de graça a [Programmable Search Element](https://developers.google.com/custom-search/docs/element): um script (`cse.google.com/cse.js`) que coloca uma busca do Google dentro de qualquer site. Ele roda **no seu navegador**, pelo mesmo caminho que você já usa para pesquisar no Google. Em vez de mostrar o visual padrão, o app usa os *callbacks* do script: quando os resultados chegam, o Google entrega a lista (link, título e os metadados do vídeo que ele indexou: duração, canal, visualizações, miniatura) e o app desenha do seu jeito. Veja [`src/lib/google-cse.ts`](src/lib/google-cse.ts).
 
-Como é um endpoint interno, o YouTube pode mudar o formato sem aviso. O código procura os blocos de vídeo em qualquer lugar da resposta (em vez de seguir um caminho fixo) para resistir a essas mudanças.
+Configuração (uma vez só):
 
-#### Busca em rede corporativa (proxy)
+1. Abra o [Programmable Search Engine](https://programmablesearchengine.google.com/controlpanel/create) com qualquer conta Google.
+2. Dê um nome e, em **“O que pesquisar?”**, escolha **“Pesquisar em sites ou páginas específicas”** e adicione `youtube.com`.
+3. Clique em **Criar** e copie o **ID do mecanismo de pesquisa** (ou o código `<script>` inteiro).
+4. Cole na tela **Buscar** do app (ou em Configurações → Busca).
 
-O `fetch` do Node ignora proxy por padrão — o erro típico é `fetch failed (ENOTFOUND)`. Use:
+Esse ID (o `cx`) **não é uma chave de API** e não envolve cobrança. A opção gratuita de mecanismos restritos a sites específicos continua disponível (o que o Google está encerrando é a busca na web inteira).
 
-```bash
-npm run dev:proxy      # ou: npm run build && npm run start:proxy
-```
+Sem configurar nada, o botão **Abrir no Google** pesquisa vídeos do YouTube no Google em outra aba; copie o link do vídeo e cole no app com `Ctrl+V`. O app entende inclusive os links "embrulhados" do Google (`google.com/url?...&url=...youtube.com/watch...`).
 
-Esse script liga o suporte a proxy do Node (`--use-env-proxy`, exige Node 22.21+ ou 24+), usa os certificados do sistema (`--use-system-ca`, necessário quando a empresa inspeciona HTTPS) e, se `HTTPS_PROXY` não estiver definido, reaproveita o proxy configurado no npm (`npm config get https-proxy`). Também dá para informar o proxy na mão:
+#### Direto no YouTube, pelo servidor do app
 
-```powershell
-# PowerShell
-$env:HTTPS_PROXY = "http://proxy.suaempresa:8080"; npm run dev:proxy
-```
+O app chama o mesmo endpoint interno que o site do YouTube usa para pesquisar (`youtubei/v1/search`) e, se falhar, lê o JSON embutido na página `youtube.com/results`. Veja [`src/lib/youtube-search.ts`](src/lib/youtube-search.ts).
 
-Se o proxy da empresa bloquear o youtube.com para o servidor, a alternativa é hospedar o app fora da rede (ex.: Vercel): aí a busca roda lá e você só acessa o site.
+Isso precisa rodar no **servidor** (a rota [`/api/search`](src/app/api/search/route.ts)), porque o navegador não pode ler respostas de `youtube.com` vindas de outro site — é a regra de segurança chamada **CORS**. Consequência: quem precisa alcançar o youtube.com é o computador que roda o `npm run dev`. Em redes que bloqueiam o YouTube, use a busca pelo Google.
+
+Se a sua rede libera o YouTube mas exige proxy, rode `npm run dev:proxy` (ou `npm run build && npm run start:proxy`): o script liga o suporte a proxy do Node (`--use-env-proxy`, Node 22.21+ ou 24+), usa os certificados do sistema (`--use-system-ca`) e, sem `HTTPS_PROXY` definido, reaproveita o proxy do npm (`npm config get https-proxy`).
 
 > ⚠️ Limpar os dados do navegador apaga sua biblioteca. Use **Configurações → Exportar backup** de vez em quando.
 
@@ -172,7 +171,8 @@ src/
 ├── lib/
 │   ├── youtube.ts        parser de links, miniaturas, oEmbed
 │   ├── youtube-bridge.ts protocolo postMessage com o player
-│   ├── youtube-search.ts busca no YouTube sem chave de API (roda no servidor)
+│   ├── google-cse.ts     busca pelo Google no navegador (Programmable Search Element)
+│   ├── youtube-search.ts busca direta no YouTube (roda no servidor)
 │   └── actions.ts        ações de alto nível (favoritar, tocar, backup…)
 └── stores/               estado global (Zustand + localStorage)
 ```
@@ -182,4 +182,5 @@ src/
 - **"O dono do vídeo não permite reprodução fora do YouTube"** — alguns vídeos (muitos clipes oficiais/VEVO) bloqueiam o embed. Não há o que fazer; o app pula para o próximo automaticamente (dá para desligar nas Configurações).
 - **O vídeo aparece mas os botões do app não controlam** — a rede pode estar bloqueando a comunicação com o player. Teste o outro domínio em **Configurações → Player** (`youtube-nocookie.com`). Os controles do próprio vídeo continuam funcionando.
 - **Os títulos aparecem como "Vídeo abc123…"** — o oEmbed está bloqueado na sua rede; o título real aparece assim que o vídeo tocar.
-- **A busca dá "fetch failed (ENOTFOUND)"** — o servidor do app não consegue sair para a internet sozinho. Rode com `npm run dev:proxy` (veja [Busca em rede corporativa](#busca-em-rede-corporativa-proxy)).
+- **A busca dá "fetch failed (ENOTFOUND)"** — você está no modo "Direto no YouTube" e o servidor do app não alcança o youtube.com. Troque para **Google** em Configurações → Busca.
+- **A busca pelo Google não carrega** — confira o ID do mecanismo; se `cse.google.com` estiver bloqueado na rede, use **Abrir no Google** e cole o link no app.

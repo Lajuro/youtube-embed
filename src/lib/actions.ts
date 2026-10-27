@@ -178,6 +178,7 @@ export interface KnownVideoInfo {
   author?: string;
   duration?: number;
   isLive?: boolean;
+  thumbnail?: string;
 }
 
 /** Garante que o vídeo está na biblioteca, já com título, canal e duração. */
@@ -188,6 +189,7 @@ export function saveVideoInfo(info: KnownVideoInfo) {
     author: info.author,
     duration: info.duration,
     isLive: info.isLive || undefined,
+    thumbnail: info.thumbnail,
     titleSource: "auto",
   });
   return created;

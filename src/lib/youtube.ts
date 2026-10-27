@@ -41,6 +41,11 @@ export function parseVideoId(input: string): string | null {
   }
 
   if (url) {
+    // Link copiado de um resultado do Google: https://www.google.com/url?...&url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D...
+    if (/(^|\.)google\.[a-z.]+$/.test(url.hostname) && url.pathname === "/url") {
+      const target = url.searchParams.get("url") ?? url.searchParams.get("q");
+      if (target && target !== candidate) return parseVideoId(target);
+    }
     const host = url.hostname.replace(/^www\.|^m\.|^music\./, "");
     if (host === "youtu.be") {
       const id = url.pathname.split("/")[1];
@@ -57,8 +62,17 @@ export function parseVideoId(input: string): string | null {
   }
 
   // Última tentativa: procurar algo com cara de ID após padrões conhecidos.
-  const loose = raw.match(/(?:v=|\/(?:embed|shorts|live|v)\/|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  // (decodifica antes, para pegar links "escapados" como watch%3Fv%3D...).
+  const loose = safeDecode(raw).match(/(?:v=|\/(?:embed|shorts|live|v)\/|youtu\.be\/)([A-Za-z0-9_-]{11})/);
   return loose?.[1] ?? null;
+}
+
+function safeDecode(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
 }
 
 /** Extrai o tempo inicial (?t=90 / ?t=1m30s / &start=90) de um link, em segundos. */

@@ -19,6 +19,8 @@ export interface Video {
   titleSource: "pending" | "auto" | "manual";
   /** O dono do vídeo bloqueou a reprodução fora do YouTube. */
   unavailable?: boolean;
+  /** Miniatura alternativa (ex.: vinda da busca do Google) caso o i.ytimg.com esteja bloqueado. */
+  thumbnail?: string;
 }
 
 export interface Playlist {

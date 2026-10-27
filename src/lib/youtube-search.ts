@@ -26,6 +26,8 @@ export interface SearchResult {
   published?: string;
   description?: string;
   isLive: boolean;
+  /** Miniatura alternativa (ex.: servida pelo Google) caso o i.ytimg.com esteja bloqueado. */
+  thumbnail?: string;
 }
 
 export interface SearchPage {

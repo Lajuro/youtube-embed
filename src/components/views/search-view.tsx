@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   Check,
   Clock3,
+  ExternalLink,
   Heart,
   ListEnd,
   ListPlus,
@@ -49,11 +50,13 @@ import {
   toggleFavorite,
 } from "@/lib/actions";
 import { cn, pluralize } from "@/lib/utils";
+import { googleSearch, googleSearchMore, googleWebSearchUrl } from "@/lib/google-cse";
 import { parseManyVideoIds } from "@/lib/youtube";
+import { GoogleSetupGuide } from "@/components/search/google-setup";
 import type { SearchPage, SearchResult } from "@/lib/youtube-search";
 import { useLibrary } from "@/stores/library-store";
 import { useCurrentVideoId, usePlayer } from "@/stores/player-store";
-import { useHydration, useSearchHistory, useUi } from "@/stores/ui-store";
+import { useHydration, useSearchHistory, useSettings, useUi } from "@/stores/ui-store";
 
 const SUGGESTIONS = [
   "lofi hip hop",
@@ -93,6 +96,11 @@ export function SearchView() {
   const inputRef = useRef<HTMLInputElement>(null);
   const hydrated = useHydration((s) => s.hydrated);
   const history = useSearchHistory((s) => s.items);
+  const provider = useSettings((s) => s.searchProvider);
+  const cx = useSettings((s) => s.googleCx);
+  const viaGoogle = provider === "google";
+  // Busca pelo Google ainda não configurada: mostra o passo a passo no lugar dos resultados.
+  const needsSetup = hydrated && viaGoogle && !cx;
 
   // Quando a URL muda (nova busca), reinicia o estado — ajuste durante o render.
   if (query !== lastQuery) {
@@ -105,9 +113,10 @@ export function SearchView() {
   }
 
   useEffect(() => {
-    if (!query) return;
+    if (!query || !hydrated || needsSetup) return;
     let cancelled = false;
-    fetchPage(new URLSearchParams({ q: query }))
+    const request = viaGoogle ? googleSearch(cx, query) : fetchPage(new URLSearchParams({ q: query }));
+    request
       .then((page) => {
         if (cancelled) return;
         setResults(page.results);
@@ -123,7 +132,7 @@ export function SearchView() {
     return () => {
       cancelled = true;
     };
-  }, [query, attempt]);
+  }, [query, attempt, hydrated, needsSetup, viaGoogle, cx]);
 
   const pastedIds = useMemo(() => parseManyVideoIds(input), [input]);
   const looksLikeLink = pastedIds.length > 0 && (input.includes("/") || input.trim().length === 11);
@@ -147,7 +156,7 @@ export function SearchView() {
     if (!continuation || loadingMore) return;
     setLoadingMore(true);
     try {
-      const page = await fetchPage(new URLSearchParams({ c: continuation }));
+      const page = viaGoogle ? await googleSearchMore() : await fetchPage(new URLSearchParams({ c: continuation }));
       setResults((prev) => {
         const seen = new Set(prev.map((r) => r.id));
         return [...prev, ...page.results.filter((r) => !seen.has(r.id))];
@@ -173,7 +182,8 @@ export function SearchView() {
             Buscar no <span className="text-gradient">YouTube</span>
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Encontre vídeos sem sair do app. O que você tocar daqui entra na sua biblioteca.
+            {viaGoogle ? "Pesquisa feita pelo Google, direto do seu navegador." : "Pesquisa feita pelo servidor do app."} O
+            que você tocar daqui entra na sua biblioteca.
           </p>
 
           <form
@@ -289,9 +299,13 @@ export function SearchView() {
           />
         )}
 
-        {status === "loading" && <ResultsSkeleton />}
+        {needsSetup && query && <GoogleSetupGuide query={query} />}
 
-        {status === "error" && error && <SearchError error={error} onRetry={() => submit(query)} />}
+        {status === "loading" && !needsSetup && <ResultsSkeleton />}
+
+        {status === "error" && error && (
+          <SearchError error={error} viaGoogle={viaGoogle} query={query} onRetry={() => submit(query)} />
+        )}
 
         {status === "done" && results.length === 0 && (
           <EmptyState icon={Search} title="Nenhum vídeo encontrado" description={`Nada para “${query}”. Tente outras palavras.`} />
@@ -299,9 +313,16 @@ export function SearchView() {
 
         {results.length > 0 && (
           <>
-            <p className="mb-3 text-sm text-muted-foreground">
-              {pluralize(results.length, "resultado", "resultados")} para <span className="text-foreground">“{query}”</span>
-            </p>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm text-muted-foreground">
+                {pluralize(results.length, "resultado", "resultados")} para <span className="text-foreground">“{query}”</span>
+              </p>
+              <Button asChild variant="ghost" size="sm" className="text-muted-foreground">
+                <a href={googleWebSearchUrl(query)} target="_blank" rel="noreferrer">
+                  <ExternalLink /> Ver no Google
+                </a>
+              </Button>
+            </div>
             <ul className="grid gap-1">
               {results.map((r) => (
                 <SearchResultItem key={r.id} result={r} />
@@ -350,6 +371,7 @@ function SearchResultItem({ result }: { result: SearchResult }) {
         <VideoThumbnail
           id={result.id}
           alt={result.title}
+          fallbackSrc={result.thumbnail}
           className="aspect-video w-full"
           imgClassName="transition-transform duration-500 group-hover/res:scale-105"
         >
@@ -499,8 +521,19 @@ function ResultsSkeleton() {
   );
 }
 
-function SearchError({ error, onRetry }: { error: { message: string; detail?: string }; onRetry: () => void }) {
+function SearchError({
+  error,
+  viaGoogle,
+  query,
+  onRetry,
+}: {
+  error: { message: string; detail?: string };
+  viaGoogle: boolean;
+  query: string;
+  onRetry: () => void;
+}) {
   const openAddDialog = useUi((s) => s.openAddDialog);
+  const setSettingsOpen = useUi((s) => s.setSettingsOpen);
   return (
     <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6">
       <div className="flex items-start gap-3">
@@ -509,20 +542,22 @@ function SearchError({ error, onRetry }: { error: { message: string; detail?: st
           <h3 className="font-semibold">A busca não funcionou</h3>
           <p className="mt-1 text-sm text-muted-foreground">{error.message}</p>
           <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-            <li>
-              A busca é feita pelo <strong className="text-foreground">servidor do app</strong> (o computador onde roda o{" "}
-              <code className="rounded bg-muted px-1">npm run dev</code>). Se a rede dele bloqueia o youtube.com, a busca
-              falha — mesmo com o player funcionando no navegador.
-            </li>
-            <li>
-              Se a sua rede usa proxy, rode o app com{" "}
-              <code className="rounded bg-muted px-1">npm run dev:proxy</code> (veja o README).
-            </li>
-            <li>
-              Outra saída é hospedar o app fora da rede da empresa (ex.: Vercel); aí a busca roda lá e você só acessa o
-              site.
-            </li>
-            <li>Enquanto isso, você ainda pode colar links normalmente.</li>
+            {viaGoogle ? (
+              <>
+                <li>Confira se o ID do mecanismo de pesquisa está certo (Configurações → Busca).</li>
+                <li>
+                  Se o endereço <code className="rounded bg-muted px-1">cse.google.com</code> estiver bloqueado na sua rede,
+                  use “Abrir no Google” e cole o link do vídeo aqui com Ctrl+V.
+                </li>
+              </>
+            ) : (
+              <>
+                <li>
+                  A busca pelo servidor precisa que o computador que roda o app alcance o youtube.com. Em redes que bloqueiam
+                  o YouTube, use a <strong className="text-foreground">busca pelo Google</strong> (Configurações → Busca).
+                </li>
+              </>
+            )}
           </ul>
           {error.detail && (
             <p className="mt-3 font-mono text-xs break-words text-muted-foreground/70">Detalhe técnico: {error.detail}</p>
@@ -530,6 +565,14 @@ function SearchError({ error, onRetry }: { error: { message: string; detail?: st
           <div className="mt-4 flex flex-wrap gap-2">
             <Button size="sm" variant="outline" className="rounded-full" onClick={onRetry}>
               Tentar de novo
+            </Button>
+            <Button asChild size="sm" variant="outline" className="rounded-full">
+              <a href={googleWebSearchUrl(query)} target="_blank" rel="noreferrer">
+                <ExternalLink /> Abrir no Google
+              </a>
+            </Button>
+            <Button size="sm" variant="ghost" className="rounded-full" onClick={() => setSettingsOpen(true)}>
+              Configurações
             </Button>
             <Button size="sm" variant="ghost" className="rounded-full" onClick={() => openAddDialog()}>
               <Plus /> Colar um link

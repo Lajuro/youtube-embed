@@ -66,9 +66,19 @@ interface SettingsState {
   ambient: boolean;
   /** Pular automaticamente vídeos que não podem ser incorporados. */
   autoSkipErrors: boolean;
+  /**
+   * Onde a busca acontece:
+   * - "google": no navegador, pelo Google (Programmable Search Element) — precisa do `googleCx`;
+   * - "server": no servidor do app, direto no YouTube — só funciona se o servidor alcança o youtube.com.
+   */
+  searchProvider: "google" | "server";
+  /** ID do mecanismo de pesquisa do Google (não é chave de API). */
+  googleCx: string;
   setEmbedHost: (host: EmbedHost) => void;
   setAmbient: (value: boolean) => void;
   setAutoSkipErrors: (value: boolean) => void;
+  setSearchProvider: (value: "google" | "server") => void;
+  setGoogleCx: (value: string) => void;
 }
 
 export const useSettings = create<SettingsState>()(
@@ -77,19 +87,39 @@ export const useSettings = create<SettingsState>()(
       embedHost: "www.youtube.com",
       ambient: true,
       autoSkipErrors: true,
+      searchProvider: "google",
+      googleCx: "",
       setEmbedHost: (embedHost) => set({ embedHost }),
       setAmbient: (ambient) => set({ ambient }),
       setAutoSkipErrors: (autoSkipErrors) => set({ autoSkipErrors }),
+      setSearchProvider: (searchProvider) => set({ searchProvider }),
+      setGoogleCx: (googleCx) => set({ googleCx: extractCx(googleCx) }),
     }),
     {
       name: "sintonia:settings",
       version: 1,
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
-      partialize: ({ embedHost, ambient, autoSkipErrors }) => ({ embedHost, ambient, autoSkipErrors }),
+      partialize: ({ embedHost, ambient, autoSkipErrors, searchProvider, googleCx }) => ({
+        embedHost,
+        ambient,
+        autoSkipErrors,
+        searchProvider,
+        googleCx,
+      }),
     }
   )
 );
+
+/**
+ * Aceita o ID puro ou qualquer coisa que o contenha — o código de incorporação
+ * (`<script src="https://cse.google.com/cse.js?cx=...">`) ou o link público
+ * (`https://cse.google.com/cse?cx=...`).
+ */
+export function extractCx(value: string) {
+  const trimmed = value.trim();
+  return trimmed.match(/[?&]cx=([\w:-]+)/)?.[1] ?? trimmed.replace(/[^\w:-]/g, "");
+}
 
 /** Marca quando os dados do localStorage já foram carregados. */
 export const useHydration = create<{ hydrated: boolean; setHydrated: () => void }>()((set) => ({
