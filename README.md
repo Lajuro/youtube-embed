@@ -143,6 +143,8 @@ Configuração (uma vez só):
 3. Clique em **Criar** e copie o **ID do mecanismo de pesquisa** (ou o código `<script>` inteiro).
 4. Cole na tela **Buscar** do app (ou em Configurações → Busca).
 
+O visual padrão do Google (inclusive a janela de "Sobreposição", layout padrão dos mecanismos novos) fica sempre escondido pelo app — veja as regras `.gsc-*` em [`globals.css`](src/app/globals.css).
+
 Esse ID (o `cx`) **não é uma chave de API** e não envolve cobrança. A opção gratuita de mecanismos restritos a sites específicos continua disponível (o que o Google está encerrando é a busca na web inteira).
 
 Sem configurar nada, o botão **Abrir no Google** pesquisa vídeos do YouTube no Google em outra aba; copie o link do vídeo e cole no app com `Ctrl+V`. O app entende inclusive os links "embrulhados" do Google (`google.com/url?...&url=...youtube.com/watch...`).
@@ -183,4 +185,5 @@ src/
 - **O vídeo aparece mas os botões do app não controlam** — a rede pode estar bloqueando a comunicação com o player. Teste o outro domínio em **Configurações → Player** (`youtube-nocookie.com`). Os controles do próprio vídeo continuam funcionando.
 - **Os títulos aparecem como "Vídeo abc123…"** — o oEmbed está bloqueado na sua rede; o título real aparece assim que o vídeo tocar.
 - **A busca dá "fetch failed (ENOTFOUND)"** — você está no modo "Direto no YouTube" e o servidor do app não alcança o youtube.com. Troque para **Google** em Configurações → Busca.
+- **Depois de atualizar o projeto, alguma mudança visual não apareceu** — apague a pasta `.next` e rode `npm run dev` de novo (ela guarda o resultado de compilações antigas).
 - **A busca pelo Google não carrega** — confira o ID do mecanismo; se `cse.google.com` estiver bloqueado na rede, use **Abrir no Google** e cole o link no app.

@@ -169,7 +169,8 @@ function handleResults(results: CseResult[]) {
 }
 
 function nextPageButton(): HTMLElement | null {
-  const current = container?.querySelector(".gsc-cursor-current-page");
+  // Procura na página toda: no layout "sobreposição" o Google pode desenhar fora do nosso container.
+  const current = document.querySelector(".gsc-cursor-current-page");
   const next = current?.nextElementSibling;
   return next instanceof HTMLElement && next.classList.contains("gsc-cursor-page") ? next : null;
 }
@@ -192,8 +193,21 @@ export function loadGoogleSearch(cx: string): Promise<void> {
     container = document.createElement("div");
     container.id = "gcse-hidden-results";
     container.setAttribute("aria-hidden", "true");
-    // Fica fora da tela: o Google desenha aqui, nós só lemos os resultados.
-    Object.assign(container.style, { position: "fixed", left: "-10000px", top: "0", width: "800px", height: "1px", overflow: "hidden" });
+    // Fica fora da tela e invisível: o Google desenha aqui, nós só lemos os resultados.
+    // `transform` + `contain` prendem aqui dentro até os elementos "position: fixed" do
+    // layout de sobreposição do Google (que senão cobririam o app). Ver também globals.css.
+    Object.assign(container.style, {
+      position: "fixed",
+      left: "-10000px",
+      top: "0",
+      width: "800px",
+      height: "1px",
+      overflow: "hidden",
+      visibility: "hidden",
+      pointerEvents: "none",
+      transform: "translateZ(0)",
+      contain: "strict",
+    });
     document.body.appendChild(container);
 
     window.__gcse = {

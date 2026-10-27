@@ -137,6 +137,18 @@
   }
 }
 
+/*
+ * Busca pelo Google (src/lib/google-cse.ts): usamos só os DADOS dos resultados e
+ * desenhamos a lista do nosso jeito. O visual do Google precisa ficar invisível —
+ * inclusive o layout "Sobreposição" (padrão em mecanismos novos), que abre uma
+ * janela por cima da página.
+ */
+.gsc-results-wrapper-overlay,
+.gsc-results-wrapper-visible,
+.gsc-modal-background-image {
+  display: none !important;
+}
+
 @layer utilities {
   .text-gradient {
     background-image: linear-gradient(110deg, var(--brand-from), var(--brand-to));
