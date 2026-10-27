@@ -16,6 +16,7 @@ import {
   Pause,
   Play,
   Plus,
+  Search,
   Settings,
   Shuffle,
   Sun,
@@ -93,10 +94,25 @@ function PaletteBody({
       <CommandInput
         value={search}
         onValueChange={setSearch}
-        placeholder="Buscar vídeos, playlists, ações… ou colar um link"
+        placeholder="Buscar na biblioteca ou no YouTube… ou colar um link"
       />
       <CommandList>
-        <CommandEmpty>Nada encontrado para “{search}”.</CommandEmpty>
+        {/* Com texto digitado sempre existe a opção "Buscar no YouTube", então não há lista vazia. */}
+        {!search.trim() && <CommandEmpty>Nada encontrado.</CommandEmpty>}
+
+        {search.trim() && !looksLikeLink && (
+          <CommandGroup heading="YouTube" forceMount>
+            <CommandItem
+              forceMount
+              value={`__yt-search ${search}`}
+              onSelect={() => run(() => router.push(`/search?q=${encodeURIComponent(search.trim())}`))}
+            >
+              <Search className="text-primary" />
+              Buscar “{search.trim()}” no YouTube
+              <CommandShortcut>↵</CommandShortcut>
+            </CommandItem>
+          </CommandGroup>
+        )}
 
         {looksLikeLink && (
           <CommandGroup heading="Link detectado" forceMount>
@@ -187,6 +203,9 @@ function PaletteBody({
         <CommandGroup heading="Ir para">
           <CommandItem value="inicio home" onSelect={() => run(() => router.push("/"))}>
             <House /> Início
+          </CommandItem>
+          <CommandItem value="buscar youtube pesquisar" onSelect={() => run(() => router.push("/search"))}>
+            <Search /> Buscar no YouTube
           </CommandItem>
           <CommandItem value="biblioteca todos videos" onSelect={() => run(() => router.push("/library"))}>
             <Library /> Biblioteca

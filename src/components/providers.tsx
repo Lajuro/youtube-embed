@@ -7,7 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useLibrary } from "@/stores/library-store";
 import { usePlayer } from "@/stores/player-store";
-import { useHydration, useSettings } from "@/stores/ui-store";
+import { useHydration, useSearchHistory, useSettings } from "@/stores/ui-store";
 
 /** Carrega os dados salvos no localStorage depois que a página monta no navegador. */
 function StoreHydrator() {
@@ -16,6 +16,7 @@ function StoreHydrator() {
       useLibrary.persist.rehydrate(),
       usePlayer.persist.rehydrate(),
       useSettings.persist.rehydrate(),
+      useSearchHistory.persist.rehydrate(),
     ]).finally(() => {
       // Retomar a sessão anterior sem tocar automaticamente.
       if (usePlayer.getState().queue.length) usePlayer.setState({ status: "paused", autoplay: false });

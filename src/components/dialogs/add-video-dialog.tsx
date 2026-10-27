@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Check, ChevronDown, Heart, Link2, ListMusic, Loader2, Play, Plus, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Check, ChevronDown, Heart, Link2, ListMusic, Loader2, Play, Plus, Search, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -67,6 +68,7 @@ function AddVideoForm({
   const playlists = useLibrary((s) => s.playlists);
   const videos = useLibrary((s) => s.videos);
   const openPlaylistDialog = useUi((s) => s.openPlaylistDialog);
+  const router = useRouter();
 
   const ids = useMemo(() => parseManyVideoIds(value), [value]);
   const playlist = playlists.find((p) => p.id === playlistId);
@@ -127,13 +129,24 @@ function AddVideoForm({
           }}
           placeholder={"https://www.youtube.com/watch?v=jfKfPfyJRdk\nhttps://youtu.be/…"}
           className="max-h-40 min-h-20 resize-none font-mono text-sm"
-          aria-invalid={hasText && ids.length === 0}
         />
 
         {hasText && ids.length === 0 && (
-          <p className="-mt-2 text-sm text-destructive">
-            Não encontrei nenhum vídeo aqui. Confira se é um link do YouTube ou um ID de 11 caracteres.
-          </p>
+          <div className="-mt-1 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-muted/30 p-3 text-sm">
+            <span className="text-muted-foreground">Isso não é um link. Quer buscar no YouTube?</span>
+            <Button
+              type="button"
+              size="sm"
+              variant="brand"
+              className="rounded-full"
+              onClick={() => {
+                router.push(`/search?q=${encodeURIComponent(value.trim())}`);
+                onDone();
+              }}
+            >
+              <Search /> Buscar “{value.trim().slice(0, 30)}”
+            </Button>
+          </div>
         )}
 
         {!hasText && (

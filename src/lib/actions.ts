@@ -170,3 +170,35 @@ export function downloadBackup() {
     description: `${pluralize(data.videos.length, "vídeo", "vídeos")} e ${pluralize(data.playlists.length, "playlist", "playlists")}`,
   });
 }
+
+/** Dados que a busca já traz — evita esperar o oEmbed/player para ter título e duração. */
+export interface KnownVideoInfo {
+  id: string;
+  title: string;
+  author?: string;
+  duration?: number;
+  isLive?: boolean;
+}
+
+/** Garante que o vídeo está na biblioteca, já com título, canal e duração. */
+export function saveVideoInfo(info: KnownVideoInfo) {
+  const { addVideo } = useLibrary.getState();
+  const { created } = addVideo(info.id, {
+    title: info.title,
+    author: info.author,
+    duration: info.duration,
+    isLive: info.isLive || undefined,
+    titleSource: "auto",
+  });
+  return created;
+}
+
+export function addSearchResultToLibrary(info: KnownVideoInfo) {
+  const created = saveVideoInfo(info);
+  toast.success(created ? "Adicionado à biblioteca" : "Já estava na biblioteca", { description: info.title });
+}
+
+export function playSearchResult(info: KnownVideoInfo) {
+  saveVideoInfo(info);
+  usePlayer.getState().playVideo(info.id);
+}

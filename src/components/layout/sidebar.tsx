@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AudioLines, Heart, House, Keyboard, Library, ListMusic, Plus, Settings, Volume2 } from "lucide-react";
+import { AudioLines, Heart, House, Keyboard, Library, ListMusic, Plus, Search, Settings, Volume2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
@@ -30,6 +30,7 @@ export function Logo({ className }: { className?: string }) {
 
 const NAV = [
   { href: "/", label: "Início", icon: House },
+  { href: "/search", label: "Buscar", icon: Search },
   { href: "/library", label: "Biblioteca", icon: Library },
   { href: "/favorites", label: "Favoritos", icon: Heart },
   { href: "/playlists", label: "Playlists", icon: ListMusic },

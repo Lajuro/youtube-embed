@@ -2,16 +2,17 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Clock3,
   Coffee,
   Heart,
   Library,
-  Link2,
   ListMusic,
   Play,
   Plus,
+  Search,
   Shuffle,
   Sparkles,
 } from "lucide-react";
@@ -123,11 +124,12 @@ function Home() {
 function Hero({ isEmpty }: { isEmpty: boolean }) {
   const [value, setValue] = useState("");
   const ids = useMemo(() => parseManyVideoIds(value), [value]);
-  const openAddDialog = useUi((s) => s.openAddDialog);
+  const router = useRouter();
 
   const submit = () => {
     if (!ids.length) {
-      openAddDialog({ initialValue: value });
+      // Não é link: vira uma busca no YouTube.
+      router.push(`/search?q=${encodeURIComponent(value.trim())}`);
       return;
     }
     addVideosToLibrary(ids);
@@ -159,8 +161,8 @@ function Hero({ isEmpty }: { isEmpty: boolean }) {
           )}
         </h1>
         <p className="mt-3 max-w-xl text-muted-foreground">
-          Cole um link do YouTube e dê play. Monte playlists de lofi, jazz ou o que te ajudar a trabalhar — tudo
-          guardado no seu navegador.
+          Busque um vídeo ou cole um link do YouTube e dê play. Monte playlists de lofi, jazz ou o que te ajudar a
+          trabalhar — tudo guardado no seu navegador.
         </p>
 
         <form
@@ -170,13 +172,13 @@ function Hero({ isEmpty }: { isEmpty: boolean }) {
           }}
           className="group/hero mt-7 flex items-center gap-2 rounded-full border bg-background/70 p-1.5 pl-5 shadow-xl shadow-black/5 backdrop-blur-xl transition-[border-color,box-shadow] focus-within:border-primary/60 focus-within:ring-4 focus-within:ring-primary/15"
         >
-          <Link2 className="size-5 shrink-0 text-muted-foreground transition-colors group-focus-within/hero:text-primary" />
+          <Search className="size-5 shrink-0 text-muted-foreground transition-colors group-focus-within/hero:text-primary" />
           <input
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder="Cole aqui o link ou o ID do vídeo…"
+            placeholder="Buscar no YouTube ou colar um link…"
             className="h-11 min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
-            aria-label="Link do YouTube"
+            aria-label="Buscar ou colar link do YouTube"
           />
           {ids.length > 0 && (
             <span className="hidden text-xs text-muted-foreground sm:block">
@@ -184,8 +186,8 @@ function Hero({ isEmpty }: { isEmpty: boolean }) {
             </span>
           )}
           <Button type="submit" variant="brand" size="lg" className="rounded-full" disabled={!value.trim()}>
-            <Play className="fill-current" />
-            <span className="hidden sm:inline">Tocar</span>
+            {ids.length ? <Play className="fill-current" /> : <Search />}
+            <span className="hidden sm:inline">{ids.length ? "Tocar" : "Buscar"}</span>
           </Button>
         </form>
         <p className="mt-3 hidden flex-wrap items-center gap-1.5 pl-5 text-xs text-muted-foreground sm:flex">
@@ -204,7 +206,7 @@ function Onboarding() {
   };
 
   const steps = [
-    { icon: Link2, title: "Cole um link", text: "Qualquer formato: watch, youtu.be, shorts, live ou só o ID." },
+    { icon: Search, title: "Busque ou cole um link", text: "Pesquise direto no app ou cole links em qualquer formato: watch, youtu.be, shorts, live." },
     { icon: ListMusic, title: "Organize", text: "Favorite e monte playlists para cada momento do dia." },
     { icon: Coffee, title: "Dê play e foque", text: "Fila, aleatório, repetir e mini player enquanto você trabalha." },
   ];

@@ -4,8 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:proxy": "node scripts/dev-proxy.mjs dev",
     "build": "next build",
     "start": "next start",
+    "start:proxy": "node scripts/dev-proxy.mjs start",
     "lint": "eslint",
     "bundle": "node scripts/bundle.mjs"
   },

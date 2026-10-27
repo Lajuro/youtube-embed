@@ -96,3 +96,31 @@ export const useHydration = create<{ hydrated: boolean; setHydrated: () => void 
   hydrated: false,
   setHydrated: () => set({ hydrated: true }),
 }));
+
+/** Últimas buscas feitas no YouTube (para os atalhos na tela de busca). */
+export const useSearchHistory = create<{
+  items: string[];
+  add: (query: string) => void;
+  remove: (query: string) => void;
+  clear: () => void;
+}>()(
+  persist(
+    (set) => ({
+      items: [],
+      add: (query) =>
+        set((s) => {
+          const q = query.trim();
+          if (!q) return s;
+          return { items: [q, ...s.items.filter((i) => i.toLowerCase() !== q.toLowerCase())].slice(0, 12) };
+        }),
+      remove: (query) => set((s) => ({ items: s.items.filter((i) => i !== query) })),
+      clear: () => set({ items: [] }),
+    }),
+    {
+      name: "sintonia:search-history",
+      version: 1,
+      storage: createJSONStorage(() => localStorage),
+      skipHydration: true,
+    }
+  )
+);
