@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Instaladores gerados por scripts/bundle.mjs.
+    "instalador/**",
   ]),
 ]);
 

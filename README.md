@@ -10,6 +10,35 @@ Feito com **Next.js 16**, **Tailwind CSS 4** e **shadcn/ui** (Radix).
 
 Pré-requisito: Node.js 20 ou superior.
 
+### Sem `git clone` e sem baixar o .zip (rede corporativa)
+
+A pasta [`instalador/`](instalador) tem duas alternativas para recriar o projeto na sua máquina:
+
+**Opção 1 — um arquivo só (recomendada, não precisa de internet para recriar os arquivos)**
+
+1. Abra [`instalador/sintonia-instalador.cjs`](instalador/sintonia-instalador.cjs) no GitHub.
+2. Clique em **Raw** e salve a página com `Ctrl+S` como `sintonia-instalador.cjs` — ou use o botão **Copy raw file**, cole no Bloco de Notas e salve escolhendo **Tipo: Todos os arquivos** (para não virar `.cjs.txt`).
+3. No terminal, na pasta onde salvou:
+
+   ```bash
+   node sintonia-instalador.cjs          # cria a pasta ./sintonia com o projeto
+   cd sintonia
+   npm install
+   npm run dev
+   ```
+
+Esse arquivo carrega dentro dele todos os arquivos do projeto, compactados (gzip) e convertidos em texto (base64) — por isso parece uma "sopa de letras". Ao rodar, ele só descompacta e grava cada arquivo no lugar certo.
+
+**Opção 2 — baixar arquivo por arquivo do GitHub**
+
+Salve [`instalador/baixar-arquivos.mjs`](instalador/baixar-arquivos.mjs) do mesmo jeito e rode `node baixar-arquivos.mjs`. Ele baixa cada arquivo de `raw.githubusercontent.com`. Só funciona se a sua rede liberar esse endereço para o Node.
+
+> Para atualizar depois: baixe o instalador de novo e rode `node sintonia-instalador.cjs sintonia --force` (sobrescreve os arquivos do projeto; seus dados ficam no navegador, não na pasta).
+>
+> Quem mexer no código deve rodar `npm run bundle` antes do commit, para regenerar os instaladores.
+
+### Com o repositório clonado
+
 ```bash
 npm install
 npm run dev      # desenvolvimento em http://localhost:3000
