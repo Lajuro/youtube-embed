@@ -7,6 +7,7 @@ import { COMPLETE_AT, findLessonByVideo, resumePosition } from "@/lib/courses";
 import { onProbedTitle } from "@/lib/youtube-prober";
 import { courseLessons, useLibrary } from "@/stores/library-store";
 import { setStartResolver, usePlayer } from "@/stores/player-store";
+import { useStats } from "@/stores/stats-store";
 
 /** Comemora quando a aula recém-concluída era a última que faltava. */
 function celebrateIfDone(courseId: string, lessonId: string) {
@@ -21,12 +22,15 @@ function celebrateIfDone(courseId: string, lessonId: string) {
 
 /** Intervalo mínimo entre gravações da posição da aula no localStorage. */
 const SAVE_EVERY_MS = 5_000;
+/** De quanto em quanto tempo o tempo ouvido/estudado do dia é somado. */
+const STATS_EVERY_MS = 10_000;
 
 /**
  * Tarefas que rodam em segundo plano, sem interface:
  *  - progresso dos cursos (posição da aula, conclusão automática, "última aula aberta");
  *  - retomar a aula de onde você parou quando ela começa a tocar;
- *  - títulos descobertos pela sonda do player (quando o oEmbed está bloqueado).
+ *  - títulos descobertos pela sonda do player (quando o oEmbed está bloqueado);
+ *  - estatísticas do dia (minutos de música e de estudo, para a tela inicial).
  */
 export function BackgroundSync() {
   useEffect(() => {
@@ -90,10 +94,22 @@ export function BackgroundSync() {
       if (duration && !video.duration) useLibrary.getState().updateVideo(id, { duration });
     });
 
+    // Tempo tocando hoje. Conta pela diferença entre os relógios (abas em segundo plano
+    // podem atrasar os timers); o teto evita somar horas se o computador dormiu.
+    let lastTick = Date.now();
+    const statsTimer = setInterval(() => {
+      const now = Date.now();
+      const elapsed = Math.min(now - lastTick, 2 * STATS_EVERY_MS) / 1000;
+      lastTick = now;
+      const { status, source } = usePlayer.getState();
+      if (status === "playing") useStats.getState().addTime(source?.type === "course" ? "study" : "listen", Math.round(elapsed));
+    }, STATS_EVERY_MS);
+
     return () => {
       setStartResolver(null);
       unsubscribe();
       stopProbe();
+      clearInterval(statsTimer);
     };
   }, []);
 

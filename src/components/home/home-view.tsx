@@ -26,6 +26,7 @@ import { continueCourse, courseStats, lessonTitle, nextLessonToWatch } from "@/l
 import { Skeleton } from "@/components/ui/skeleton";
 import { STARTER_VIDEOS } from "@/components/dialogs/add-video-dialog";
 import { HydrationGate } from "@/components/hydration-gate";
+import { TodayStats } from "@/components/home/today-stats";
 import { PlaylistCard } from "@/components/playlist/playlist-card";
 import { PlaylistCover } from "@/components/playlist/playlist-cover";
 import { VideoCard } from "@/components/video/video-card";
@@ -89,6 +90,8 @@ function Home() {
           <>
             {all.length > 0 && <QuickAccess favoriteIds={favoriteIds} allIds={all.map((v) => v.id)} />}
 
+            <TodayStats />
+
             <ContinueLearning />
 
             {recentIds.length > 0 && (
@@ -99,7 +102,7 @@ function Home() {
 
             {playlists.length > 0 && (
               <Section title="Suas playlists" icon={ListMusic} href="/playlists">
-                <div className="-mx-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+                <div className="stagger -mx-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
                   {playlists.slice(0, 6).map((p) => (
                     <PlaylistCard key={p.id} playlist={p} className="[&:nth-child(n+5)]:max-xl:hidden [&:nth-child(n+6)]:max-2xl:hidden" />
                   ))}
@@ -219,7 +222,7 @@ function Onboarding() {
 
   return (
     <div className="grid gap-8">
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="stagger grid gap-3 md:grid-cols-3">
         {steps.map((s, i) => (
           <div key={s.title} className="relative overflow-hidden rounded-2xl border bg-card/60 p-5 backdrop-blur">
             <span className="absolute top-3 right-4 text-5xl font-black text-foreground/[0.05]">{i + 1}</span>
@@ -304,7 +307,7 @@ function QuickAccess({ favoriteIds, allIds }: { favoriteIds: string[]; allIds: s
   ];
 
   return (
-    <div className="-mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="stagger -mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
       {tiles.map((t) => {
         const active = source?.type === t.source.type && source.id === t.source.id;
         return (
@@ -364,7 +367,7 @@ function ContinueLearning() {
 
   return (
     <Section title={active.some((c) => c.lastOpenedAt) ? "Continue aprendendo" : "Seus cursos"} icon={GraduationCap} href="/courses">
-      <div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
+      <div className="stagger grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
         {active.map((course) => {
           const stats = courseStats(course, progress, videos);
           const next = nextLessonToWatch(course, progress);
@@ -437,7 +440,7 @@ function Section({
 
 function CardGrid({ ids, source }: { ids: string[]; source: QueueSource }) {
   return (
-    <div className="-mx-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+    <div className="stagger -mx-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {ids.map((id, i) => (
         <VideoCard key={id} id={id} onPlay={() => playList(ids, i, source)} />
       ))}

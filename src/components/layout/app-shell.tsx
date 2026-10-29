@@ -10,12 +10,15 @@ import { BackgroundSync } from "@/components/background-sync";
 import { CommandPalette } from "@/components/command-palette";
 import { DocumentTitle } from "@/components/document-title";
 import { GlobalHotkeys } from "@/components/global-hotkeys";
+import { LinkDropZone } from "@/components/link-drop-zone";
 import { MobileSidebar, Sidebar } from "@/components/layout/sidebar";
 import { TopBar } from "@/components/layout/top-bar";
 import { NowPlaying } from "@/components/player/now-playing";
+import { Osd } from "@/components/player/osd";
 import { PlayerBar } from "@/components/player/player-bar";
 import { PlayerHost } from "@/components/player/player-host";
 import { QueueSheet } from "@/components/player/queue-sheet";
+import { TimerEngine } from "@/components/timers/timer-engine";
 import { useUi } from "@/stores/ui-store";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -36,6 +39,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <NowPlaying />
       <PlayerHost />
       <QueueSheet />
+      <Osd />
       <MobileSidebar />
       <AddVideoDialog />
       <PlaylistDialog />
@@ -45,8 +49,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <ShortcutsDialog />
       <CommandPalette />
       <GlobalHotkeys />
+      <LinkDropZone />
       <DocumentTitle />
       <BackgroundSync />
+      <TimerEngine />
     </div>
   );
 }

@@ -8,10 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Logo } from "@/components/layout/sidebar";
+import { TimerButton } from "@/components/timers/timer-popover";
+import { TOP_BAR_HEIGHT } from "@/lib/layout";
 import { useUi } from "@/stores/ui-store";
-
-/** Altura da barra do topo (as páginas usam para o fundo "passar por baixo" dela). */
-export const TOP_BAR_HEIGHT = 56;
 
 export function TopBar() {
   const router = useRouter();
@@ -50,6 +49,7 @@ export function TopBar() {
       </button>
 
       <div className="ml-auto flex items-center gap-1">
+        <TimerButton />
         <Tooltip>
           <TooltipTrigger asChild>
             <Button

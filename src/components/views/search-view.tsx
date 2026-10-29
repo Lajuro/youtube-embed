@@ -7,7 +7,6 @@ import {
   Check,
   Clock3,
   ExternalLink,
-  Heart,
   ListEnd,
   ListPlus,
   ListStart,
@@ -49,6 +48,7 @@ import {
   saveVideoInfo,
   toggleFavorite,
 } from "@/lib/actions";
+import { FavoriteHeart } from "@/components/video/favorite-heart";
 import { cn, pluralize } from "@/lib/utils";
 import { googleSearch, googleSearchMore, googleWebSearchUrl } from "@/lib/google-cse";
 import { parseManyVideoIds } from "@/lib/youtube";
@@ -323,7 +323,7 @@ export function SearchView() {
                 </a>
               </Button>
             </div>
-            <ul className="grid gap-1">
+            <ul className="stagger grid gap-1">
               {results.map((r) => (
                 <SearchResultItem key={r.id} result={r} />
               ))}
@@ -441,7 +441,7 @@ function SearchResultItem({ result }: { result: SearchResult }) {
               toggleFavorite(result.id);
             }}
           >
-            <Heart className={cn(isFavorite && "fill-primary text-primary")} />
+            <FavoriteHeart active={isFavorite} />
           </Button>
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>

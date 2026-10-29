@@ -7,7 +7,6 @@ import {
   Eye,
   EyeOff,
   GraduationCap,
-  Heart,
   ListMusic,
   Loader2,
   Maximize2,
@@ -29,6 +28,7 @@ import { Slider } from "@/components/ui/slider";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { VideoThumbnail } from "@/components/video/video-thumbnail";
 import { PlaybackRateMenu } from "@/components/player/playback-rate-menu";
+import { FavoriteHeart } from "@/components/video/favorite-heart";
 import { toggleFavorite } from "@/lib/actions";
 import { PLAYER_BAR_HEIGHT } from "@/lib/layout";
 import { cn, formatTime } from "@/lib/utils";
@@ -139,7 +139,7 @@ export function PlayerBar() {
           onClick={() => toggleFavorite(currentId)}
           className="hidden shrink-0 sm:inline-flex"
         >
-          <Heart className={cn(isFavorite && "fill-primary text-primary")} />
+          <FavoriteHeart active={isFavorite} />
         </IconButton>
       </div>
 
@@ -167,11 +167,11 @@ export function PlayerBar() {
               className="size-10 rounded-full bg-foreground text-background shadow-md transition-transform hover:scale-105 hover:bg-foreground active:scale-95"
             >
               {isLoading && !isPlaying ? (
-                <Loader2 className="size-5 animate-spin" />
+                <Loader2 key="loading" className="size-5 animate-spin" />
               ) : isPlaying ? (
-                <Pause className="size-5 fill-current" />
+                <Pause key="pause" className="size-5 fill-current animate-in zoom-in-50 fade-in duration-200" />
               ) : (
-                <Play className="ml-0.5 size-5 fill-current" />
+                <Play key="play" className="ml-0.5 size-5 fill-current animate-in zoom-in-50 fade-in duration-200" />
               )}
             </Button>
           </TooltipTrigger>
@@ -317,7 +317,15 @@ function VolumeControl() {
   const Icon = effective === 0 ? VolumeX : effective < 50 ? Volume1 : Volume2;
 
   return (
-    <div className="flex items-center gap-1">
+    <div
+      className="flex items-center gap-1"
+      // Rodinha do mouse sobre o volume ajusta de 5 em 5.
+      onWheel={(e) => {
+        if (e.deltaY === 0) return;
+        const player = usePlayer.getState();
+        player.setVolume((player.muted ? 0 : player.volume) + (e.deltaY < 0 ? 5 : -5));
+      }}
+    >
       <IconButton label={muted ? "Ativar som" : "Silenciar"} shortcut="M" onClick={usePlayer.getState().toggleMute}>
         <Icon />
       </IconButton>

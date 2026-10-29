@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useTheme } from "next-themes";
-import { Download, ExternalLink, Globe, Monitor, Moon, Server, ShieldCheck, Sun, Trash2, Tv, Upload } from "lucide-react";
+import { AppWindow, Check, Download, ExternalLink, Globe, Monitor, Moon, Server, ShieldCheck, Sun, Trash2, Tv, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -22,6 +22,8 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { CREATE_ENGINE_URL, GoogleCxForm } from "@/components/search/google-setup";
+import { ACCENTS, accentGradient } from "@/lib/accents";
+import { promptInstall, useInstall } from "@/lib/pwa";
 import { downloadBackup } from "@/lib/actions";
 import { cn, pluralize } from "@/lib/utils";
 import type { EmbedHost } from "@/lib/youtube";
@@ -134,6 +136,37 @@ export function SettingsDialog() {
               <OptionCard selected={theme === "light"} onClick={() => setTheme("light")} icon={Sun} title="Claro" />
               <OptionCard selected={theme === "system"} onClick={() => setTheme("system")} icon={Monitor} title="Sistema" />
             </div>
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3">
+              <span>
+                <span className="block text-sm font-medium">Cor de destaque</span>
+                <span className="block text-xs text-muted-foreground">
+                  {ACCENTS.find((a) => a.id === settings.accent)?.label}
+                </span>
+              </span>
+              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Cor de destaque">
+                {ACCENTS.map((a) => {
+                  const selected = settings.accent === a.id;
+                  return (
+                    <button
+                      key={a.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      aria-label={a.label}
+                      title={a.label}
+                      onClick={() => settings.setAccent(a.id)}
+                      className={cn(
+                        "grid size-8 cursor-pointer place-items-center rounded-full text-white ring-offset-2 ring-offset-background transition-transform outline-none hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring active:scale-95",
+                        selected && "ring-2 ring-foreground/70"
+                      )}
+                      style={{ backgroundImage: accentGradient(a) }}
+                    >
+                      {selected && <Check className="size-4 animate-pop-in drop-shadow" strokeWidth={3} />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <Label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border p-3 font-normal">
               <span>
                 <span className="block text-sm font-medium">Luz ambiente</span>
@@ -150,6 +183,12 @@ export function SettingsDialog() {
               </span>
               <Switch checked={settings.sidebarCollapsed} onCheckedChange={() => settings.toggleSidebar()} />
             </Label>
+          </Section>
+
+          <Separator />
+
+          <Section title="App" description="Instale o Sintonia para ele abrir numa janela própria, como um programa.">
+            <InstallCard />
           </Section>
 
           <Separator />
@@ -339,5 +378,43 @@ export function SettingsDialog() {
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function InstallCard() {
+  const prompt = useInstall((s) => s.prompt);
+  const installed = useInstall((s) => s.installed);
+
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-xl border p-3">
+      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+        <AppWindow className="size-5" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-medium">
+          {installed ? "Você está usando o app instalado" : "Instalar como app"}
+        </span>
+        <span className="block text-xs text-muted-foreground">
+          {installed
+            ? "Ele fica na barra de tarefas e no menu Iniciar, sem as abas do navegador."
+            : prompt
+              ? "Janela própria, atalho na barra de tarefas e no menu Iniciar. Seus dados continuam os mesmos."
+              : "No Chrome ou Edge: menu ⋮ → “Instalar Sintonia” (ou “Aplicativos → Instalar este site como aplicativo”)."}
+        </span>
+      </span>
+      {!installed && prompt && (
+        <Button
+          size="sm"
+          variant="brand"
+          className="rounded-full"
+          onClick={async () => {
+            if (await promptInstall()) toast.success("Sintonia instalado! Procure por ele no menu Iniciar.");
+          }}
+        >
+          <Download /> Instalar
+        </Button>
+      )}
+      {installed && <Check className="size-5 text-emerald-500" />}
+    </div>
   );
 }

@@ -66,6 +66,7 @@ import {
   resumePosition,
   toggleLessonCompleted,
 } from "@/lib/courses";
+import { TimerButton } from "@/components/timers/timer-popover";
 import { cn, formatTime, formatTotalDuration, pluralize } from "@/lib/utils";
 import { thumbnailUrl } from "@/lib/youtube";
 import { courseLessons, useLibrary, type Course, type Lesson } from "@/stores/library-store";
@@ -148,7 +149,7 @@ function Classroom({ course }: { course: Course }) {
   const activeTab = !theater && tab === "content" ? "overview" : tab;
 
   return (
-    <div className="flex h-dvh flex-col bg-background">
+    <div className="flex h-dvh flex-col bg-background" data-enter="fade">
       <ClassroomHeader
         course={course}
         percent={stats.percent}
@@ -306,6 +307,7 @@ function ClassroomHeader({
       {!playingThis && <BackgroundAudioChip />}
 
       <div className="flex shrink-0 items-center gap-1">
+        <TimerButton />
         <Tooltip>
           <TooltipTrigger asChild>
             <span className="flex items-center gap-2 rounded-full px-1.5 py-1">
@@ -572,7 +574,9 @@ function EndScreen({ course, lesson }: { course: Course; lesson: Lesson }) {
   const next = lessons[index + 1];
   const [remaining, setRemaining] = useState(COUNTDOWN);
   const [cancelled, setCancelled] = useState(false);
-  const counting = Boolean(next) && autoplay && !cancelled;
+  // O desligamento automático ("ao fim deste vídeo") também segura a próxima aula.
+  const stoppedByTimer = usePlayer((s) => s.stoppedByTimer);
+  const counting = Boolean(next) && autoplay && !cancelled && !stoppedByTimer;
 
   useEffect(() => {
     if (!counting) return;

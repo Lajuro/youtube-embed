@@ -66,7 +66,7 @@ function Courses() {
       <div className="px-4 md:px-8">
         {courses.length === 0 ? (
           <div className="grid gap-4">
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="stagger grid gap-3 md:grid-cols-3">
               {[
                 { icon: ListVideo, title: "Importe uma playlist", text: "Cole o link de uma playlist do YouTube e todas as aulas entram de uma vez." },
                 { icon: GraduationCap, title: "Organize em seções", text: "Divida as aulas em seções, renomeie e reordene arrastando." },
@@ -98,7 +98,7 @@ function Courses() {
             </div>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          <div className="stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {sorted.map((course) => (
               <CourseCard key={course.id} course={course} />
             ))}

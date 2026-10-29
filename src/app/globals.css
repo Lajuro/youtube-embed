@@ -41,6 +41,10 @@
   --radius-2xl: calc(var(--radius) + 8px);
 
   --animate-equalizer: equalizer 1s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.8s ease-in-out infinite;
+  --animate-heart-pop: heart-pop 0.5s cubic-bezier(0.17, 0.89, 0.32, 1.49);
+  --animate-heart-burst: heart-burst 0.55s ease-out forwards;
+  --animate-pop-in: pop-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 
   @keyframes equalizer {
     0%,
@@ -51,71 +55,151 @@
       transform: scaleY(1);
     }
   }
+  @keyframes shimmer {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes heart-pop {
+    0% {
+      transform: scale(1);
+    }
+    30% {
+      transform: scale(1.4);
+    }
+    60% {
+      transform: scale(0.9);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  @keyframes heart-burst {
+    from {
+      transform: scale(0.3);
+      opacity: 0.9;
+    }
+    to {
+      transform: scale(1.8);
+      opacity: 0;
+    }
+  }
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: scale(0.85);
+    }
+  }
+}
+
+/*
+ * Cores de destaque: tudo deriva de dois matizes (--p-h/--p-c: cor principal; --b-h/--b-c:
+ * segunda cor do gradiente). Os cinzas também levam um pouquinho do matiz principal, então
+ * trocar o destaque (Configurações → Aparência) muda o clima do app inteiro.
+ */
+:root {
+  --p-h: 292;
+  --p-c: 0.24;
+  --b-h: 352;
+  --b-c: 0.22;
+}
+:root[data-accent="ocean"] {
+  --p-h: 255;
+  --p-c: 0.19;
+  --b-h: 205;
+  --b-c: 0.14;
+}
+:root[data-accent="aqua"] {
+  --p-h: 192;
+  --p-c: 0.12;
+  --b-h: 165;
+  --b-c: 0.14;
+}
+:root[data-accent="forest"] {
+  --p-h: 150;
+  --p-c: 0.16;
+  --b-h: 118;
+  --b-c: 0.17;
+}
+:root[data-accent="sunset"] {
+  --p-h: 45;
+  --p-c: 0.19;
+  --b-h: 15;
+  --b-c: 0.2;
+}
+:root[data-accent="rose"] {
+  --p-h: 0;
+  --p-c: 0.21;
+  --b-h: 320;
+  --b-c: 0.2;
 }
 
 /* Tema claro */
 :root {
   --radius: 0.75rem;
-  --brand-from: oklch(0.6 0.24 292);
-  --brand-to: oklch(0.68 0.22 352);
-  --background: oklch(0.985 0.004 290);
-  --foreground: oklch(0.18 0.02 285);
+  --brand-from: oklch(0.6 var(--p-c) var(--p-h));
+  --brand-to: oklch(0.68 var(--b-c) var(--b-h));
+  --background: oklch(0.985 0.004 var(--p-h));
+  --foreground: oklch(0.18 0.02 var(--p-h));
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.02 285);
+  --card-foreground: oklch(0.18 0.02 var(--p-h));
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.02 285);
-  --primary: oklch(0.56 0.24 292);
+  --popover-foreground: oklch(0.18 0.02 var(--p-h));
+  --primary: oklch(0.56 var(--p-c) var(--p-h));
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.955 0.008 290);
-  --secondary-foreground: oklch(0.22 0.02 285);
-  --muted: oklch(0.955 0.008 290);
-  --muted-foreground: oklch(0.5 0.02 285);
-  --accent: oklch(0.94 0.014 290);
-  --accent-foreground: oklch(0.22 0.02 285);
+  --secondary: oklch(0.955 0.008 var(--p-h));
+  --secondary-foreground: oklch(0.22 0.02 var(--p-h));
+  --muted: oklch(0.955 0.008 var(--p-h));
+  --muted-foreground: oklch(0.5 0.02 var(--p-h));
+  --accent: oklch(0.94 0.014 var(--p-h));
+  --accent-foreground: oklch(0.22 0.02 var(--p-h));
   --destructive: oklch(0.58 0.22 25);
-  --border: oklch(0.9 0.01 290);
-  --input: oklch(0.9 0.01 290);
-  --ring: oklch(0.56 0.24 292 / 60%);
-  --sidebar: oklch(0.97 0.006 290);
-  --sidebar-foreground: oklch(0.22 0.02 285);
-  --sidebar-primary: oklch(0.56 0.24 292);
+  --border: oklch(0.9 0.01 var(--p-h));
+  --input: oklch(0.9 0.01 var(--p-h));
+  --ring: oklch(0.56 var(--p-c) var(--p-h) / 60%);
+  --sidebar: oklch(0.97 0.006 var(--p-h));
+  --sidebar-foreground: oklch(0.22 0.02 var(--p-h));
+  --sidebar-primary: oklch(0.56 var(--p-c) var(--p-h));
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.93 0.014 290);
-  --sidebar-accent-foreground: oklch(0.2 0.02 285);
-  --sidebar-border: oklch(0.91 0.01 290);
-  --sidebar-ring: oklch(0.56 0.24 292 / 60%);
+  --sidebar-accent: oklch(0.93 0.014 var(--p-h));
+  --sidebar-accent-foreground: oklch(0.2 0.02 var(--p-h));
+  --sidebar-border: oklch(0.91 0.01 var(--p-h));
+  --sidebar-ring: oklch(0.56 var(--p-c) var(--p-h) / 60%);
 }
 
 /* Tema escuro (padrão) */
 .dark {
-  --brand-from: oklch(0.66 0.22 292);
-  --brand-to: oklch(0.72 0.19 352);
-  --background: oklch(0.14 0.012 285);
-  --foreground: oklch(0.97 0.004 285);
-  --card: oklch(0.18 0.014 285);
-  --card-foreground: oklch(0.97 0.004 285);
-  --popover: oklch(0.2 0.016 285);
-  --popover-foreground: oklch(0.97 0.004 285);
-  --primary: oklch(0.7 0.19 292);
-  --primary-foreground: oklch(0.15 0.02 285);
-  --secondary: oklch(0.24 0.016 285);
-  --secondary-foreground: oklch(0.97 0.004 285);
-  --muted: oklch(0.23 0.014 285);
-  --muted-foreground: oklch(0.7 0.016 285);
-  --accent: oklch(0.26 0.02 285);
-  --accent-foreground: oklch(0.97 0.004 285);
+  --brand-from: oklch(0.66 calc(var(--p-c) * 0.92) var(--p-h));
+  --brand-to: oklch(0.72 calc(var(--b-c) * 0.86) var(--b-h));
+  --background: oklch(0.14 0.012 var(--p-h));
+  --foreground: oklch(0.97 0.004 var(--p-h));
+  --card: oklch(0.18 0.014 var(--p-h));
+  --card-foreground: oklch(0.97 0.004 var(--p-h));
+  --popover: oklch(0.2 0.016 var(--p-h));
+  --popover-foreground: oklch(0.97 0.004 var(--p-h));
+  --primary: oklch(0.7 calc(var(--p-c) * 0.8) var(--p-h));
+  --primary-foreground: oklch(0.15 0.02 var(--p-h));
+  --secondary: oklch(0.24 0.016 var(--p-h));
+  --secondary-foreground: oklch(0.97 0.004 var(--p-h));
+  --muted: oklch(0.23 0.014 var(--p-h));
+  --muted-foreground: oklch(0.7 0.016 var(--p-h));
+  --accent: oklch(0.26 0.02 var(--p-h));
+  --accent-foreground: oklch(0.97 0.004 var(--p-h));
   --destructive: oklch(0.68 0.2 22);
   --border: oklch(1 0 0 / 8%);
   --input: oklch(1 0 0 / 11%);
-  --ring: oklch(0.7 0.19 292 / 55%);
-  --sidebar: oklch(0.12 0.01 285);
-  --sidebar-foreground: oklch(0.95 0.004 285);
-  --sidebar-primary: oklch(0.7 0.19 292);
-  --sidebar-primary-foreground: oklch(0.15 0.02 285);
-  --sidebar-accent: oklch(0.21 0.016 285);
-  --sidebar-accent-foreground: oklch(0.97 0.004 285);
+  --ring: oklch(0.7 calc(var(--p-c) * 0.8) var(--p-h) / 55%);
+  --sidebar: oklch(0.12 0.01 var(--p-h));
+  --sidebar-foreground: oklch(0.95 0.004 var(--p-h));
+  --sidebar-primary: oklch(0.7 calc(var(--p-c) * 0.8) var(--p-h));
+  --sidebar-primary-foreground: oklch(0.15 0.02 var(--p-h));
+  --sidebar-accent: oklch(0.21 0.016 var(--p-h));
+  --sidebar-accent-foreground: oklch(0.97 0.004 var(--p-h));
   --sidebar-border: oklch(1 0 0 / 7%);
-  --sidebar-ring: oklch(0.7 0.19 292 / 55%);
+  --sidebar-ring: oklch(0.7 calc(var(--p-c) * 0.8) var(--p-h) / 55%);
 }
 
 @layer base {
@@ -147,6 +231,61 @@
 .gsc-results-wrapper-visible,
 .gsc-modal-background-image {
   display: none !important;
+}
+
+/*
+ * Movimento. Cada página entra com um leve "subir e aparecer". As páginas visitadas ficam
+ * montadas e escondidas (display: none) pelo Next — quando voltam a aparecer, a animação
+ * roda de novo sozinha. O fill-mode "backwards" garante que nenhum transform sobra no fim
+ * (um transform no ancestral quebraria elementos position: fixed lá dentro).
+ */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes fade-enter {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+#main > :not(header) {
+  animation: page-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+/* Páginas com o vídeo encaixado só esmaecem (o player é posicionado pelo retângulo do palco). */
+#main > [data-enter="fade"] {
+  animation-name: fade-enter;
+}
+/* Grades de cards: cada item aparece um pouquinho depois do anterior. */
+.stagger > * {
+  animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: 360ms;
+}
+.stagger > :nth-child(1) { animation-delay: 0ms; }
+.stagger > :nth-child(2) { animation-delay: 30ms; }
+.stagger > :nth-child(3) { animation-delay: 60ms; }
+.stagger > :nth-child(4) { animation-delay: 90ms; }
+.stagger > :nth-child(5) { animation-delay: 120ms; }
+.stagger > :nth-child(6) { animation-delay: 150ms; }
+.stagger > :nth-child(7) { animation-delay: 180ms; }
+.stagger > :nth-child(8) { animation-delay: 210ms; }
+.stagger > :nth-child(9) { animation-delay: 240ms; }
+.stagger > :nth-child(10) { animation-delay: 270ms; }
+.stagger > :nth-child(11) { animation-delay: 300ms; }
+.stagger > :nth-child(12) { animation-delay: 330ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  #main > *,
+  .stagger > * {
+    animation: none;
+  }
 }
 
 @layer utilities {

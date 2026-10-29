@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { ChevronDown, Copy, Heart, ListPlus, MoreHorizontal, PanelRight, Plus, RectangleHorizontal } from "lucide-react";
+import { ChevronDown, Copy, ListPlus, MoreHorizontal, PanelRight, Plus, RectangleHorizontal } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
 import { Kbd } from "@/components/ui/kbd";
 import { QueueList } from "@/components/player/queue-list";
 import { PLAYER_STAGE_ID } from "@/components/player/player-host";
+import { FavoriteHeart } from "@/components/video/favorite-heart";
 import { usePlayerBarHeight } from "@/lib/layout";
 import { VideoDropdownMenu } from "@/components/video/video-menu";
 import { addToPlaylist, copyVideoLink, toggleFavorite } from "@/lib/actions";
@@ -148,7 +149,7 @@ export function NowPlaying() {
                 onClick={() => toggleFavorite(currentId)}
                 aria-label={isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
               >
-                <Heart className={cn("size-5", isFavorite && "fill-primary text-primary")} />
+                <FavoriteHeart active={isFavorite} className="size-5" />
               </Button>
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>

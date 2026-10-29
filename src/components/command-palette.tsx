@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
+  Brain,
   Download,
   GraduationCap,
   Heart,
@@ -14,12 +15,14 @@ import {
   ListPlus,
   Maximize2,
   Moon,
+  Palette,
   Pause,
   Play,
   Plus,
   Search,
   Settings,
   Shuffle,
+  Square,
   Sun,
 } from "lucide-react";
 
@@ -35,12 +38,15 @@ import {
 } from "@/components/ui/command";
 import { PlaylistCover } from "@/components/playlist/playlist-cover";
 import { VideoThumbnail } from "@/components/video/video-thumbnail";
+import { ACCENTS, accentGradient } from "@/lib/accents";
 import { addVideosToLibrary, downloadBackup, playList } from "@/lib/actions";
+import { unlockAudio } from "@/lib/chime";
 import { pluralize } from "@/lib/utils";
 import { parseManyVideoIds } from "@/lib/youtube";
 import { sortByAddedDesc, useLibrary } from "@/stores/library-store";
 import { usePlayer } from "@/stores/player-store";
-import { useUi } from "@/stores/ui-store";
+import { useTimer } from "@/stores/timer-store";
+import { useSettings, useUi } from "@/stores/ui-store";
 
 export function CommandPalette() {
   const open = useUi((s) => s.commandOpen);
@@ -79,6 +85,7 @@ function PaletteBody({
   const favorites = useLibrary((s) => s.favorites);
   const status = usePlayer((s) => s.status);
   const hasQueue = usePlayer((s) => s.queue.length > 0);
+  const timerPhase = useTimer((s) => s.phase);
   const ui = useUi.getState();
 
   const allVideos = useMemo(() => sortByAddedDesc(videos), [videos]);
@@ -184,6 +191,36 @@ function PaletteBody({
               <Heart /> Tocar favoritos
             </CommandItem>
           )}
+          {timerPhase === "idle" ? (
+            <CommandItem
+              value="comecar foco pomodoro timer concentracao"
+              onSelect={() =>
+                run(() => {
+                  unlockAudio();
+                  useTimer.getState().startFocus();
+                })
+              }
+            >
+              <Brain /> Começar foco (Pomodoro)
+            </CommandItem>
+          ) : (
+            <CommandItem value="encerrar parar timer foco pomodoro" onSelect={() => run(() => useTimer.getState().stop())}>
+              <Square /> Encerrar o timer de foco
+            </CommandItem>
+          )}
+          {hasQueue && (
+            <CommandItem
+              value="desligar parar musica 30 minutos sleep timer dormir"
+              onSelect={() =>
+                run(() => {
+                  usePlayer.getState().setStopAfterCurrent(false);
+                  useTimer.getState().setSleep(30);
+                })
+              }
+            >
+              <Moon /> Parar a música em 30 min
+            </CommandItem>
+          )}
           <CommandItem
             value="tema claro escuro dark light"
             onSelect={() => run(() => setTheme(resolvedTheme === "dark" ? "light" : "dark"))}
@@ -202,6 +239,22 @@ function PaletteBody({
             <CommandShortcut>?</CommandShortcut>
           </CommandItem>
         </CommandGroup>
+
+        {search.trim().length > 0 && (
+          <CommandGroup heading="Cor de destaque">
+            {ACCENTS.map((a) => (
+              <CommandItem
+                key={a.id}
+                value={`cor destaque tema accent ${a.label}`}
+                onSelect={() => run(() => useSettings.getState().setAccent(a.id))}
+              >
+                <Palette />
+                <span className="size-3.5 rounded-full" style={{ backgroundImage: accentGradient(a) }} />
+                Cor {a.label}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
 
         <CommandSeparator />
 

@@ -99,7 +99,7 @@ function LibraryContent() {
         ) : view === "list" ? (
           <VideoList ids={ids} source={SOURCE} />
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+          <div className="stagger grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
             {ids.map((id, i) => (
               <VideoCard key={id} id={id} onPlay={() => playList(ids, i, SOURCE)} />
             ))}

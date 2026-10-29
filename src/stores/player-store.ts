@@ -73,6 +73,10 @@ interface PlayerState {
   autoplay: boolean;
   expanded: boolean;
   queueOpen: boolean;
+  /** Parar quando o vídeo atual terminar (desligamento automático "ao fim deste vídeo"). */
+  stopAfterCurrent: boolean;
+  /** O vídeo atual parou no fim por causa do desligamento automático (nada deve avançar sozinho). */
+  stoppedByTimer: boolean;
 
   /* ---- ações ---- */
   playQueue: (ids: string[], startIndex?: number, source?: QueueSource | null, options?: PlayQueueOptions) => void;
@@ -96,6 +100,7 @@ interface PlayerState {
   setVideoMode: (mode: VideoMode) => void;
   setExpanded: (value: boolean) => void;
   setQueueOpen: (value: boolean) => void;
+  setStopAfterCurrent: (value: boolean) => void;
   stop: () => void;
 
   /* ---- sincronização vinda do iframe ---- */
@@ -121,6 +126,7 @@ export const usePlayer = create<PlayerState>()(
           duration: 0,
           isLive: false,
           resumeAt: start,
+          stoppedByTimer: false,
         }));
       };
 
@@ -146,6 +152,8 @@ export const usePlayer = create<PlayerState>()(
         autoplay: false,
         expanded: false,
         queueOpen: false,
+        stopAfterCurrent: false,
+        stoppedByTimer: false,
 
         playQueue: (ids, startIndex = 0, source = null, options = {}) => {
           if (!ids.length) return;
@@ -246,6 +254,10 @@ export const usePlayer = create<PlayerState>()(
         next: (auto = false) => {
           const { queue, index, repeat, source } = get();
           if (!queue.length) return;
+          if (auto && get().stopAfterCurrent) {
+            set({ status: "ended", stopAfterCurrent: false, stoppedByTimer: true });
+            return;
+          }
           if (auto && advanceGuard && !advanceGuard(source)) {
             set({ status: "ended" });
             return;
@@ -358,6 +370,7 @@ export const usePlayer = create<PlayerState>()(
         setVideoMode: (videoMode) => set({ videoMode }),
         setExpanded: (expanded) => set({ expanded }),
         setQueueOpen: (queueOpen) => set({ queueOpen }),
+        setStopAfterCurrent: (stopAfterCurrent) => set({ stopAfterCurrent }),
 
         stop: () => {
           bridge().pause();

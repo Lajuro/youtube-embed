@@ -1,18 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowUpToLine, EyeOff, Maximize2, X } from "lucide-react";
+import { ArrowUpToLine, EyeOff, GripHorizontal, Maximize2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { getPlayerBarHeight } from "@/lib/layout";
+import { getPlayerBarHeight, TOP_BAR_HEIGHT } from "@/lib/layout";
 import { cn } from "@/lib/utils";
 import { getBridge, PlayerState, type PlayerInfo } from "@/lib/youtube-bridge";
 import { playerErrorMessage } from "@/lib/youtube";
 import { useLibrary } from "@/stores/library-store";
 import { useCurrentVideoId, usePlayer, usePlayerDock, type PlayerStatus } from "@/stores/player-store";
-import { useHydration, useSettings, useUi } from "@/stores/ui-store";
+import { useHydration, useSettings, useUi, type MiniCorner } from "@/stores/ui-store";
 
 export const PLAYER_STAGE_ID = "player-stage";
 
@@ -68,16 +68,27 @@ const stateToStatus: Record<number, PlayerStatus | undefined> = {
   [PlayerState.ENDED]: "ended",
 };
 
-function miniRect(viewportW: number, viewportH: number): Rect {
+/** Mini player no canto escolhido (arrastando, ele "gruda" no canto mais próximo). */
+function miniRect(viewportW: number, viewportH: number, corner: MiniCorner = useSettings.getState().miniCorner): Rect {
   const width = viewportW < 640 ? 192 : viewportW < 1280 ? 272 : 320;
   const height = Math.round((width * 9) / 16);
   const margin = viewportW < 640 ? 12 : 16;
+  const topInset = useUi.getState().focusMode ? 0 : TOP_BAR_HEIGHT;
+  // Nos cantos da esquerda, fica ao lado do menu lateral (sem cobrir a navegação).
+  const areaLeft = document.getElementById("main")?.getBoundingClientRect().left ?? 0;
   return {
     width,
     height,
-    left: viewportW - width - margin,
-    top: viewportH - getPlayerBarHeight() - height - margin,
+    left: corner.endsWith("left") ? areaLeft + margin : viewportW - width - margin,
+    top: corner.startsWith("top") ? topInset + margin : viewportH - getPlayerBarHeight() - height - margin,
   };
+}
+
+/** Canto mais próximo do centro do mini player depois de solto. */
+function nearestCorner(rect: DOMRect): MiniCorner {
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  return `${cy < window.innerHeight / 2 ? "top" : "bottom"}-${cx < window.innerWidth / 2 ? "left" : "right"}`;
 }
 
 function rectOf(el: Element | null | undefined): Rect | null {
@@ -147,6 +158,10 @@ export function PlayerHost() {
 
   const hostRef = useRef<HTMLDivElement>(null);
   const [mode, setMode] = useState<HostMode>("mini");
+  /* Arrastar o mini player: enquanto arrasta, o posicionamento automático fica de lado. */
+  const dragRef = useRef<{ dx: number; dy: number } | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const snapRef = useRef<() => void>(() => {});
 
   /* ---------- Criação / recriação do iframe ---------- */
   // Ajuste de estado durante o render (padrão recomendado pelo React em vez de um effect):
@@ -305,6 +320,7 @@ export function PlayerHost() {
       const el = hostRef.current;
       if (!el) return;
       const placement = computePlacement();
+      if (dragRef.current && placement.mode === "mini" && currentMode === "mini") return;
       if (placement.mode !== currentMode) {
         // Só anima posição/tamanho quando troca de modo (ex.: aula → flutuante).
         if (currentMode) {
@@ -325,6 +341,16 @@ export function PlayerHost() {
       el.style.clipPath = clip ?? "";
     };
 
+    // Depois de soltar o mini player: desliza até o canto (com a mesma animação das trocas de modo).
+    snapRef.current = () => {
+      const el = hostRef.current;
+      if (!el) return;
+      el.style.transition = MODE_TRANSITION;
+      clearTimeout(transitionTimer);
+      transitionTimer = setTimeout(() => (el.style.transition = BASE_TRANSITION), 520);
+      apply();
+    };
+
     const nextFrame = () => requestAnimationFrame(apply);
     const raf = nextFrame();
 
@@ -332,7 +358,8 @@ export function PlayerHost() {
     const observe = () => {
       observer.disconnect();
       const { el, scrollEl } = usePlayerDock.getState();
-      for (const target of [el, scrollEl, document.getElementById(PLAYER_STAGE_ID)]) {
+      // #main muda de largura quando o menu lateral recolhe/expande.
+      for (const target of [el, scrollEl, document.getElementById(PLAYER_STAGE_ID), document.getElementById("main")]) {
         if (target) observer.observe(target);
       }
     };
@@ -355,6 +382,9 @@ export function PlayerHost() {
       useUi.subscribe((s, prev) => {
         if (s.focusMode !== prev.focusMode) nextFrame();
       }),
+      useSettings.subscribe((s, prev) => {
+        if (s.miniCorner !== prev.miniCorner) snapRef.current();
+      }),
     ];
 
     window.addEventListener("resize", apply);
@@ -373,6 +403,33 @@ export function PlayerHost() {
 
   const hidden = mode === "hidden";
 
+  const onDragStart = (e: React.PointerEvent<HTMLDivElement>) => {
+    const el = hostRef.current;
+    if (!el || e.button !== 0 || (e.target as HTMLElement).closest("button")) return;
+    const r = el.getBoundingClientRect();
+    dragRef.current = { dx: e.clientX - r.left, dy: e.clientY - r.top };
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setDragging(true);
+  };
+  const onDragMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const el = hostRef.current;
+    const drag = dragRef.current;
+    if (!el || !drag) return;
+    const maxLeft = window.innerWidth - el.offsetWidth;
+    const maxTop = window.innerHeight - el.offsetHeight;
+    el.style.left = `${Math.min(Math.max(0, e.clientX - drag.dx), maxLeft)}px`;
+    el.style.top = `${Math.min(Math.max(0, e.clientY - drag.dy), maxTop)}px`;
+  };
+  const onDragEnd = () => {
+    const el = hostRef.current;
+    if (!el || !dragRef.current) return;
+    dragRef.current = null;
+    setDragging(false);
+    const corner = nearestCorner(el.getBoundingClientRect());
+    if (corner !== useSettings.getState().miniCorner) useSettings.getState().setMiniCorner(corner);
+    else snapRef.current();
+  };
+
   return (
     <div
       ref={hostRef}
@@ -382,6 +439,7 @@ export function PlayerHost() {
         mode === "docked" && "z-30",
         mode === "float" && "z-40 rounded-xl shadow-2xl ring-1 ring-white/10",
         mode === "mini" && "z-30 rounded-xl shadow-2xl ring-1 ring-white/10",
+        dragging && "z-50 scale-[1.03] shadow-[0_24px_80px_-12px_rgba(0,0,0,0.7)] ring-primary/60",
         hidden && "pointer-events-none z-0 opacity-0"
       )}
       aria-hidden={hidden}
@@ -390,7 +448,7 @@ export function PlayerHost() {
         key={`${seed.host}-${seed.token}`}
         src={seed.src}
         title="Player do YouTube"
-        className="size-full"
+        className={cn("size-full", dragging && "pointer-events-none")}
         allow="autoplay; encrypted-media; picture-in-picture; fullscreen; clipboard-write; web-share"
         allowFullScreen
         referrerPolicy="strict-origin-when-cross-origin"
@@ -398,7 +456,21 @@ export function PlayerHost() {
       />
 
       {(mode === "mini" || mode === "float") && (
-        <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-end gap-1 bg-gradient-to-b from-black/70 to-transparent p-1.5 opacity-0 transition-opacity group-hover/host:opacity-100">
+        <div
+          className={cn(
+            "absolute inset-x-0 top-0 flex items-center justify-end gap-1 bg-gradient-to-b from-black/70 to-transparent p-1.5 opacity-0 transition-opacity group-hover/host:opacity-100",
+            mode === "mini" ? "cursor-grab touch-none active:cursor-grabbing" : "pointer-events-none",
+            dragging && "opacity-100"
+          )}
+          // A faixa de cima do mini player é a "alça": arraste para levar a outro canto.
+          onPointerDown={mode === "mini" ? onDragStart : undefined}
+          onPointerMove={mode === "mini" ? onDragMove : undefined}
+          onPointerUp={mode === "mini" ? onDragEnd : undefined}
+          onPointerCancel={mode === "mini" ? onDragEnd : undefined}
+          onDoubleClick={mode === "mini" ? () => usePlayer.getState().setExpanded(true) : undefined}
+          title={mode === "mini" ? "Arraste para mudar de canto · clique duplo para expandir" : undefined}
+        >
+          {mode === "mini" && <GripHorizontal className="mr-auto ml-1 size-4 text-white/80" aria-hidden />}
           {mode === "float" ? (
             <HostButton
               label="Voltar para a aula"

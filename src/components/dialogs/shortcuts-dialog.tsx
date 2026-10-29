@@ -13,7 +13,11 @@ export const SHORTCUTS: { group: string; items: { keys: string[]; label: string 
       { keys: ["P"], label: "Anterior" },
       { keys: ["←"], label: "Voltar 10 segundos" },
       { keys: ["→"], label: "Avançar 10 segundos" },
+      { keys: ["+"], label: "Aumentar o volume" },
+      { keys: ["−"], label: "Diminuir o volume" },
       { keys: ["M"], label: "Silenciar" },
+      { keys: [">"], label: "Mais rápido" },
+      { keys: ["<"], label: "Mais devagar" },
       { keys: ["S"], label: "Aleatório" },
       { keys: ["R"], label: "Repetir (tudo / um / desligado)" },
     ],
@@ -44,7 +48,8 @@ export function ShortcutsDialog() {
         <DialogHeader>
           <DialogTitle>Atalhos de teclado</DialogTitle>
           <DialogDescription>
-            Dica: cole (<Kbd>Ctrl</Kbd>+<Kbd>V</Kbd>) um link do YouTube em qualquer lugar da página para adicioná-lo.
+            Dica: cole (<Kbd>Ctrl</Kbd>+<Kbd>V</Kbd>) ou arraste um link do YouTube para qualquer lugar da página para
+            adicioná-lo. No “Tocando agora”, <Kbd>↑</Kbd> <Kbd>↓</Kbd> também mudam o volume.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-6 sm:grid-cols-2">

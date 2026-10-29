@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import type { AccentId } from "@/lib/accents";
 import type { EmbedHost } from "@/lib/youtube";
 
 interface AddDialogState {
@@ -80,8 +81,14 @@ export const useUi = create<UiState>()((set) => ({
   setMobileNavOpen: (mobileNavOpen) => set({ mobileNavOpen }),
 }));
 
+/** Canto da tela onde o mini player fica (arrastável). */
+export type MiniCorner = "top-left" | "top-right" | "bottom-left" | "bottom-right";
+
 interface SettingsState {
   embedHost: EmbedHost;
+  /** Cor de destaque do app (botões, gradientes, foco). */
+  accent: AccentId;
+  miniCorner: MiniCorner;
   /** Fundo com as cores da capa do vídeo atual. */
   ambient: boolean;
   /** Pular automaticamente vídeos que não podem ser incorporados. */
@@ -103,6 +110,8 @@ interface SettingsState {
   /** Mostrar a fila ao lado do vídeo na tela "Tocando agora" (desligado = modo cinema). */
   nowPlayingQueue: boolean;
   setEmbedHost: (host: EmbedHost) => void;
+  setAccent: (accent: AccentId) => void;
+  setMiniCorner: (corner: MiniCorner) => void;
   setAmbient: (value: boolean) => void;
   setAutoSkipErrors: (value: boolean) => void;
   setSearchProvider: (value: "google" | "server") => void;
@@ -117,6 +126,8 @@ export const useSettings = create<SettingsState>()(
   persist(
     (set) => ({
       embedHost: "www.youtube.com",
+      accent: "violet",
+      miniCorner: "bottom-right",
       ambient: true,
       autoSkipErrors: true,
       searchProvider: "google",
@@ -126,6 +137,8 @@ export const useSettings = create<SettingsState>()(
       courseAutoplay: true,
       nowPlayingQueue: true,
       setEmbedHost: (embedHost) => set({ embedHost }),
+      setAccent: (accent) => set({ accent }),
+      setMiniCorner: (miniCorner) => set({ miniCorner }),
       setAmbient: (ambient) => set({ ambient }),
       setAutoSkipErrors: (autoSkipErrors) => set({ autoSkipErrors }),
       setSearchProvider: (searchProvider) => set({ searchProvider }),
@@ -142,6 +155,8 @@ export const useSettings = create<SettingsState>()(
       skipHydration: true,
       partialize: (s) => ({
         embedHost: s.embedHost,
+        accent: s.accent,
+        miniCorner: s.miniCorner,
         ambient: s.ambient,
         autoSkipErrors: s.autoSkipErrors,
         searchProvider: s.searchProvider,

@@ -54,7 +54,7 @@ npm start        # http://localhost:3000
 ## Funcionalidades
 
 - **Adicionar vídeos** por link ou ID, em qualquer formato: `watch?v=`, `youtu.be/`, `shorts/`, `live/`, `embed/`, `music.youtube.com`, código `<iframe>` ou só o ID de 11 caracteres. Dá para colar vários de uma vez (um por linha).
-- **Colar em qualquer lugar**: com a página aberta, `Ctrl+V` em um link do YouTube já abre o diálogo de adicionar.
+- **Colar ou arrastar em qualquer lugar**: com a página aberta, `Ctrl+V` em um link do YouTube — ou arrastar o link (da barra de endereço, de um resultado do Google…) para a janela — já abre o diálogo de adicionar.
 - **Buscar no YouTube** direto no app, sem chave de API (veja [como funciona](#6-busca-sem-api)).
 - **Cursos** estilo Udemy (veja [como funciona](#7-cursos)):
   - crie a partir de uma **playlist do YouTube** (importa todos os vídeos), de links soltos ou em branco;
@@ -68,13 +68,19 @@ npm start        # http://localhost:3000
 - **Player** estilo app de música: tocar/pausar, anterior/próximo, aleatório, repetir (tudo/um), volume, barra de progresso e selo **AO VIVO** para rádios 24h.
 - **Fila de reprodução** editável (tocar em seguida, adicionar à fila, reordenar, remover).
 - **Tocando agora**: tela grande com o vídeo, fundo "luz ambiente" com as cores da capa e a fila ao lado.
-- **Mini player** flutuante, ou **só áudio** (oculta o vídeo).
+- **Mini player** flutuante e **arrastável**: pegue pela faixa de cima e solte perto de qualquer canto — ele "gruda" lá e lembra o lugar (clique duplo na faixa abre o "Tocando agora"). Ou **só áudio** (oculta o vídeo).
+- **Timer de foco (Pomodoro)** no ícone de relógio do topo: blocos de 25/5, 50/10 ou 90/20 min, pausa longa a cada 4 focos, aviso sonoro, contagem no título da aba e, se quiser, **a música pausa sozinha nas pausas** e volta quando o foco recomeça.
+- **Desligamento automático**: pare a música daqui a 15 min… 2 h ou **ao fim do vídeo atual**, com o volume baixando aos poucos.
+- **Seu dia**: no Início, minutos de música e de estudo de hoje, focos concluídos, dias seguidos de uso e um gráfico dos últimos 7 dias.
+- **Cores de destaque**: violeta, oceano, água-marinha, floresta, pôr do sol ou rosa (Configurações → Aparência, ou `Ctrl+K` → "cor").
+- **Avisos na tela** (estilo TV) ao usar o teclado: volume, velocidade, ±10 s, aleatório, repetir.
+- **Instalar como app** (PWA): no Chrome/Edge, Configurações → App → Instalar. Abre numa janela própria, com atalho na barra de tarefas e no menu Iniciar.
 - **Modo cinema** (`T`): no "Tocando agora" esconde a fila; na sala de aula esconde o conteúdo do curso — o vídeo ocupa a largura toda.
 - **Menu lateral recolhível** (`Ctrl+B`): vira uma coluna só de ícones. A barra do player some quando não há nada tocando.
 - **Retoma a sessão**: ao reabrir, a fila e a posição do vídeo continuam onde pararam.
 - **Paleta de comandos** (`Ctrl+K`) e **atalhos de teclado** (aperte `?` para ver todos).
 - **Backup**: exporte/importe tudo em JSON nas Configurações.
-- Tema escuro/claro, responsivo para celular.
+- Tema escuro/claro, animações suaves (respeitam a opção "reduzir movimento" do sistema), responsivo para celular.
 
 ### Atalhos
 
@@ -83,6 +89,8 @@ npm start        # http://localhost:3000
 | `Espaço` | Tocar / pausar |
 | `N` / `P` | Próximo / anterior |
 | `←` / `→` | Voltar / avançar 10 s |
+| `+` / `-` | Volume (no "Tocando agora", `↑` / `↓` também) |
+| `>` / `<` | Mais rápido / mais devagar |
 | `M` | Silenciar |
 | `S` | Aleatório |
 | `R` | Repetir (tudo → um → desligado) |
@@ -131,13 +139,15 @@ O vídeo pode estar em cinco "modos": **Tocando agora**, **encaixado** num palco
 
 ### 5. Dados no navegador
 
-O estado fica em três *stores* do [Zustand](https://zustand.docs.pmnd.rs) com o middleware `persist`, gravando no `localStorage`:
+O estado fica em *stores* do [Zustand](https://zustand.docs.pmnd.rs) com o middleware `persist`, gravando no `localStorage`:
 
 | Chave | O que guarda |
 | --- | --- |
 | `sintonia:library` | vídeos, favoritos, playlists, histórico, cursos, progresso das aulas e anotações |
 | `sintonia:player` | fila, posição, volume, aleatório/repetir |
-| `sintonia:settings` | preferências (domínio do player, luz ambiente…) |
+| `sintonia:settings` | preferências (domínio do player, luz ambiente, cor de destaque, canto do mini player…) |
+| `sintonia:timers` | timer de foco e desligamento automático (horário de término, para sobreviver a um recarregamento) |
+| `sintonia:stats` | segundos de música/estudo e focos concluídos por dia (últimos 90 dias) |
 
 Como o servidor não tem acesso ao `localStorage`, os dados são carregados só depois que a página monta no navegador (veja `StoreHydrator` em [`src/components/providers.tsx`](src/components/providers.tsx)). Isso evita diferenças entre o HTML do servidor e o do navegador ("hydration mismatch").
 
@@ -182,6 +192,13 @@ Um curso é uma lista de **seções**, e cada seção tem **aulas** (uma aula = 
 - **Progresso**: o [`BackgroundSync`](src/components/background-sync.tsx) salva a posição a cada 5 s, marca a aula como concluída ao chegar em 95% (ou no fim) e registra a última aula aberta. Ao tocar uma aula, o player começa do ponto salvo (`loadVideoById` com `startSeconds`).
 - **Velocidade**: comando `setPlaybackRate` do player, reaplicado a cada vídeo novo.
 
+### 8. Detalhes de interface
+
+- **Cores de destaque**: todas as cores do tema saem de duas variáveis CSS de matiz (`--p-h` e `--b-h`, em [`globals.css`](src/app/globals.css)), usadas dentro de `oklch()`. Trocar a cor é só mudar o atributo `data-accent` do `<html>` — até os cinzas ganham um toque do matiz escolhido. Um script mínimo no `<head>` aplica a cor salva antes da página aparecer, para não "piscar" o violeta padrão.
+- **Animações**: as páginas entram com um leve "subir e aparecer" e os cards aparecem em cascata (`.stagger`). O Next mantém as páginas visitadas montadas e escondidas (`display: none`); quando uma volta a aparecer, o navegador reinicia a animação sozinho — sem JavaScript.
+- **Timers**: o [`TimerEngine`](src/components/timers/timer-engine.tsx) roda a cada meio segundo comparando o relógio com o horário de término salvo (em vez de "contar segundos", que atrasaria com a aba em segundo plano). O som do aviso é gerado na hora com a Web Audio API ([`src/lib/chime.ts`](src/lib/chime.ts)), sem arquivos de áudio.
+- **Ícones do app instalado**: gerados por código em [`src/app/icons/[variant]/route.tsx`](src/app/icons/[variant]/route.tsx) com `ImageResponse` (o mesmo desenho do `icon.svg`), então o projeto não guarda imagens binárias. O manifesto fica em [`src/app/manifest.ts`](src/app/manifest.ts).
+
 ## Estrutura
 
 ```text
@@ -193,6 +210,8 @@ src/
 │   ├── video/            lista, cards, menus de contexto
 │   ├── courses/          cursos: lista, sala de aula, editor, anotações, importação
 │   ├── dialogs/          adicionar vídeo, playlist, configurações, atalhos
+│   ├── timers/           timer de foco (Pomodoro) e desligamento automático
+│   ├── home/             tela inicial e o card "Seu dia"
 │   └── layout/           barra lateral e topo
 ├── lib/
 │   ├── youtube.ts        parser de links, miniaturas, oEmbed
@@ -201,6 +220,9 @@ src/
 │   ├── courses.ts        regras dos cursos (progresso, próxima aula, tocar aula)
 │   ├── google-cse.ts     busca pelo Google no navegador (Programmable Search Element)
 │   ├── youtube-search.ts busca direta no YouTube (roda no servidor)
+│   ├── accents.ts        cores de destaque
+│   ├── chime.ts          aviso sonoro (Web Audio API)
+│   ├── pwa.ts            instalar como app
 │   └── actions.ts        ações de alto nível (favoritar, tocar, backup…)
 └── stores/               estado global (Zustand + localStorage)
 ```
@@ -212,5 +234,7 @@ src/
 - **Os títulos aparecem como "Vídeo abc123…"** — o oEmbed está bloqueado na sua rede; o título real aparece assim que o vídeo tocar.
 - **A busca dá "fetch failed (ENOTFOUND)"** — você está no modo "Direto no YouTube" e o servidor do app não alcança o youtube.com. Troque para **Google** em Configurações → Busca.
 - **Depois de atualizar o projeto, alguma mudança visual não apareceu** — apague a pasta `.next` e rode `npm run dev` de novo (ela guarda o resultado de compilações antigas).
+- **Não aparece a opção de instalar como app** — o navegador só oferece em `localhost` ou HTTPS, e algumas empresas bloqueiam a instalação por política. O app funciona igual no navegador.
+- **O aviso sonoro do timer não toca** — navegadores só liberam som depois de um clique na página; ao clicar em "Começar foco" ele é liberado.
 - **A busca pelo Google não carrega** — confira o ID do mecanismo; se `cse.google.com` estiver bloqueado na rede, use **Abrir no Google** e cole o link no app.
 - **A importação da playlist não encontrou vídeos** — a playlist precisa ser pública ou não listada, e o link precisa ter o trecho `list=…`. Se a sua rede bloquear também o `/embed/videoseries`, crie o curso a partir de links.

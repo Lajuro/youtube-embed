@@ -18,7 +18,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { AlertTriangle, Clock3, GripVertical, Heart, MoreHorizontal, Pause, Play, Radio } from "lucide-react";
+import { AlertTriangle, Clock3, GripVertical, MoreHorizontal, Pause, Play, Radio } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Equalizer } from "@/components/video/equalizer";
 import { VideoContextMenu, VideoDropdownMenu } from "@/components/video/video-menu";
 import { VideoThumbnail } from "@/components/video/video-thumbnail";
+import { FavoriteHeart } from "@/components/video/favorite-heart";
 import { playList, toggleFavorite } from "@/lib/actions";
 import { cn, formatRelative, formatTime } from "@/lib/utils";
 import { useLibrary, type Video } from "@/stores/library-store";
@@ -276,7 +277,7 @@ function RowContent({
               !isFavorite && "opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100"
             )}
           >
-            <Heart className={cn(isFavorite && "fill-primary text-primary")} />
+            <FavoriteHeart active={isFavorite} />
           </Button>
           <VideoDropdownMenu
             videoId={video.id}

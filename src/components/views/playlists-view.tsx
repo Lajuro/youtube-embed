@@ -47,7 +47,7 @@ function PlaylistsContent() {
           </Button>
         </EmptyState>
       ) : (
-        <div className="-mx-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+        <div className="stagger -mx-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {playlists.map((p) => (
             <PlaylistCard key={p.id} playlist={p} />
           ))}
