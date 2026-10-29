@@ -28,6 +28,16 @@ export function setStartResolver(resolver: StartResolver | null) {
   startResolver = resolver;
 }
 
+/**
+ * Permite que uma página impeça o avanço automático ao fim de um vídeo (ex.: a sala de
+ * aula mostra a tela "Próxima aula em 5s" e decide sozinha quando avançar).
+ */
+type AdvanceGuard = (source: QueueSource | null) => boolean;
+let advanceGuard: AdvanceGuard | null = null;
+export function setAdvanceGuard(guard: AdvanceGuard | null) {
+  advanceGuard = guard;
+}
+
 interface PlayQueueOptions {
   /** Ignora o modo aleatório (aulas de um curso sempre seguem a ordem). */
   ordered?: boolean;
@@ -234,8 +244,12 @@ export const usePlayer = create<PlayerState>()(
         },
 
         next: (auto = false) => {
-          const { queue, index, repeat } = get();
+          const { queue, index, repeat, source } = get();
           if (!queue.length) return;
+          if (auto && advanceGuard && !advanceGuard(source)) {
+            set({ status: "ended" });
+            return;
+          }
           if (auto && repeat === "one") {
             bridge().seekTo(0);
             bridge().play();
@@ -389,9 +403,21 @@ export const usePlayer = create<PlayerState>()(
  * "Encaixe" do vídeo: uma página pode oferecer um elemento (ex.: a área de vídeo da
  * sala de aula) para o player ocupar no lugar do mini player.
  */
-export const usePlayerDock = create<{ el: HTMLElement | null; setEl: (el: HTMLElement | null) => void }>()(
-  (set) => ({ el: null, setEl: (el) => set({ el }) })
-);
+export const usePlayerDock = create<{
+  /** Elemento que o vídeo deve cobrir. */
+  el: HTMLElement | null;
+  /** Área rolável que contém o palco: o vídeo é recortado por ela e flutua quando sai dela. */
+  scrollEl: HTMLElement | null;
+  setDock: (el: HTMLElement, scrollEl: HTMLElement | null) => void;
+  clearDock: (el: HTMLElement) => void;
+}>()((set, get) => ({
+  el: null,
+  scrollEl: null,
+  setDock: (el, scrollEl) => set({ el, scrollEl }),
+  clearDock: (el) => {
+    if (get().el === el) set({ el: null, scrollEl: null });
+  },
+}));
 
 export function useCurrentVideoId() {
   return usePlayer((s) => s.queue[s.index] ?? null);

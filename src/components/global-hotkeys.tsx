@@ -7,7 +7,7 @@ import { toggleFavorite } from "@/lib/actions";
 import { parseManyVideoIds } from "@/lib/youtube";
 import { useLibrary } from "@/stores/library-store";
 import { usePlayer } from "@/stores/player-store";
-import { useUi } from "@/stores/ui-store";
+import { useSettings, useUi } from "@/stores/ui-store";
 
 function isTyping(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false;
@@ -39,6 +39,11 @@ export function GlobalHotkeys() {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         ui.setCommandOpen(!ui.commandOpen);
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b" && !isTyping(e.target)) {
+        e.preventDefault();
+        useSettings.getState().toggleSidebar();
         return;
       }
       if (e.key === "Escape" && player.expanded && !anyOverlayOpen()) {
@@ -96,6 +101,18 @@ export function GlobalHotkeys() {
         case "E":
           if (currentId) player.setExpanded(!player.expanded);
           break;
+        case "t":
+        case "T": {
+          // Modo cinema: na sala de aula esconde o conteúdo do curso; no "Tocando agora", a fila.
+          const settings = useSettings.getState();
+          if (ui.focusMode) settings.setCourseTheater(!settings.courseTheater);
+          else if (player.expanded) settings.setNowPlayingQueue(!settings.nowPlayingQueue);
+          else if (currentId) {
+            settings.setNowPlayingQueue(false);
+            player.setExpanded(true);
+          }
+          break;
+        }
         case "q":
         case "Q":
           player.setQueueOpen(!player.queueOpen);

@@ -43,8 +43,8 @@ function FavoritesContent() {
         eyebrow="Coleção"
         title="Favoritos"
         cover={
-          <div className="grid size-40 place-items-center rounded-2xl bg-brand-gradient text-white shadow-2xl md:size-52">
-            <Heart className="size-16 fill-current md:size-20" />
+          <div className="grid size-32 place-items-center rounded-2xl bg-brand-gradient text-white shadow-2xl md:size-40">
+            <Heart className="size-12 fill-current md:size-16" />
           </div>
         }
         description="Os vídeos que você mais curte, sempre à mão."

@@ -37,7 +37,7 @@ function Courses() {
 
   return (
     <div className="pb-16">
-      <section className="relative -mt-16 overflow-hidden px-4 pt-20 pb-8 md:px-8 md:pt-24">
+      <section className="relative -mt-14 overflow-hidden px-4 pt-18 pb-8 md:px-8 md:pt-20">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -top-28 -left-20 size-[26rem] rounded-full bg-[var(--brand-from)] opacity-20 blur-[100px]" />
           <div className="absolute -top-20 right-10 size-[20rem] rounded-full bg-[var(--brand-to)] opacity-15 blur-[100px]" />

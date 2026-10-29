@@ -24,6 +24,8 @@ export const SHORTCUTS: { group: string; items: { keys: string[]; label: string 
       { keys: ["Ctrl", "K"], label: "Buscar / paleta de comandos" },
       { keys: ["A"], label: "Adicionar vídeo" },
       { keys: ["E"], label: "Abrir / fechar “Tocando agora”" },
+      { keys: ["T"], label: "Modo cinema (vídeo maior)" },
+      { keys: ["Ctrl", "B"], label: "Recolher / expandir o menu" },
       { keys: ["Q"], label: "Fila de reprodução" },
       { keys: ["V"], label: "Mostrar / ocultar mini player" },
       { keys: ["F"], label: "Favoritar o que está tocando" },

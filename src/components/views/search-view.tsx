@@ -171,7 +171,7 @@ export function SearchView() {
 
   return (
     <div className="pb-16">
-      <section className="relative -mt-16 overflow-hidden px-4 pt-20 pb-6 md:px-8 md:pt-24">
+      <section className="relative -mt-14 overflow-hidden px-4 pt-18 pb-6 md:px-8 md:pt-20">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -top-32 left-1/4 size-[26rem] rounded-full bg-[var(--brand-from)] opacity-20 blur-[100px]" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background" />

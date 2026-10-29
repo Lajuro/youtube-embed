@@ -113,6 +113,7 @@ const FILES = [
   "src/lib/actions.ts",
   "src/lib/courses.ts",
   "src/lib/google-cse.ts",
+  "src/lib/layout.ts",
   "src/lib/utils.ts",
   "src/lib/youtube-bridge.ts",
   "src/lib/youtube-prober.ts",

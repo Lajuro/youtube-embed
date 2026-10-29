@@ -143,6 +143,34 @@ export function SettingsDialog() {
               </span>
               <Switch checked={settings.ambient} onCheckedChange={settings.setAmbient} />
             </Label>
+            <Label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border p-3 font-normal">
+              <span>
+                <span className="block text-sm font-medium">Menu lateral recolhido</span>
+                <span className="block text-xs text-muted-foreground">Só ícones, para sobrar mais espaço (Ctrl+B).</span>
+              </span>
+              <Switch checked={settings.sidebarCollapsed} onCheckedChange={() => settings.toggleSidebar()} />
+            </Label>
+          </Section>
+
+          <Separator />
+
+          <Section title="Cursos">
+            <Label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border p-3 font-normal">
+              <span>
+                <span className="block text-sm font-medium">Reprodução automática</span>
+                <span className="block text-xs text-muted-foreground">
+                  Ao terminar uma aula, a próxima começa depois de uma contagem de 5 segundos.
+                </span>
+              </span>
+              <Switch checked={settings.courseAutoplay} onCheckedChange={settings.setCourseAutoplay} />
+            </Label>
+            <Label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border p-3 font-normal">
+              <span>
+                <span className="block text-sm font-medium">Modo cinema na sala de aula</span>
+                <span className="block text-xs text-muted-foreground">Esconde o conteúdo do curso e o vídeo ocupa a largura toda (T).</span>
+              </span>
+              <Switch checked={settings.courseTheater} onCheckedChange={settings.setCourseTheater} />
+            </Label>
           </Section>
 
           <Separator />

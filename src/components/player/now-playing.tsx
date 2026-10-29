@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { ChevronDown, Copy, Heart, ListPlus, MoreHorizontal, Plus } from "lucide-react";
+import { ChevronDown, Copy, Heart, ListPlus, MoreHorizontal, PanelRight, Plus, RectangleHorizontal } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Kbd } from "@/components/ui/kbd";
 import { QueueList } from "@/components/player/queue-list";
-import { PLAYER_BAR_HEIGHT, PLAYER_STAGE_ID } from "@/components/player/player-host";
+import { PLAYER_STAGE_ID } from "@/components/player/player-host";
+import { usePlayerBarHeight } from "@/lib/layout";
 import { VideoDropdownMenu } from "@/components/video/video-menu";
 import { addToPlaylist, copyVideoLink, toggleFavorite } from "@/lib/actions";
 import { cn, formatTime } from "@/lib/utils";
@@ -24,6 +25,7 @@ import { thumbnailUrl } from "@/lib/youtube";
 import { useLibrary } from "@/stores/library-store";
 import { useCurrentVideoId, usePlayer } from "@/stores/player-store";
 import { useSettings, useUi } from "@/stores/ui-store";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 /** Fundo "ambient": a miniatura do vídeo bem desfocada, como o modo ambiente do YouTube. */
 export function AmbientBackdrop({ videoId, className }: { videoId: string | null; className?: string }) {
@@ -43,7 +45,8 @@ export function AmbientBackdrop({ videoId, className }: { videoId: string | null
   );
 }
 
-const STAGE_MAX_WIDTH = `max(18rem, calc((100dvh - ${PLAYER_BAR_HEIGHT}px - 250px) * 16 / 9))`;
+/** O vídeo usa a maior largura que ainda cabe na altura (descontando topo, título e barra do player). */
+const stageMaxWidth = (bar: number) => `max(18rem, calc((100dvh - ${bar}px - 190px) * 16 / 9))`;
 
 export function NowPlaying() {
   const expanded = usePlayer((s) => s.expanded);
@@ -56,6 +59,10 @@ export function NowPlaying() {
   const isFavorite = useLibrary((s) => (currentId ? s.favorites.includes(currentId) : false));
   const playlists = useLibrary((s) => s.playlists);
   const openPlaylistDialog = useUi((s) => s.openPlaylistDialog);
+  const showQueue = useSettings((s) => s.nowPlayingQueue);
+  const setShowQueue = useSettings((s) => s.setNowPlayingQueue);
+  const bar = usePlayerBarHeight();
+  const maxWidth = stageMaxWidth(bar);
 
   // Fecha automaticamente se a fila acabar.
   useEffect(() => {
@@ -67,7 +74,7 @@ export function NowPlaying() {
   return (
     <div
       className="fixed inset-x-0 top-0 z-[35] flex flex-col overflow-hidden bg-background animate-in fade-in duration-300"
-      style={{ bottom: PLAYER_BAR_HEIGHT }}
+      style={{ bottom: bar }}
       role="dialog"
       aria-label="Tocando agora"
     >
@@ -81,22 +88,46 @@ export function NowPlaying() {
           <p className="text-[11px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">Tocando agora</p>
           {source && <p className="truncate text-sm font-medium">{source.label}</p>}
         </div>
-        <div className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:flex">
-          <Kbd>Esc</Kbd> para fechar
+        <div className="flex items-center gap-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hidden lg:inline-flex"
+                aria-pressed={!showQueue}
+                aria-label={showQueue ? "Modo cinema" : "Mostrar a fila"}
+                onClick={() => setShowQueue(!showQueue)}
+              >
+                {showQueue ? <RectangleHorizontal className="size-5" /> : <PanelRight className="size-5" />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="flex items-center gap-2">
+              {showQueue ? "Modo cinema" : "Mostrar a fila"} <Kbd>T</Kbd>
+            </TooltipContent>
+          </Tooltip>
+          <span className="hidden items-center gap-1.5 pl-2 text-xs text-muted-foreground xl:flex">
+            <Kbd>Esc</Kbd> fecha
+          </span>
         </div>
       </header>
 
-      <div className="relative grid min-h-0 flex-1 grid-cols-1 gap-6 overflow-y-auto scrollbar-thin px-4 pb-6 md:px-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-8 lg:overflow-hidden">
+      <div
+        className={cn(
+          "relative grid min-h-0 flex-1 grid-cols-1 gap-6 overflow-y-auto scrollbar-thin px-4 pb-5 md:px-8 lg:gap-8 lg:overflow-hidden",
+          showQueue && "lg:grid-cols-[minmax(0,1fr)_360px]"
+        )}
+      >
         <div className="flex min-w-0 flex-col items-center lg:justify-center">
           {/* O iframe é posicionado exatamente sobre este elemento (ver PlayerHost). */}
           <div
             id={PLAYER_STAGE_ID}
             className="aspect-video w-full rounded-2xl bg-black/40"
-            style={{ maxWidth: STAGE_MAX_WIDTH }}
+            style={{ maxWidth }}
           />
           <div
             className="mt-5 flex w-full items-start justify-between gap-4"
-            style={{ maxWidth: STAGE_MAX_WIDTH }}
+            style={{ maxWidth }}
           >
             <div className="min-w-0">
               <div className="flex items-center gap-2">
@@ -160,7 +191,12 @@ export function NowPlaying() {
           </div>
         </div>
 
-        <aside className="min-h-0 rounded-2xl border bg-background/40 p-3 backdrop-blur-xl lg:overflow-y-auto lg:scrollbar-thin">
+        <aside
+          className={cn(
+            "min-h-0 rounded-2xl border bg-background/40 p-3 backdrop-blur-xl lg:overflow-y-auto lg:scrollbar-thin",
+            !showQueue && "lg:hidden"
+          )}
+        >
           <QueueList compact />
         </aside>
       </div>

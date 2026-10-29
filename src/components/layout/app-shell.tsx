@@ -16,18 +16,22 @@ import { NowPlaying } from "@/components/player/now-playing";
 import { PlayerBar } from "@/components/player/player-bar";
 import { PlayerHost } from "@/components/player/player-host";
 import { QueueSheet } from "@/components/player/queue-sheet";
+import { useUi } from "@/stores/ui-store";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  // No modo foco (sala de aula) a página ocupa a tela toda: sem menu, topo nem barra do player.
+  const focus = useUi((s) => s.focusMode);
+
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
       <div className="flex min-h-0 flex-1">
-        <Sidebar />
+        {!focus && <Sidebar />}
         <main id="main" className="relative min-w-0 flex-1 overflow-y-auto scrollbar-thin">
-          <TopBar />
+          {!focus && <TopBar />}
           {children}
         </main>
       </div>
-      <PlayerBar />
+      {!focus && <PlayerBar />}
 
       <NowPlaying />
       <PlayerHost />

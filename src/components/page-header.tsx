@@ -28,7 +28,7 @@ export function PageHeader({
   className?: string;
 }) {
   return (
-    <section className={cn("relative -mt-16 overflow-hidden pt-16", className)}>
+    <section className={cn("relative -mt-14 overflow-hidden pt-14", className)}>
       {backdropVideoId ? (
         <AmbientBackdrop videoId={backdropVideoId} className="opacity-90" />
       ) : (
@@ -39,11 +39,11 @@ export function PageHeader({
           }}
         />
       )}
-      <div className="relative flex flex-col gap-6 px-4 pt-6 pb-6 sm:flex-row sm:items-end md:px-8 md:pt-10">
+      <div className="relative flex flex-col gap-5 px-4 pt-4 pb-5 sm:flex-row sm:items-end md:px-8 md:pt-6">
         <div className="shrink-0 self-center sm:self-auto">{cover}</div>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">{eyebrow}</p>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-balance break-words sm:text-4xl lg:text-6xl">
+          <h1 className="mt-1.5 text-3xl font-extrabold tracking-tight text-balance break-words md:text-4xl xl:text-5xl">
             {title}
           </h1>
           {description && <p className="mt-3 max-w-2xl text-sm text-muted-foreground">{description}</p>}

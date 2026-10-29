@@ -1,19 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import {
   ChevronDown,
-  GraduationCap,
   Eye,
   EyeOff,
+  GraduationCap,
   Heart,
   ListMusic,
   Loader2,
   Maximize2,
   Pause,
   Play,
-  Plus,
   Repeat,
   Repeat1,
   Shuffle,
@@ -30,12 +29,11 @@ import { Slider } from "@/components/ui/slider";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { VideoThumbnail } from "@/components/video/video-thumbnail";
 import { PlaybackRateMenu } from "@/components/player/playback-rate-menu";
-import { PLAYER_BAR_HEIGHT } from "@/components/player/player-host";
 import { toggleFavorite } from "@/lib/actions";
+import { PLAYER_BAR_HEIGHT } from "@/lib/layout";
 import { cn, formatTime } from "@/lib/utils";
 import { useLibrary } from "@/stores/library-store";
 import { useCurrentVideoId, usePlayer } from "@/stores/player-store";
-import { useUi } from "@/stores/ui-store";
 
 function IconButton({
   label,
@@ -53,7 +51,7 @@ function IconButton({
           aria-label={label}
           aria-pressed={active}
           className={cn(
-            "relative text-muted-foreground hover:bg-transparent hover:text-foreground dark:hover:bg-transparent",
+            "relative rounded-full text-muted-foreground hover:text-foreground",
             active && "text-primary hover:text-primary",
             className
           )}
@@ -72,13 +70,14 @@ function ActiveDot({ show }: { show: boolean }) {
   return (
     <span
       className={cn(
-        "absolute -bottom-0.5 left-1/2 size-1 -translate-x-1/2 rounded-full bg-primary transition-opacity",
+        "absolute bottom-0.5 left-1/2 size-1 -translate-x-1/2 rounded-full bg-primary transition-opacity",
         show ? "opacity-100" : "opacity-0"
       )}
     />
   );
 }
 
+/** Barra do player (modo música). Só aparece quando há algo na fila. */
 export function PlayerBar() {
   const currentId = useCurrentVideoId();
   const video = useLibrary((s) => (currentId ? s.videos[currentId] : undefined));
@@ -91,7 +90,8 @@ export function PlayerBar() {
   const queueOpen = usePlayer((s) => s.queueOpen);
   const source = usePlayer((s) => s.source);
   const hasQueue = usePlayer((s) => s.queue.length > 0);
-  const openAddDialog = useUi((s) => s.openAddDialog);
+
+  if (!hasQueue || !currentId) return null;
 
   const player = usePlayer.getState();
   const isPlaying = status === "playing" || status === "buffering";
@@ -99,148 +99,114 @@ export function PlayerBar() {
 
   return (
     <footer
-      className="relative z-40 flex shrink-0 items-center gap-3 border-t bg-background/85 px-3 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70 md:gap-6 md:px-4"
+      className="relative z-40 flex shrink-0 items-center gap-3 border-t bg-background/80 px-3 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4 duration-300 md:gap-4 md:px-4"
       style={{ height: PLAYER_BAR_HEIGHT }}
     >
-      {/* Barra de progresso fininha no mobile */}
-      <div className="absolute inset-x-0 top-0 md:hidden">
-        <MobileProgress />
-      </div>
+      <SeekBar />
 
-      {/* Esquerda: vídeo atual */}
-      <div className="flex min-w-0 flex-1 items-center gap-3 md:w-[30%] md:flex-none">
-        {currentId && video ? (
-          <>
-            <button
-              type="button"
-              onClick={() => player.setExpanded(!expanded)}
-              className="group/thumb relative shrink-0 cursor-pointer overflow-hidden rounded-md focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
-              aria-label={expanded ? "Fechar “Tocando agora”" : "Abrir “Tocando agora”"}
+      {/* Esquerda: o que está tocando */}
+      <div className="flex min-w-0 flex-1 items-center gap-3 md:w-[32%] md:flex-none">
+        <button
+          type="button"
+          onClick={() => player.setExpanded(!expanded)}
+          className="group/thumb relative shrink-0 cursor-pointer overflow-hidden rounded-md focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+          aria-label={expanded ? "Fechar “Tocando agora”" : "Abrir “Tocando agora”"}
+        >
+          <VideoThumbnail id={currentId} className="aspect-video h-11" />
+          <span className="absolute inset-0 grid place-items-center bg-black/50 text-white opacity-0 transition-opacity group-hover/thumb:opacity-100">
+            {expanded ? <ChevronDown className="size-5" /> : <Maximize2 className="size-4" />}
+          </span>
+        </button>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium" title={video?.title}>
+            {video?.title ?? "Carregando…"}
+          </p>
+          {source?.type === "course" && source.id ? (
+            <Link
+              href={`/courses/${source.id}`}
+              className="flex items-center gap-1 truncate text-xs text-muted-foreground hover:text-foreground hover:underline"
             >
-              <VideoThumbnail id={currentId} className="aspect-video h-12 md:h-14" />
-              <span className="absolute inset-0 grid place-items-center bg-black/50 text-white opacity-0 transition-opacity group-hover/thumb:opacity-100">
-                {expanded ? <ChevronDown className="size-5" /> : <Maximize2 className="size-4" />}
-              </span>
-            </button>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium" title={video.title}>
-                {video.title}
-              </p>
-              {source?.type === "course" && source.id ? (
-                <Link
-                  href={`/courses/${source.id}`}
-                  className="flex items-center gap-1 truncate text-xs text-muted-foreground hover:text-foreground hover:underline"
-                >
-                  <GraduationCap className="size-3.5 shrink-0 text-primary" />
-                  <span className="truncate">{source.label}</span>
-                </Link>
-              ) : (
-                <p className="truncate text-xs text-muted-foreground">{video.author ?? "Canal desconhecido"}</p>
-              )}
-            </div>
-            <IconButton
-              label={isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
-              shortcut="F"
-              onClick={() => toggleFavorite(currentId)}
-              className="hidden shrink-0 sm:inline-flex"
-            >
-              <Heart className={cn(isFavorite && "fill-primary text-primary")} />
-            </IconButton>
-          </>
-        ) : (
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="grid aspect-video h-12 shrink-0 place-items-center rounded-md border border-dashed text-muted-foreground md:h-14">
-              <ListMusic className="size-5" />
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium">Nada tocando</p>
-              <button
-                type="button"
-                onClick={() => openAddDialog()}
-                className="inline-flex cursor-pointer items-center gap-1 text-xs text-primary hover:underline"
-              >
-                <Plus className="size-3" /> Adicionar um vídeo
-              </button>
-            </div>
-          </div>
-        )}
+              <GraduationCap className="size-3.5 shrink-0 text-primary" />
+              <span className="truncate">{source.label}</span>
+            </Link>
+          ) : (
+            <p className="truncate text-xs text-muted-foreground">{video?.author ?? "Canal desconhecido"}</p>
+          )}
+        </div>
+        <IconButton
+          label={isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+          shortcut="F"
+          onClick={() => toggleFavorite(currentId)}
+          className="hidden shrink-0 sm:inline-flex"
+        >
+          <Heart className={cn(isFavorite && "fill-primary text-primary")} />
+        </IconButton>
       </div>
 
       {/* Centro: controles */}
-      <div className="flex shrink-0 items-center gap-1 md:flex-1 md:flex-col md:gap-1.5">
-        <div className="flex items-center gap-1 md:gap-2">
-          <IconButton
-            label={shuffle ? "Desativar aleatório" : "Ativar aleatório"}
-            shortcut="S"
-            active={shuffle}
-            onClick={player.toggleShuffle}
-            className="hidden md:inline-flex"
-          >
-            <Shuffle />
-            <ActiveDot show={shuffle} />
-          </IconButton>
-          <IconButton label="Anterior" shortcut="P" onClick={player.previous} disabled={!hasQueue} className="hidden sm:inline-flex">
-            <SkipBack className="fill-current" />
-          </IconButton>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                aria-label={isPlaying ? "Pausar" : "Tocar"}
-                disabled={!hasQueue}
-                onClick={player.togglePlay}
-                className="size-10 rounded-full bg-foreground text-background shadow-lg transition-transform hover:scale-105 hover:bg-foreground active:scale-95"
-              >
-                {isLoading && !isPlaying ? (
-                  <Loader2 className="size-5 animate-spin" />
-                ) : isPlaying ? (
-                  <Pause className="size-5 fill-current" />
-                ) : (
-                  <Play className="ml-0.5 size-5 fill-current" />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="flex items-center gap-2">
-              {isPlaying ? "Pausar" : "Tocar"} <Kbd>Espaço</Kbd>
-            </TooltipContent>
-          </Tooltip>
-          <IconButton label="Próximo" shortcut="N" onClick={() => player.next()} disabled={!hasQueue}>
-            <SkipForward className="fill-current" />
-          </IconButton>
-          <IconButton
-            label={repeat === "off" ? "Repetir tudo" : repeat === "all" ? "Repetir um" : "Desativar repetição"}
-            shortcut="R"
-            active={repeat !== "off"}
-            onClick={player.cycleRepeat}
-            className="hidden md:inline-flex"
-          >
-            {repeat === "one" ? <Repeat1 /> : <Repeat />}
-            <ActiveDot show={repeat !== "off"} />
-          </IconButton>
-        </div>
-        <div className="hidden w-full max-w-xl md:block">
-          <DesktopProgress />
-        </div>
+      <div className="flex shrink-0 items-center justify-center gap-0.5 md:flex-1 md:gap-1.5">
+        <IconButton
+          label={shuffle ? "Desativar aleatório" : "Ativar aleatório"}
+          shortcut="S"
+          active={shuffle}
+          onClick={player.toggleShuffle}
+          className="hidden md:inline-flex"
+        >
+          <Shuffle />
+          <ActiveDot show={shuffle} />
+        </IconButton>
+        <IconButton label="Anterior" shortcut="P" onClick={player.previous} className="hidden sm:inline-flex">
+          <SkipBack className="fill-current" />
+        </IconButton>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon"
+              aria-label={isPlaying ? "Pausar" : "Tocar"}
+              onClick={player.togglePlay}
+              className="size-10 rounded-full bg-foreground text-background shadow-md transition-transform hover:scale-105 hover:bg-foreground active:scale-95"
+            >
+              {isLoading && !isPlaying ? (
+                <Loader2 className="size-5 animate-spin" />
+              ) : isPlaying ? (
+                <Pause className="size-5 fill-current" />
+              ) : (
+                <Play className="ml-0.5 size-5 fill-current" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent className="flex items-center gap-2">
+            {isPlaying ? "Pausar" : "Tocar"} <Kbd>Espaço</Kbd>
+          </TooltipContent>
+        </Tooltip>
+        <IconButton label="Próximo" shortcut="N" onClick={() => player.next()}>
+          <SkipForward className="fill-current" />
+        </IconButton>
+        <IconButton
+          label={repeat === "off" ? "Repetir tudo" : repeat === "all" ? "Repetir um" : "Desativar repetição"}
+          shortcut="R"
+          active={repeat !== "off"}
+          onClick={player.cycleRepeat}
+          className="hidden md:inline-flex"
+        >
+          {repeat === "one" ? <Repeat1 /> : <Repeat />}
+          <ActiveDot show={repeat !== "off"} />
+        </IconButton>
+        <TimeLabel className="ml-2 hidden lg:block" />
       </div>
 
-      {/* Direita: fila, vídeo, volume */}
-      <div className="hidden items-center justify-end gap-1 md:flex md:w-[30%]">
-        <PlaybackRateMenu className="hidden lg:inline-flex" />
+      {/* Direita: velocidade, vídeo, fila, volume */}
+      <div className="hidden items-center justify-end gap-0.5 md:flex md:w-[32%]">
+        <PlaybackRateMenu className="hidden xl:inline-flex" />
         <IconButton
           label={videoMode === "hidden" ? "Mostrar mini player" : "Ocultar vídeo (só áudio)"}
           shortcut="V"
-          active={videoMode === "mini" && hasQueue}
-          disabled={!hasQueue}
+          active={videoMode === "mini"}
           onClick={() => player.setVideoMode(videoMode === "hidden" ? "mini" : "hidden")}
         >
           {videoMode === "hidden" ? <EyeOff /> : <Eye />}
         </IconButton>
-        <IconButton
-          label="Fila de reprodução"
-          shortcut="Q"
-          active={queueOpen}
-          onClick={() => player.setQueueOpen(!queueOpen)}
-        >
+        <IconButton label="Fila de reprodução" shortcut="Q" active={queueOpen} onClick={() => player.setQueueOpen(!queueOpen)}>
           <ListMusic />
           <ActiveDot show={queueOpen} />
         </IconButton>
@@ -248,7 +214,6 @@ export function PlayerBar() {
         <IconButton
           label={expanded ? "Fechar “Tocando agora”" : "Abrir “Tocando agora”"}
           shortcut="E"
-          disabled={!hasQueue}
           active={expanded}
           onClick={() => player.setExpanded(!expanded)}
         >
@@ -257,76 +222,90 @@ export function PlayerBar() {
       </div>
 
       {/* Mobile: fila */}
-      <IconButton
-        label="Fila de reprodução"
-        onClick={() => player.setQueueOpen(!queueOpen)}
-        className="md:hidden"
-      >
+      <IconButton label="Fila de reprodução" onClick={() => player.setQueueOpen(!queueOpen)} className="md:hidden">
         <ListMusic />
       </IconButton>
     </footer>
   );
 }
 
-function useProgress() {
+function TimeLabel({ className }: { className?: string }) {
   const currentTime = usePlayer((s) => s.currentTime);
   const duration = usePlayer((s) => s.duration);
   const isLive = usePlayer((s) => s.isLive);
-  const hasQueue = usePlayer((s) => s.queue.length > 0);
-  return { currentTime, duration, isLive, hasQueue };
-}
-
-function DesktopProgress() {
-  const { currentTime, duration, isLive, hasQueue } = useProgress();
-  const [dragValue, setDragValue] = useState<number | null>(null);
-  const shown = dragValue ?? currentTime;
-
-  return (
-    <div className="flex items-center gap-2 text-[11px] text-muted-foreground tabular-nums">
-      <span className="w-12 text-right">{hasQueue && !isLive ? formatTime(shown) : isLive ? formatTime(currentTime) : "--:--"}</span>
-      {isLive ? (
-        <div className="relative h-1 flex-1 overflow-hidden rounded-full bg-foreground/15">
-          <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-red-500/60 to-red-500" />
-        </div>
-      ) : (
-        <Slider
-          aria-label="Progresso"
-          min={0}
-          max={Math.max(duration, 1)}
-          step={1}
-          value={[Math.min(shown, Math.max(duration, 1))]}
-          disabled={!hasQueue || !duration}
-          onValueChange={([v]) => setDragValue(v)}
-          onValueCommit={([v]) => {
-            usePlayer.getState().seek(v);
-            setDragValue(null);
-          }}
-          className="flex-1"
-        />
-      )}
-      <span className="min-w-12 whitespace-nowrap">
-        {isLive ? (
-          <span className="inline-flex items-center gap-1 font-semibold tracking-wider text-red-500 uppercase">
-            <span className="size-1.5 animate-pulse rounded-full bg-red-500" />
-            Ao vivo
-          </span>
-        ) : (
-          formatTime(hasQueue && duration ? duration : undefined)
-        )}
+  if (isLive) {
+    return (
+      <span className={cn("inline-flex items-center gap-1 text-[11px] font-semibold tracking-wider text-red-500 uppercase", className)}>
+        <span className="size-1.5 animate-pulse rounded-full bg-red-500" /> Ao vivo
       </span>
-    </div>
+    );
+  }
+  return (
+    <span className={cn("text-xs whitespace-nowrap text-muted-foreground tabular-nums", className)}>
+      {formatTime(currentTime)} / {formatTime(duration || undefined)}
+    </span>
   );
 }
 
-function MobileProgress() {
-  const { currentTime, duration, isLive } = useProgress();
-  const pct = isLive ? 100 : duration ? (currentTime / duration) * 100 : 0;
+/**
+ * Barra de progresso na borda de cima da barra do player (fina; engrossa ao passar o
+ * mouse e mostra o tempo do ponto sob o cursor).
+ */
+function SeekBar() {
+  const currentTime = usePlayer((s) => s.currentTime);
+  const duration = usePlayer((s) => s.duration);
+  const isLive = usePlayer((s) => s.isLive);
+  const [dragValue, setDragValue] = useState<number | null>(null);
+  const [hover, setHover] = useState<{ x: number; time: number } | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  if (isLive) {
+    return (
+      <div className="absolute inset-x-0 top-0 h-[3px] -translate-y-1/2 bg-red-500/80">
+        <div className="h-full w-full animate-pulse bg-red-500" />
+      </div>
+    );
+  }
+
+  const shown = dragValue ?? currentTime;
+  const max = Math.max(duration, 1);
+
   return (
-    <div className="h-0.5 w-full bg-foreground/10">
-      <div
-        className={cn("h-full transition-[width] duration-300", isLive ? "bg-red-500" : "bg-brand-gradient")}
-        style={{ width: `${pct}%` }}
+    <div
+      ref={ref}
+      className="group/seek absolute inset-x-0 top-0 z-10 -translate-y-1/2 py-1.5"
+      onPointerMove={(e) => {
+        const r = ref.current?.getBoundingClientRect();
+        if (!r || !duration) return;
+        const ratio = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+        setHover({ x: e.clientX - r.left, time: ratio * duration });
+      }}
+      onPointerLeave={() => setHover(null)}
+    >
+      <Slider
+        aria-label="Progresso"
+        min={0}
+        max={max}
+        step={1}
+        value={[Math.min(shown, max)]}
+        disabled={!duration}
+        onValueChange={([v]) => setDragValue(v)}
+        onValueCommit={([v]) => {
+          usePlayer.getState().seek(v);
+          setDragValue(null);
+        }}
+        trackClassName="rounded-none bg-foreground/10 data-[orientation=horizontal]:h-[3px] group-hover/seek:data-[orientation=horizontal]:h-[5px] group-hover/slider:data-[orientation=horizontal]:h-[5px]"
+        rangeClassName="bg-brand-gradient group-hover/slider:bg-brand-gradient"
+        thumbClassName="size-3"
       />
+      {hover && duration > 0 && (
+        <span
+          className="pointer-events-none absolute -top-6 -translate-x-1/2 rounded-md bg-popover px-1.5 py-0.5 text-[11px] font-medium text-popover-foreground tabular-nums shadow-md ring-1 ring-border"
+          style={{ left: hover.x }}
+        >
+          {formatTime(hover.time)}
+        </span>
+      )}
     </div>
   );
 }
@@ -349,7 +328,7 @@ function VolumeControl() {
         step={1}
         value={[effective]}
         onValueChange={([v]) => usePlayer.getState().setVolume(v)}
-        className="w-24 lg:w-28"
+        className="hidden w-20 lg:flex xl:w-24"
       />
     </div>
   );

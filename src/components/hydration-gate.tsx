@@ -14,7 +14,7 @@ export function PageSkeleton() {
   return (
     <div className="px-4 py-6 md:px-8">
       <div className="flex items-end gap-6">
-        <Skeleton className="size-40 rounded-2xl md:size-52" />
+        <Skeleton className="size-32 rounded-2xl md:size-40" />
         <div className="flex flex-1 flex-col gap-3">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-10 w-2/3" />

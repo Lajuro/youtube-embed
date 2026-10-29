@@ -59,7 +59,8 @@ npm start        # http://localhost:3000
 - **Cursos** estilo Udemy (veja [como funciona](#7-cursos)):
   - crie a partir de uma **playlist do YouTube** (importa todos os vídeos), de links soltos ou em branco;
   - organize em **seções**: renomeie, reordene, arraste aulas, mova entre seções ou divida uma seção em duas;
-  - **sala de aula** com o vídeo, o conteúdo do curso ao lado e as aulas marcadas como concluídas automaticamente;
+  - **sala de aula em modo foco**: tela inteira para o curso (sem menu, topo nem barra de música), vídeo grande que rola com a página e vira mini player ao sair da tela;
+  - **tela de fim de aula** com "Próxima aula em 5 s" (reprodução automática pode ser desligada) e aulas marcadas como concluídas automaticamente;
   - **continua de onde parou** em cada aula, **velocidade** de 0,75x a 2x e **anotações com tempo** (clique no tempo para voltar àquele momento);
   - "Continue aprendendo" no Início, e as aulas não se misturam com a sua biblioteca de músicas.
 - **Biblioteca** com busca, ordenação (recentes, título, mais tocados…) e visualização em lista ou grade.
@@ -68,6 +69,8 @@ npm start        # http://localhost:3000
 - **Fila de reprodução** editável (tocar em seguida, adicionar à fila, reordenar, remover).
 - **Tocando agora**: tela grande com o vídeo, fundo "luz ambiente" com as cores da capa e a fila ao lado.
 - **Mini player** flutuante, ou **só áudio** (oculta o vídeo).
+- **Modo cinema** (`T`): no "Tocando agora" esconde a fila; na sala de aula esconde o conteúdo do curso — o vídeo ocupa a largura toda.
+- **Menu lateral recolhível** (`Ctrl+B`): vira uma coluna só de ícones. A barra do player some quando não há nada tocando.
 - **Retoma a sessão**: ao reabrir, a fila e a posição do vídeo continuam onde pararam.
 - **Paleta de comandos** (`Ctrl+K`) e **atalhos de teclado** (aperte `?` para ver todos).
 - **Backup**: exporte/importe tudo em JSON nas Configurações.
@@ -85,6 +88,8 @@ npm start        # http://localhost:3000
 | `R` | Repetir (tudo → um → desligado) |
 | `F` | Favoritar o que está tocando |
 | `E` | Abrir/fechar "Tocando agora" |
+| `T` | Modo cinema |
+| `Ctrl+B` | Recolher/expandir o menu lateral |
 | `Q` | Fila |
 | `V` | Mostrar/ocultar mini player |
 | `A` | Adicionar vídeo |
@@ -115,7 +120,9 @@ A [IFrame Player API oficial](https://developers.google.com/youtube/iframe_api_r
 
 ### 3. O iframe nunca sai do lugar
 
-Se um iframe for movido de lugar no DOM (ou se o `src` dele mudar), o navegador **recarrega o vídeo**. Por isso [`PlayerHost`](src/components/player/player-host.tsx) monta o iframe uma única vez, no layout raiz, com `position: fixed`. Para virar mini player ou ocupar a tela "Tocando agora", só mudamos `top/left/width/height` via CSS — com uma transição suave. Trocar de vídeo é um comando (`loadVideoById`), não um novo iframe.
+Se um iframe for movido de lugar no DOM (ou se o `src` dele mudar), o navegador **recarrega o vídeo**. Por isso [`PlayerHost`](src/components/player/player-host.tsx) monta o iframe uma única vez, no layout raiz, com `position: fixed`, e só muda `top/left/width/height`. Trocar de vídeo é um comando (`loadVideoById`), não um novo iframe.
+
+O vídeo pode estar em cinco "modos": **Tocando agora**, **encaixado** num palco da página (sala de aula), **flutuante** (o palco saiu da tela ao rolar), **mini player** ou **oculto** (só áudio). A posição é escrita direto no estilo do elemento a cada evento de rolagem — sem passar pelo React —, então o vídeo acompanha a página no mesmo quadro, sem "atraso". Quando o palco passa por baixo do cabeçalho, o vídeo é recortado com `clip-path`; abaixo de 40% visível, ele flutua. A transição animada só acontece na troca de modo.
 
 ### 4. Títulos e miniaturas sem chave de API
 

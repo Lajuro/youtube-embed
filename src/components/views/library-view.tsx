@@ -45,8 +45,8 @@ function LibraryContent() {
         title="Biblioteca"
         accent="color-mix(in oklch, oklch(0.6 0.18 250) 45%, transparent)"
         cover={
-          <div className="grid size-40 place-items-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-2xl md:size-52">
-            <Library className="size-16 md:size-20" />
+          <div className="grid size-32 place-items-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-2xl md:size-40">
+            <Library className="size-12 md:size-16" />
           </div>
         }
         description="Todos os vídeos que você já adicionou."

@@ -27,6 +27,12 @@ interface CourseDialogState {
 }
 
 interface UiState {
+  /**
+   * Modo foco: a página ocupa a tela inteira, sem menu lateral, barra do topo e barra
+   * do player (usado na sala de aula dos cursos).
+   */
+  focusMode: boolean;
+  setFocusMode: (value: boolean) => void;
   courseDialog: CourseDialogState;
   openCourseDialog: (options?: Omit<CourseDialogState, "open">) => void;
   closeCourseDialog: () => void;
@@ -50,6 +56,8 @@ interface UiState {
 }
 
 export const useUi = create<UiState>()((set) => ({
+  focusMode: false,
+  setFocusMode: (focusMode) => set({ focusMode }),
   courseDialog: { open: false },
   openCourseDialog: (options) => set({ courseDialog: { open: true, ...options } }),
   closeCourseDialog: () => set((s) => ({ courseDialog: { ...s.courseDialog, open: false } })),
@@ -86,11 +94,23 @@ interface SettingsState {
   searchProvider: "google" | "server";
   /** ID do mecanismo de pesquisa do Google (não é chave de API). */
   googleCx: string;
+  /** Menu lateral recolhido (só ícones). */
+  sidebarCollapsed: boolean;
+  /** Modo cinema na sala de aula: esconde o conteúdo do curso e o vídeo ocupa a largura toda. */
+  courseTheater: boolean;
+  /** Ir sozinho para a próxima aula quando uma termina. */
+  courseAutoplay: boolean;
+  /** Mostrar a fila ao lado do vídeo na tela "Tocando agora" (desligado = modo cinema). */
+  nowPlayingQueue: boolean;
   setEmbedHost: (host: EmbedHost) => void;
   setAmbient: (value: boolean) => void;
   setAutoSkipErrors: (value: boolean) => void;
   setSearchProvider: (value: "google" | "server") => void;
   setGoogleCx: (value: string) => void;
+  toggleSidebar: () => void;
+  setCourseTheater: (value: boolean) => void;
+  setCourseAutoplay: (value: boolean) => void;
+  setNowPlayingQueue: (value: boolean) => void;
 }
 
 export const useSettings = create<SettingsState>()(
@@ -101,23 +121,35 @@ export const useSettings = create<SettingsState>()(
       autoSkipErrors: true,
       searchProvider: "google",
       googleCx: "",
+      sidebarCollapsed: false,
+      courseTheater: false,
+      courseAutoplay: true,
+      nowPlayingQueue: true,
       setEmbedHost: (embedHost) => set({ embedHost }),
       setAmbient: (ambient) => set({ ambient }),
       setAutoSkipErrors: (autoSkipErrors) => set({ autoSkipErrors }),
       setSearchProvider: (searchProvider) => set({ searchProvider }),
       setGoogleCx: (googleCx) => set({ googleCx: extractCx(googleCx) }),
+      toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
+      setCourseTheater: (courseTheater) => set({ courseTheater }),
+      setCourseAutoplay: (courseAutoplay) => set({ courseAutoplay }),
+      setNowPlayingQueue: (nowPlayingQueue) => set({ nowPlayingQueue }),
     }),
     {
       name: "sintonia:settings",
       version: 1,
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
-      partialize: ({ embedHost, ambient, autoSkipErrors, searchProvider, googleCx }) => ({
-        embedHost,
-        ambient,
-        autoSkipErrors,
-        searchProvider,
-        googleCx,
+      partialize: (s) => ({
+        embedHost: s.embedHost,
+        ambient: s.ambient,
+        autoSkipErrors: s.autoSkipErrors,
+        searchProvider: s.searchProvider,
+        googleCx: s.googleCx,
+        sidebarCollapsed: s.sidebarCollapsed,
+        courseTheater: s.courseTheater,
+        courseAutoplay: s.courseAutoplay,
+        nowPlayingQueue: s.nowPlayingQueue,
       }),
     }
   )

@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Kbd } from "@/components/ui/kbd";
 import { Progress } from "@/components/ui/progress";
 import { CourseCover } from "@/components/courses/course-cover";
 import { sortCourses } from "@/components/courses/courses-view";
@@ -148,7 +147,7 @@ function Hero({ isEmpty }: { isEmpty: boolean }) {
   };
 
   return (
-    <section className="relative -mt-16 overflow-hidden px-4 pt-20 pb-10 md:px-8 md:pt-24 md:pb-14">
+    <section className="relative -mt-14 overflow-hidden px-4 pt-18 pb-10 md:px-8 md:pt-20 md:pb-12">
       {/* Gradiente "mesh" no fundo */}
       <div className="pointer-events-none absolute inset-0 -z-0">
         <div className="absolute -top-32 -left-24 size-[28rem] rounded-full bg-[var(--brand-from)] opacity-25 blur-[100px]" />
@@ -159,7 +158,7 @@ function Hero({ isEmpty }: { isEmpty: boolean }) {
 
       <div className="relative max-w-3xl">
         <p className="text-sm font-medium text-muted-foreground">{greeting()} 👋</p>
-        <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-balance md:text-5xl lg:text-6xl">
+        <h1 className="mt-1.5 text-3xl font-extrabold tracking-tight text-balance md:text-4xl xl:text-5xl">
           {isEmpty ? (
             <>
               Sua trilha sonora para <span className="text-gradient">focar</span>.
@@ -180,7 +179,7 @@ function Hero({ isEmpty }: { isEmpty: boolean }) {
             e.preventDefault();
             submit();
           }}
-          className="group/hero mt-7 flex items-center gap-2 rounded-full border bg-background/70 p-1.5 pl-5 shadow-xl shadow-black/5 backdrop-blur-xl transition-[border-color,box-shadow] focus-within:border-primary/60 focus-within:ring-4 focus-within:ring-primary/15"
+          className="group/hero mt-6 flex items-center gap-2 rounded-full border bg-background/70 p-1.5 pl-5 shadow-xl shadow-black/5 backdrop-blur-xl transition-[border-color,box-shadow] focus-within:border-primary/60 focus-within:ring-4 focus-within:ring-primary/15"
         >
           <Search className="size-5 shrink-0 text-muted-foreground transition-colors group-focus-within/hero:text-primary" />
           <input
@@ -200,9 +199,6 @@ function Hero({ isEmpty }: { isEmpty: boolean }) {
             <span className="hidden sm:inline">{ids.length ? "Tocar" : "Buscar"}</span>
           </Button>
         </form>
-        <p className="mt-3 hidden flex-wrap items-center gap-1.5 pl-5 text-xs text-muted-foreground sm:flex">
-          Dica: cole com <Kbd>Ctrl</Kbd>+<Kbd>V</Kbd> em qualquer lugar da página · busque com <Kbd>Ctrl</Kbd>+<Kbd>K</Kbd>
-        </p>
       </div>
     </section>
   );

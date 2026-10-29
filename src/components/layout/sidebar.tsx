@@ -3,27 +3,39 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AudioLines, GraduationCap, Heart, House, Keyboard, Library, ListMusic, Plus, Search, Settings, Volume2 } from "lucide-react";
+import {
+  AudioLines,
+  GraduationCap,
+  Heart,
+  House,
+  Keyboard,
+  Library,
+  ListMusic,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Plus,
+  Search,
+  Settings,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Kbd } from "@/components/ui/kbd";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { PlaylistCover } from "@/components/playlist/playlist-cover";
+import { Equalizer } from "@/components/video/equalizer";
 import { cn, pluralize } from "@/lib/utils";
 import { countLibraryVideos, useLibrary } from "@/stores/library-store";
 import { usePlayer } from "@/stores/player-store";
-import { useHydration, useUi } from "@/stores/ui-store";
+import { useHydration, useSettings, useUi } from "@/stores/ui-store";
 
-export function Logo({ className }: { className?: string }) {
+export function Logo({ className, compact = false }: { className?: string; compact?: boolean }) {
   return (
-    <Link href="/" className={cn("group/logo flex items-center gap-2.5", className)}>
-      <span className="relative grid size-9 place-items-center rounded-xl bg-brand-gradient text-white shadow-lg shadow-[color-mix(in_oklch,var(--brand-from)_40%,transparent)] transition-transform group-hover/logo:scale-105 group-hover/logo:-rotate-3">
-        <AudioLines className="size-5" />
+    <Link href="/" className={cn("group/logo flex items-center gap-2.5", className)} aria-label="Sintonia — início">
+      <span className="relative grid size-8 shrink-0 place-items-center rounded-[10px] bg-brand-gradient text-white shadow-md shadow-[color-mix(in_oklch,var(--brand-from)_35%,transparent)] transition-transform group-hover/logo:scale-105 group-hover/logo:-rotate-3">
+        <AudioLines className="size-[18px]" />
       </span>
-      <span className="text-lg font-semibold tracking-tight">
-        Sintonia
-      </span>
+      {!compact && <span className="text-[17px] font-semibold tracking-tight">Sintonia</span>}
     </Link>
   );
 }
@@ -37,12 +49,17 @@ const NAV = [
   { href: "/courses", label: "Cursos", icon: GraduationCap },
 ] as const;
 
+interface ContentProps {
+  collapsed?: boolean;
+  onNavigate?: () => void;
+}
+
 /**
  * Com Cache Components, `usePathname` suspende durante o prerender de rotas dinâmicas
  * (ex.: /playlists/[id]). Por isso a versão "com rota ativa" fica dentro de um Suspense
  * cujo fallback é a mesma barra lateral sem destaque.
  */
-function SidebarContent(props: { onNavigate?: () => void }) {
+function SidebarContent(props: ContentProps) {
   return (
     <Suspense fallback={<SidebarBody pathname="" {...props} />}>
       <SidebarWithPath {...props} />
@@ -50,11 +67,24 @@ function SidebarContent(props: { onNavigate?: () => void }) {
   );
 }
 
-function SidebarWithPath(props: { onNavigate?: () => void }) {
+function SidebarWithPath(props: ContentProps) {
   return <SidebarBody pathname={usePathname()} {...props} />;
 }
 
-function SidebarBody({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+/** Item que, com o menu recolhido, mostra o nome num tooltip à direita. */
+function RailTip({ show, label, children }: { show: boolean; label: React.ReactNode; children: React.ReactElement }) {
+  if (!show) return children;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent side="right" sideOffset={10}>
+        {label}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+function SidebarBody({ pathname, collapsed = false, onNavigate }: ContentProps & { pathname: string }) {
   const hydrated = useHydration((s) => s.hydrated);
   const videoCount = useLibrary((s) => countLibraryVideos(s.videos));
   const courseCount = useLibrary((s) => s.courses.length);
@@ -62,6 +92,7 @@ function SidebarBody({ pathname, onNavigate }: { pathname: string; onNavigate?: 
   const playlists = useLibrary((s) => s.playlists);
   const source = usePlayer((s) => s.source);
   const isPlaying = usePlayer((s) => s.status === "playing");
+  const toggleSidebar = useSettings((s) => s.toggleSidebar);
   const { openPlaylistDialog, setSettingsOpen, setShortcutsOpen } = useUi.getState();
 
   const counts: Record<string, number | undefined> = {
@@ -73,130 +104,209 @@ function SidebarBody({ pathname, onNavigate }: { pathname: string; onNavigate?: 
 
   return (
     <div className="flex h-full flex-col">
-      <div className="px-5 pt-5 pb-4">
-        <Logo />
+      <div className={cn("flex h-14 shrink-0 items-center", collapsed ? "justify-center" : "justify-between pr-2 pl-4")}>
+        <Logo compact={collapsed} />
+        {!collapsed && !onNavigate && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                className="text-muted-foreground"
+                onClick={toggleSidebar}
+                aria-label="Recolher menu"
+              >
+                <PanelLeftClose />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="flex items-center gap-2">
+              Recolher menu
+              <KbdGroup>
+                <Kbd>Ctrl</Kbd>
+                <Kbd>B</Kbd>
+              </KbdGroup>
+            </TooltipContent>
+          </Tooltip>
+        )}
       </div>
 
-      <nav className="grid gap-0.5 px-3">
+      <nav className={cn("grid gap-0.5", collapsed ? "justify-items-center px-2" : "px-2.5")}>
         {NAV.map(({ href, label, icon: Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
-          const count = counts[href];
+          const count = hydrated ? counts[href] : undefined;
           return (
-            <Link
-              key={href}
-              href={href}
-              onClick={onNavigate}
-              className={cn(
-                "group/nav relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                active && "bg-sidebar-accent text-sidebar-foreground"
-              )}
-            >
-              {active && <span className="absolute top-1/2 left-0 h-5 w-[3px] -translate-y-1/2 rounded-full bg-brand-gradient" />}
-              <Icon className={cn("size-[18px]", active && "text-primary", href === "/favorites" && active && "fill-primary")} />
-              {label}
-              {hydrated && count ? (
-                <span className="ml-auto text-xs text-muted-foreground tabular-nums">{count}</span>
-              ) : null}
-            </Link>
+            <RailTip key={href} show={collapsed} label={count ? `${label} · ${count}` : label}>
+              <Link
+                href={href}
+                onClick={onNavigate}
+                aria-label={label}
+                className={cn(
+                  "group/nav relative flex items-center rounded-lg text-sm font-medium text-sidebar-foreground/65 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                  collapsed ? "size-10 justify-center" : "h-9 gap-3 px-2.5",
+                  active && "bg-sidebar-accent text-sidebar-foreground"
+                )}
+              >
+                {active && (
+                  <span
+                    className={cn(
+                      "absolute top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full bg-brand-gradient",
+                      collapsed ? "-left-2" : "-left-2.5"
+                    )}
+                  />
+                )}
+                <Icon
+                  className={cn("size-[18px] shrink-0", active && "text-primary", href === "/favorites" && active && "fill-primary")}
+                />
+                {!collapsed && (
+                  <>
+                    <span className="truncate">{label}</span>
+                    {count ? <span className="ml-auto text-xs text-muted-foreground/80 tabular-nums">{count}</span> : null}
+                  </>
+                )}
+              </Link>
+            </RailTip>
           );
         })}
       </nav>
 
-      <div className="mt-6 flex items-center justify-between px-5">
-        <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Suas playlists</h2>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              size="icon-xs"
-              variant="ghost"
-              className="text-muted-foreground"
-              onClick={() => openPlaylistDialog()}
-              aria-label="Nova playlist"
-            >
-              <Plus />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Nova playlist</TooltipContent>
-        </Tooltip>
+      <div className={cn("mt-5 flex items-center", collapsed ? "flex-col gap-2 px-2" : "justify-between pr-2 pl-5")}>
+        {collapsed ? (
+          <div className="h-px w-8 bg-sidebar-border" />
+        ) : (
+          <h2 className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Playlists</h2>
+        )}
+        <RailTip show={collapsed} label="Nova playlist">
+          <Button
+            size="icon-xs"
+            variant="ghost"
+            className="text-muted-foreground"
+            onClick={() => openPlaylistDialog()}
+            aria-label="Nova playlist"
+          >
+            <Plus />
+          </Button>
+        </RailTip>
       </div>
 
-      <div className="mt-2 min-h-0 flex-1 overflow-y-auto scrollbar-thin px-3 pb-3">
-        {hydrated && playlists.length === 0 && (
+      <div className={cn("mt-1.5 min-h-0 flex-1 overflow-y-auto scrollbar-none pb-3", collapsed ? "px-2" : "px-2.5")}>
+        {hydrated && playlists.length === 0 && !collapsed && (
           <button
             type="button"
             onClick={() => openPlaylistDialog()}
-            className="mt-1 flex w-full cursor-pointer flex-col items-start gap-1 rounded-xl border border-dashed p-4 text-left text-sm transition-colors hover:border-primary/60 hover:bg-sidebar-accent/50"
+            className="mt-1 flex w-full cursor-pointer flex-col items-start gap-1 rounded-xl border border-dashed p-3 text-left text-sm transition-colors hover:border-primary/60 hover:bg-sidebar-accent/50"
           >
             <span className="font-medium">Crie sua primeira playlist</span>
-            <span className="text-xs text-muted-foreground">Ex.: “Foco”, “Lofi da manhã”, “Sexta-feira”.</span>
+            <span className="text-xs text-muted-foreground">Ex.: “Foco”, “Lofi da manhã”.</span>
           </button>
         )}
-        <ul className="grid gap-0.5">
+        <ul className={cn("grid gap-0.5", collapsed && "justify-items-center")}>
           {playlists.map((p) => {
             const href = `/playlists/${p.id}`;
             const active = pathname === href;
             const playingThis = source?.type === "playlist" && source.id === p.id;
             return (
               <li key={p.id}>
-                <Link
-                  href={href}
-                  onClick={onNavigate}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg p-1.5 pr-2 transition-colors hover:bg-sidebar-accent",
-                    active && "bg-sidebar-accent"
-                  )}
-                >
-                  <PlaylistCover seed={p.id} videoIds={p.videoIds} className="size-10 shrink-0 rounded-md" iconClassName="size-4" />
-                  <span className="min-w-0 flex-1">
-                    <span className={cn("block truncate text-sm font-medium", playingThis && "text-primary")}>{p.name}</span>
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {pluralize(p.videoIds.length, "vídeo", "vídeos")}
-                    </span>
-                  </span>
-                  {playingThis && (
-                    <Volume2 className={cn("size-4 shrink-0 text-primary", !isPlaying && "opacity-50")} />
-                  )}
-                </Link>
+                <RailTip show={collapsed} label={`${p.name} · ${pluralize(p.videoIds.length, "vídeo", "vídeos")}`}>
+                  <Link
+                    href={href}
+                    onClick={onNavigate}
+                    aria-label={p.name}
+                    className={cn(
+                      "relative flex items-center rounded-lg transition-colors hover:bg-sidebar-accent",
+                      collapsed ? "p-1" : "gap-2.5 p-1.5 pr-2",
+                      active && "bg-sidebar-accent"
+                    )}
+                  >
+                    <PlaylistCover
+                      seed={p.id}
+                      videoIds={p.videoIds}
+                      className={cn("shrink-0 rounded-md", collapsed ? "size-9" : "size-9")}
+                      iconClassName="size-4"
+                    />
+                    {collapsed ? (
+                      playingThis && (
+                        <span className="absolute right-0 bottom-0 grid size-4 place-items-center rounded-full bg-sidebar ring-2 ring-sidebar">
+                          <span className="size-2 rounded-full bg-primary" />
+                        </span>
+                      )
+                    ) : (
+                      <>
+                        <span className="min-w-0 flex-1">
+                          <span className={cn("block truncate text-[13px] font-medium", playingThis && "text-primary")}>
+                            {p.name}
+                          </span>
+                          <span className="block truncate text-xs text-muted-foreground">
+                            {pluralize(p.videoIds.length, "vídeo", "vídeos")}
+                          </span>
+                        </span>
+                        {playingThis && <Equalizer paused={!isPlaying} className="shrink-0" />}
+                      </>
+                    )}
+                  </Link>
+                </RailTip>
               </li>
             );
           })}
         </ul>
       </div>
 
-      <div className="flex items-center gap-1 border-t border-sidebar-border px-3 py-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex-1 justify-start text-muted-foreground"
-          onClick={() => setSettingsOpen(true)}
-        >
-          <Settings /> Configurações
-        </Button>
-        <Tooltip>
-          <TooltipTrigger asChild>
+      <div
+        className={cn(
+          "flex shrink-0 border-t border-sidebar-border",
+          collapsed ? "flex-col items-center gap-1 py-3" : "items-center gap-1 px-2 py-2"
+        )}
+      >
+        <RailTip show={collapsed} label="Configurações">
+          <Button
+            variant="ghost"
+            size={collapsed ? "icon-sm" : "sm"}
+            className={cn("text-muted-foreground", !collapsed && "flex-1 justify-start")}
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Configurações"
+          >
+            <Settings />
+            {!collapsed && "Configurações"}
+          </Button>
+        </RailTip>
+        <RailTip show={collapsed} label="Atalhos (?)">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground"
+            onClick={() => setShortcutsOpen(true)}
+            aria-label="Atalhos de teclado"
+          >
+            <Keyboard />
+          </Button>
+        </RailTip>
+        {collapsed && (
+          <RailTip show label="Expandir menu (Ctrl+B)">
             <Button
               variant="ghost"
               size="icon-sm"
               className="text-muted-foreground"
-              onClick={() => setShortcutsOpen(true)}
-              aria-label="Atalhos de teclado"
+              onClick={toggleSidebar}
+              aria-label="Expandir menu"
             >
-              <Keyboard />
+              <PanelLeftOpen />
             </Button>
-          </TooltipTrigger>
-          <TooltipContent className="flex items-center gap-2">
-            Atalhos <Kbd>?</Kbd>
-          </TooltipContent>
-        </Tooltip>
+          </RailTip>
+        )}
       </div>
     </div>
   );
 }
 
 export function Sidebar() {
+  const collapsed = useSettings((s) => s.sidebarCollapsed);
   return (
-    <aside className="hidden w-64 shrink-0 border-r border-sidebar-border bg-sidebar lg:block xl:w-72">
-      <SidebarContent />
+    <aside
+      className={cn(
+        "hidden shrink-0 overflow-hidden border-r border-sidebar-border bg-sidebar transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] lg:block",
+        collapsed ? "w-[68px]" : "w-60"
+      )}
+    >
+      <SidebarContent collapsed={collapsed} />
     </aside>
   );
 }

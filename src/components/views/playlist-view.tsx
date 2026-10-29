@@ -110,7 +110,7 @@ function PlaylistContent({ id }: { id: string }) {
           <PlaylistCover
             seed={playlist.id}
             videoIds={allIds}
-            className="size-40 rounded-2xl shadow-2xl shadow-black/40 md:size-52"
+            className="size-32 rounded-2xl shadow-2xl shadow-black/40 md:size-40"
           />
         }
         description={playlist.description}

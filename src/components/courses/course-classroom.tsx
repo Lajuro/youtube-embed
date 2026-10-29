@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- fundo do pôster usa a miniatura direto do i.ytimg.com */
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   BookOpen,
@@ -10,12 +10,19 @@ import {
   ChevronRight,
   Clock3,
   GraduationCap,
+  Keyboard,
   ListChecks,
+  MoreHorizontal,
   NotebookPen,
+  PanelRightClose,
+  PanelRightOpen,
+  Pause,
   Pencil,
   Play,
   RotateCcw,
+  SkipForward,
   Trophy,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -28,16 +35,28 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Kbd } from "@/components/ui/kbd";
+import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { EmptyState } from "@/components/empty-state";
 import { CourseCurriculum } from "@/components/courses/course-curriculum";
 import { CourseNotes } from "@/components/courses/course-notes";
+import { Logo } from "@/components/layout/sidebar";
 import { PlaybackRateMenu } from "@/components/player/playback-rate-menu";
-import { PLAYER_BAR_HEIGHT } from "@/components/player/player-host";
+import { Equalizer } from "@/components/video/equalizer";
+import { VideoThumbnail } from "@/components/video/video-thumbnail";
 import {
   courseStats,
   findLessonByVideo,
@@ -50,8 +69,13 @@ import {
 import { cn, formatTime, formatTotalDuration, pluralize } from "@/lib/utils";
 import { thumbnailUrl } from "@/lib/youtube";
 import { courseLessons, useLibrary, type Course, type Lesson } from "@/stores/library-store";
-import { usePlayer, usePlayerDock } from "@/stores/player-store";
-import { useUi } from "@/stores/ui-store";
+import { setAdvanceGuard, useCurrentVideoId, usePlayer, usePlayerDock } from "@/stores/player-store";
+import { useSettings, useUi } from "@/stores/ui-store";
+
+/** Altura do cabeçalho da sala de aula. */
+const HEADER = "3.5rem";
+/** Segundos da contagem para a próxima aula. */
+const COUNTDOWN = 5;
 
 export function CourseClassroom({ courseId }: { courseId: string }) {
   const course = useLibrary((s) => s.courses.find((c) => c.id === courseId));
@@ -70,172 +94,423 @@ export function CourseClassroom({ courseId }: { courseId: string }) {
   return <Classroom course={course} />;
 }
 
+/** Liga o modo foco (sem menu, topo e barra do player) enquanto a sala de aula estiver aberta. */
+function useFocusMode() {
+  useLayoutEffect(() => {
+    useUi.getState().setFocusMode(true);
+    return () => useUi.getState().setFocusMode(false);
+  }, []);
+}
+
 function Classroom({ course }: { course: Course }) {
+  useFocusMode();
   const videos = useLibrary((s) => s.videos);
   const progress = useLibrary((s) => s.progress);
   const playingThis = usePlayer((s) => s.source?.type === "course" && s.source.id === course.id && s.queue.length > 0);
-  const currentVideoId = usePlayer((s) => s.queue[s.index]);
-  const isPlaying = usePlayer((s) => s.status === "playing" || s.status === "buffering");
+  const currentVideoId = useCurrentVideoId();
+  const status = usePlayer((s) => s.status);
+  const theater = useSettings((s) => s.courseTheater);
+  const setTheater = useSettings((s) => s.setCourseTheater);
   const openCourseDialog = useUi((s) => s.openCourseDialog);
-  const setDockEl = usePlayerDock((s) => s.setEl);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [tab, setTab] = useState("overview");
 
   const lessons = useMemo(() => courseLessons(course), [course]);
-  const playingLesson = playingThis && currentVideoId ? findLessonByVideo(course, currentVideoId)?.lesson ?? null : null;
+  const playingLesson = playingThis && currentVideoId ? (findLessonByVideo(course, currentVideoId)?.lesson ?? null) : null;
   const lesson: Lesson | undefined = playingLesson ?? nextLessonToWatch(course, progress);
   const lessonIndex = lesson ? lessons.findIndex((l) => l.id === lesson.id) : -1;
   const sectionIndex = lesson ? course.sections.findIndex((s) => s.lessons.some((l) => l.id === lesson.id)) : -1;
   const stats = courseStats(course, progress, videos);
-  const done = stats.total > 0 && stats.completed === stats.total;
+  const isPlaying = status === "playing" || status === "buffering";
 
-  // Enquanto este curso estiver tocando, o vídeo "encaixa" no palco desta página.
+  // Enquanto este curso toca, o vídeo encaixa no palco desta página (e rola junto com ela).
   useEffect(() => {
     const el = stageRef.current;
     if (!playingThis || !el) return;
-    setDockEl(el);
-    return () => {
-      if (usePlayerDock.getState().el === el) setDockEl(null);
-    };
-  }, [playingThis, setDockEl]);
+    usePlayerDock.getState().setDock(el, scrollRef.current);
+    return () => usePlayerDock.getState().clearDock(el);
+  }, [playingThis]);
 
-  const goTo = (target: Lesson | undefined) => target && playLesson(course.id, target.id);
-  const completed = lesson ? Boolean(progress[lesson.id]?.completed) : false;
+  // Ao fim de uma aula, quem decide avançar é a tela de "próxima aula" (com contagem).
+  useEffect(() => {
+    setAdvanceGuard((source) => !(source?.type === "course" && source.id === course.id));
+    return () => setAdvanceGuard(null);
+  }, [course.id]);
+
+  // Ao trocar de aula, volta para o topo (vídeo à vista).
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [playingLesson?.id]);
+
+  // Em modo cinema o conteúdo do curso vira uma aba.
+  const contentTab = theater ? "lg:inline-flex" : "lg:hidden";
+  const activeTab = !theater && tab === "content" ? "overview" : tab;
 
   return (
-    <div className="flex flex-col lg:flex-row" style={{ height: `calc(100dvh - 4rem - ${PLAYER_BAR_HEIGHT}px)` }}>
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        {/* Cabeçalho do curso */}
-        <div className="flex h-12 shrink-0 items-center gap-2 border-b px-2 md:px-4">
-          <Button asChild variant="ghost" size="icon-sm" aria-label="Voltar para os cursos">
-            <Link href="/courses">
-              <ChevronLeft />
-            </Link>
-          </Button>
-          <GraduationCap className="hidden size-4 shrink-0 text-primary sm:block" />
-          <h1 className="min-w-0 truncate text-sm font-semibold md:text-base">{course.title}</h1>
-          <div className="ml-auto flex shrink-0 items-center gap-2">
-            <ProgressRing percent={stats.percent} done={done} />
-            <span className="hidden text-xs text-muted-foreground tabular-nums sm:inline">
-              {stats.completed}/{stats.total} aulas
-            </span>
-            <Button asChild variant="ghost" size="sm" className="text-muted-foreground">
-              <Link href={`/courses/${course.id}/edit`}>
-                <Pencil />
-                <span className="hidden md:inline">Editar conteúdo</span>
-              </Link>
-            </Button>
-          </div>
-        </div>
+    <div className="flex h-dvh flex-col bg-background">
+      <ClassroomHeader
+        course={course}
+        percent={stats.percent}
+        done={stats.total > 0 && stats.completed === stats.total}
+        playingThis={playingThis}
+        theater={theater}
+        onToggleTheater={() => setTheater(!theater)}
+        onEditDetails={() => openCourseDialog({ courseId: course.id })}
+      />
 
-        {/* Palco do vídeo: o player (que vive no layout) é posicionado exatamente aqui. */}
-        <div className="flex shrink-0 justify-center bg-black">
-          <div
-            ref={stageRef}
-            className="relative aspect-video"
-            style={{ width: "min(100%, calc(max(14rem, 50dvh) * 16 / 9))" }}
-          >
-            {!playingThis && <Poster course={course} lesson={lesson} lessonNumber={lessonIndex + 1} />}
-          </div>
-        </div>
-
-        {/* Aula atual + abas */}
-        <div className="min-h-0 flex-1 overflow-y-auto scrollbar-thin">
-          {lesson ? (
-            <div className="border-b px-4 py-4 md:px-6">
-              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                Seção {sectionIndex + 1}: {course.sections[sectionIndex]?.title} · Aula {lessonIndex + 1} de {lessons.length}
-              </p>
-              <h2 className="mt-1 text-lg font-bold tracking-tight text-balance md:text-xl">
-                {lessonTitle(lesson, videos)}
-              </h2>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={lessonIndex <= 0}
-                  onClick={() => goTo(lessons[lessonIndex - 1])}
-                >
-                  <ChevronLeft /> Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={lessonIndex >= lessons.length - 1}
-                  onClick={() => goTo(lessons[lessonIndex + 1])}
-                >
-                  Próxima <ChevronRight />
-                </Button>
-                <Button
-                  variant={completed ? "secondary" : "brand"}
-                  size="sm"
-                  onClick={() => {
-                    const nowDone = toggleLessonCompleted(lesson.id);
-                    if (nowDone) toast.success("Aula concluída! ✅");
-                  }}
-                >
-                  <Check />
-                  {completed ? "Concluída" : "Marcar como concluída"}
-                </Button>
-                {playingThis && <PlaybackRateMenu showIcon className="border" />}
-              </div>
+      <div className="flex min-h-0 flex-1">
+        <div ref={scrollRef} className="min-w-0 flex-1 overflow-y-auto scrollbar-thin">
+          {/* Palco: o player (que vive no layout) é posicionado exatamente aqui. */}
+          <div className="bg-black">
+            <div
+              ref={stageRef}
+              className="relative mx-auto aspect-video w-full"
+              style={{ maxWidth: `calc((100dvh - ${HEADER}) * 16 / 9)` }}
+            >
+              {!playingThis && <Poster course={course} lesson={lesson} lessonNumber={lessonIndex + 1} />}
+              {playingThis && status === "ended" && playingLesson && (
+                <EndScreen key={playingLesson.id} course={course} lesson={playingLesson} />
+              )}
             </div>
-          ) : null}
+          </div>
 
-          <Tabs value={tab} onValueChange={setTab} className="px-4 py-4 md:px-6">
-            <TabsList>
-              <TabsTrigger value="content" className="lg:hidden">
-                <ListChecks /> Conteúdo
-              </TabsTrigger>
-              <TabsTrigger value="overview">
-                <BookOpen /> Visão geral
-              </TabsTrigger>
-              <TabsTrigger value="notes">
-                <NotebookPen /> Anotações
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="-mx-4 mt-2 border-t lg:hidden">
+          {lesson && (
+            <LessonBar
+              course={course}
+              lesson={lesson}
+              lessonIndex={lessonIndex}
+              sectionIndex={sectionIndex}
+              lessons={lessons}
+              playingThis={playingThis}
+            />
+          )}
+
+          <div className="mx-auto w-full max-w-5xl px-4 pb-16 md:px-8">
+            <Tabs value={activeTab} onValueChange={setTab}>
+              <TabsList className="h-10 w-full justify-start gap-1 rounded-none border-b bg-transparent p-0 sm:w-auto">
+                {[
+                  { value: "content", icon: ListChecks, label: "Conteúdo", className: contentTab },
+                  { value: "overview", icon: BookOpen, label: "Visão geral" },
+                  { value: "notes", icon: NotebookPen, label: "Anotações" },
+                ].map((t) => (
+                  <TabsTrigger
+                    key={t.value}
+                    value={t.value}
+                    className={cn(
+                      "h-10 flex-none rounded-none border-0 border-b-2 border-transparent px-3 text-muted-foreground shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none dark:data-[state=active]:bg-transparent",
+                      t.className
+                    )}
+                  >
+                    <t.icon /> {t.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              <TabsContent value="content" className={cn("-mx-4 mt-0 md:-mx-8", !theater && "lg:hidden")}>
+                <CourseCurriculum
+                  course={course}
+                  activeLessonId={lesson?.id}
+                  playing={Boolean(playingLesson) && isPlaying}
+                  onPlay={(id) => playLesson(course.id, id)}
+                />
+              </TabsContent>
+              <TabsContent value="overview" className="mt-5">
+                <Overview course={course} onEdit={() => openCourseDialog({ courseId: course.id })} />
+              </TabsContent>
+              <TabsContent value="notes" className="mt-5">
+                <CourseNotes course={course} currentLesson={playingLesson} />
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+
+        {/* Conteúdo do curso (desktop) — some no modo cinema */}
+        {!theater && (
+          <aside className="hidden w-[340px] shrink-0 flex-col border-l bg-sidebar/50 animate-in fade-in slide-in-from-right-4 duration-300 lg:flex xl:w-[380px]">
+            <div className="flex items-start justify-between gap-2 border-b px-4 py-3">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-sm font-semibold">Conteúdo do curso</h2>
+                <Progress value={stats.percent} className="mt-2.5" />
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  {stats.completed} de {pluralize(stats.total, "aula", "aulas")}
+                  {stats.remaining > 0 && ` · faltam ${formatTotalDuration(stats.remaining)}`}
+                </p>
+              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="icon-sm" variant="ghost" className="-mr-1 text-muted-foreground" onClick={() => setTheater(true)} aria-label="Fechar painel (modo cinema)">
+                    <X />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="flex items-center gap-2">
+                  Modo cinema <Kbd>T</Kbd>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto scrollbar-thin">
               <CourseCurriculum
                 course={course}
                 activeLessonId={lesson?.id}
                 playing={Boolean(playingLesson) && isPlaying}
                 onPlay={(id) => playLesson(course.id, id)}
               />
-            </TabsContent>
-            <TabsContent value="overview" className="mt-2">
-              <Overview course={course} onEdit={() => openCourseDialog({ courseId: course.id })} />
-            </TabsContent>
-            <TabsContent value="notes" className="mt-2">
-              <CourseNotes course={course} currentLesson={playingLesson} />
-            </TabsContent>
-          </Tabs>
-        </div>
+            </div>
+          </aside>
+        )}
       </div>
-
-      {/* Conteúdo do curso (desktop) */}
-      <aside className="hidden w-[360px] shrink-0 flex-col border-l bg-sidebar/40 lg:flex xl:w-[400px]">
-        <div className="border-b p-4">
-          <h2 className="font-semibold">Conteúdo do curso</h2>
-          <Progress value={stats.percent} className="mt-3" />
-          <p className="mt-1.5 text-xs text-muted-foreground">
-            {stats.percent}% concluído · {stats.completed} de {pluralize(stats.total, "aula", "aulas")}
-            {stats.remaining > 0 && ` · faltam ${formatTotalDuration(stats.remaining)}`}
-          </p>
-        </div>
-        <div className="min-h-0 flex-1 overflow-y-auto scrollbar-thin">
-          <CourseCurriculum
-            course={course}
-            activeLessonId={lesson?.id}
-            playing={Boolean(playingLesson) && isPlaying}
-            onPlay={(id) => playLesson(course.id, id)}
-          />
-        </div>
-      </aside>
     </div>
   );
 }
 
-/** Capa do palco quando o curso não está tocando (ex.: você está ouvindo música). */
+/* ---------------- Cabeçalho ---------------- */
+
+function ClassroomHeader({
+  course,
+  percent,
+  done,
+  playingThis,
+  theater,
+  onToggleTheater,
+  onEditDetails,
+}: {
+  course: Course;
+  percent: number;
+  done: boolean;
+  playingThis: boolean;
+  theater: boolean;
+  onToggleTheater: () => void;
+  onEditDetails: () => void;
+}) {
+  const [confirmReset, setConfirmReset] = useState(false);
+  const setShortcutsOpen = useUi((s) => s.setShortcutsOpen);
+
+  return (
+    <header className="flex shrink-0 items-center gap-2 border-b px-2 md:gap-3 md:px-4" style={{ height: HEADER }}>
+      <Logo compact className="hidden md:flex" />
+      <div className="hidden h-6 w-px bg-border md:block" />
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button asChild variant="ghost" size="icon-sm" aria-label="Voltar para os cursos">
+            <Link href="/courses">
+              <ChevronLeft />
+            </Link>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Voltar para os cursos</TooltipContent>
+      </Tooltip>
+      <div className="min-w-0 flex-1">
+        <h1 className="truncate text-sm font-semibold md:text-[15px]">{course.title}</h1>
+        {course.author && <p className="hidden truncate text-xs text-muted-foreground sm:block">{course.author}</p>}
+      </div>
+
+      {!playingThis && <BackgroundAudioChip />}
+
+      <div className="flex shrink-0 items-center gap-1">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="flex items-center gap-2 rounded-full px-1.5 py-1">
+              <ProgressRing percent={percent} done={done} />
+              <span className="hidden text-xs font-medium text-muted-foreground tabular-nums lg:inline">
+                {done ? "Concluído" : `${percent}%`}
+              </span>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>Seu progresso no curso</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="hidden text-muted-foreground lg:inline-flex"
+              aria-pressed={theater}
+              aria-label={theater ? "Mostrar conteúdo do curso" : "Modo cinema"}
+              onClick={onToggleTheater}
+            >
+              {theater ? <PanelRightOpen /> : <PanelRightClose />}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent className="flex items-center gap-2">
+            {theater ? "Mostrar conteúdo do curso" : "Modo cinema"} <Kbd>T</Kbd>
+          </TooltipContent>
+        </Tooltip>
+        <Button asChild variant="ghost" size="sm" className="hidden text-muted-foreground sm:inline-flex">
+          <Link href={`/courses/${course.id}/edit`}>
+            <Pencil /> <span className="hidden md:inline">Editar</span>
+          </Link>
+        </Button>
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon-sm" className="text-muted-foreground" aria-label="Mais opções">
+              <MoreHorizontal />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem asChild className="sm:hidden">
+              <Link href={`/courses/${course.id}/edit`}>
+                <Pencil /> Editar conteúdo
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={onEditDetails}>
+              <BookOpen /> Detalhes do curso
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setShortcutsOpen(true)}>
+              <Keyboard /> Atalhos de teclado
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => setConfirmReset(true)}>
+              <RotateCcw /> Zerar progresso
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <AlertDialog open={confirmReset} onOpenChange={setConfirmReset}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Zerar o progresso?</AlertDialogTitle>
+            <AlertDialogDescription>Todas as aulas voltam a ficar como não assistidas. As anotações continuam.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                useLibrary.getState().resetCourseProgress(course.id);
+                toast.success("Progresso zerado");
+              }}
+            >
+              Zerar progresso
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </header>
+  );
+}
+
+/** Se outra coisa estiver tocando (ex.: música), mostra um controle discreto em vez do vídeo. */
+function BackgroundAudioChip() {
+  const currentId = useCurrentVideoId();
+  const title = useLibrary((s) => (currentId ? s.videos[currentId]?.title : undefined));
+  const status = usePlayer((s) => s.status);
+  if (!currentId) return null;
+  const playing = status === "playing" || status === "buffering";
+
+  return (
+    <div className="hidden max-w-64 items-center gap-2 rounded-full border bg-muted/40 py-1 pr-1 pl-2.5 text-xs md:flex">
+      {playing ? <Equalizer className="shrink-0" /> : <span className="size-1.5 shrink-0 rounded-full bg-muted-foreground" />}
+      <span className="min-w-0 truncate text-muted-foreground" title={title}>
+        {title ?? "Tocando"}
+      </span>
+      <Button
+        size="icon-xs"
+        variant="ghost"
+        className="shrink-0 rounded-full"
+        aria-label={playing ? "Pausar" : "Tocar"}
+        onClick={() => usePlayer.getState().togglePlay()}
+      >
+        {playing ? <Pause className="fill-current" /> : <Play className="fill-current" />}
+      </Button>
+      <Button size="icon-xs" variant="ghost" className="shrink-0 rounded-full" aria-label="Parar" onClick={() => usePlayer.getState().stop()}>
+        <X />
+      </Button>
+    </div>
+  );
+}
+
+/* ---------------- Barra da aula ---------------- */
+
+function LessonBar({
+  course,
+  lesson,
+  lessonIndex,
+  sectionIndex,
+  lessons,
+  playingThis,
+}: {
+  course: Course;
+  lesson: Lesson;
+  lessonIndex: number;
+  sectionIndex: number;
+  lessons: Lesson[];
+  playingThis: boolean;
+}) {
+  const videos = useLibrary((s) => s.videos);
+  const completed = useLibrary((s) => Boolean(s.progress[lesson.id]?.completed));
+  const autoplay = useSettings((s) => s.courseAutoplay);
+  const setAutoplay = useSettings((s) => s.setCourseAutoplay);
+  const prev = lessons[lessonIndex - 1];
+  const next = lessons[lessonIndex + 1];
+
+  return (
+    <div className="mx-auto w-full max-w-5xl px-4 pt-5 pb-4 md:px-8">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-muted-foreground">
+            Seção {sectionIndex + 1}: {course.sections[sectionIndex]?.title} · Aula {lessonIndex + 1} de {lessons.length}
+          </p>
+          <h2 className="mt-1 text-xl font-bold tracking-tight text-balance md:text-2xl">{lessonTitle(lesson, videos)}</h2>
+        </div>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <div className="flex items-center rounded-full border">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="rounded-full"
+                  disabled={!prev}
+                  aria-label="Aula anterior"
+                  onClick={() => prev && playLesson(course.id, prev.id)}
+                >
+                  <ChevronLeft />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Aula anterior</TooltipContent>
+            </Tooltip>
+            <div className="h-4 w-px bg-border" />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="rounded-full"
+                  disabled={!next}
+                  aria-label="Próxima aula"
+                  onClick={() => next && playLesson(course.id, next.id)}
+                >
+                  <ChevronRight />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Próxima aula</TooltipContent>
+            </Tooltip>
+          </div>
+          <Button
+            variant={completed ? "secondary" : "outline"}
+            size="sm"
+            className={cn("rounded-full", completed && "text-emerald-500")}
+            onClick={() => {
+              const nowDone = toggleLessonCompleted(lesson.id);
+              if (nowDone) toast.success("Aula concluída! ✅");
+            }}
+          >
+            <Check />
+            {completed ? "Concluída" : "Marcar como concluída"}
+          </Button>
+          {playingThis && <PlaybackRateMenu showIcon className="rounded-full border" />}
+          <Label className="flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-normal text-muted-foreground">
+            <Switch checked={autoplay} onCheckedChange={setAutoplay} className="scale-90" />
+            Reprodução automática
+          </Label>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Palco: pôster e tela de fim ---------------- */
+
+/** Capa do palco quando o curso não está tocando. */
 function Poster({ course, lesson, lessonNumber }: { course: Course; lesson?: Lesson; lessonNumber: number }) {
   const videos = useLibrary((s) => s.videos);
   if (!lesson) {
@@ -269,7 +544,7 @@ function Poster({ course, lesson, lessonNumber }: { course: Course; lesson?: Les
           if (fallback && e.currentTarget.src !== fallback) e.currentTarget.src = fallback;
           else e.currentTarget.style.display = "none";
         }}
-        className="absolute inset-0 size-full scale-110 object-cover opacity-50 blur-sm transition-transform duration-700 group-hover/poster:scale-[1.15]"
+        className="absolute inset-0 size-full scale-110 object-cover opacity-45 blur-sm transition-transform duration-700 group-hover/poster:scale-[1.15]"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/30" />
       <div className="relative flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
@@ -279,13 +554,125 @@ function Poster({ course, lesson, lessonNumber }: { course: Course; lesson?: Les
         <span className="text-xs font-medium tracking-widest text-white/70 uppercase">
           {resumeAt ? `Continuar de ${formatTime(resumeAt)}` : lessonNumber === 1 ? "Começar o curso" : "Assistir"}
         </span>
-        <span className="line-clamp-2 max-w-xl text-base font-semibold md:text-lg">
+        <span className="line-clamp-2 max-w-xl text-base font-semibold md:text-xl">
           Aula {lessonNumber}: {lessonTitle(lesson, videos)}
         </span>
       </div>
     </button>
   );
 }
+
+/** Tela ao terminar uma aula: próxima aula com contagem (ou fim do curso). */
+function EndScreen({ course, lesson }: { course: Course; lesson: Lesson }) {
+  const videos = useLibrary((s) => s.videos);
+  const progress = useLibrary((s) => s.progress);
+  const autoplay = useSettings((s) => s.courseAutoplay);
+  const lessons = courseLessons(course);
+  const index = lessons.findIndex((l) => l.id === lesson.id);
+  const next = lessons[index + 1];
+  const [remaining, setRemaining] = useState(COUNTDOWN);
+  const [cancelled, setCancelled] = useState(false);
+  const counting = Boolean(next) && autoplay && !cancelled;
+
+  useEffect(() => {
+    if (!counting) return;
+    if (remaining <= 0) {
+      playLesson(course.id, next!.id);
+      return;
+    }
+    const timer = setTimeout(() => setRemaining((r) => r - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [counting, remaining, course.id, next]);
+
+  const replay = () => {
+    usePlayer.getState().seek(0);
+    usePlayer.getState().togglePlay();
+  };
+
+  const allDone = lessons.every((l) => progress[l.id]?.completed);
+
+  return (
+    <div className="absolute inset-0 z-[31] grid place-items-center bg-black/85 p-4 text-white backdrop-blur-md animate-in fade-in duration-500">
+      {next ? (
+        <div className="w-full max-w-lg text-center">
+          <p className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-400">
+            <Check className="size-3.5" /> Aula concluída
+          </p>
+          <p className="mt-4 text-xs font-medium tracking-widest text-white/60 uppercase">A seguir</p>
+          <div className="mt-3 flex items-center gap-4 rounded-2xl bg-white/5 p-3 text-left ring-1 ring-white/10">
+            <div className="relative shrink-0">
+              <VideoThumbnail id={next.videoId} className="aspect-video w-28 rounded-lg sm:w-40" />
+              {counting && <CountdownRing remaining={remaining} />}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-white/60">Aula {index + 2}</p>
+              <p className="line-clamp-2 font-semibold">{lessonTitle(next, videos)}</p>
+            </div>
+          </div>
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
+            <Button variant="brand" className="rounded-full" onClick={() => playLesson(course.id, next.id)}>
+              <SkipForward className="fill-current" /> {counting ? `Assistir agora (${remaining})` : "Assistir próxima aula"}
+            </Button>
+            {counting ? (
+              <Button variant="ghost" className="rounded-full text-white hover:bg-white/10 hover:text-white" onClick={() => setCancelled(true)}>
+                Cancelar
+              </Button>
+            ) : (
+              <Button variant="ghost" className="rounded-full text-white hover:bg-white/10 hover:text-white" onClick={replay}>
+                <RotateCcw /> Rever esta aula
+              </Button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="max-w-md text-center">
+          <div className="mx-auto grid size-16 place-items-center rounded-full bg-amber-400/15 text-amber-400">
+            <Trophy className="size-8" />
+          </div>
+          <p className="mt-4 text-xl font-bold">{allDone ? "Você concluiu o curso! 🎉" : "Você chegou à última aula"}</p>
+          <p className="mt-1 text-sm text-white/70">
+            {allDone ? "Parabéns pela dedicação." : "Ainda há aulas não concluídas — confira o conteúdo do curso."}
+          </p>
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
+            <Button variant="ghost" className="rounded-full text-white hover:bg-white/10 hover:text-white" onClick={replay}>
+              <RotateCcw /> Rever esta aula
+            </Button>
+            <Button asChild variant="brand" className="rounded-full">
+              <Link href="/courses">Ver meus cursos</Link>
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CountdownRing({ remaining }: { remaining: number }) {
+  const r = 18;
+  const c = 2 * Math.PI * r;
+  return (
+    <span className="absolute inset-0 grid place-items-center rounded-lg bg-black/55">
+      <svg viewBox="0 0 44 44" className="size-12 -rotate-90">
+        <circle cx="22" cy="22" r={r} fill="none" stroke="rgba(255,255,255,.2)" strokeWidth="3" />
+        <circle
+          cx="22"
+          cy="22"
+          r={r}
+          fill="none"
+          stroke="white"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={(c * remaining) / COUNTDOWN}
+          className="transition-[stroke-dashoffset] duration-1000 ease-linear"
+        />
+      </svg>
+      <span className="absolute text-sm font-bold tabular-nums">{remaining}</span>
+    </span>
+  );
+}
+
+/* ---------------- Visão geral ---------------- */
 
 function Overview({ course, onEdit }: { course: Course; onEdit: () => void }) {
   const videos = useLibrary((s) => s.videos);
@@ -329,40 +716,23 @@ function Overview({ course, onEdit }: { course: Course; onEdit: () => void }) {
         <p className={cn("mt-2 text-sm whitespace-pre-wrap", !course.description && "text-muted-foreground italic")}>
           {course.description || "Sem descrição."}
         </p>
-        <p className="mt-3 text-xs text-muted-foreground">
-          {pluralize(course.sections.length, "seção", "seções")} · {pluralize(stats.total, "aula", "aulas")} · As aulas
-          continuam de onde você parou e são marcadas como concluídas ao chegar perto do fim.
-        </p>
       </div>
 
-      {stats.completed > 0 && (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="sm" className="w-fit text-muted-foreground">
-              <RotateCcw /> Recomeçar o curso (zerar progresso)
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Zerar o progresso?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Todas as aulas voltam a ficar como não assistidas. As anotações continuam.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => {
-                  useLibrary.getState().resetCourseProgress(course.id);
-                  toast.success("Progresso zerado");
-                }}
-              >
-                Zerar progresso
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
+      <div className="rounded-xl border border-dashed p-4 text-xs text-muted-foreground">
+        <p className="mb-2 font-medium text-foreground">Atalhos na sala de aula</p>
+        <div className="grid gap-1.5 sm:grid-cols-2">
+          {[
+            ["Espaço", "Tocar / pausar"],
+            ["← →", "Voltar / avançar 10 s"],
+            ["N / P", "Próxima / anterior"],
+            ["T", "Modo cinema"],
+          ].map(([key, label]) => (
+            <span key={key} className="flex items-center gap-2">
+              <Kbd>{key}</Kbd> {label}
+            </span>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -371,7 +741,7 @@ function ProgressRing({ percent, done }: { percent: number; done: boolean }) {
   const r = 14;
   const c = 2 * Math.PI * r;
   return (
-    <span className="relative grid size-9 place-items-center" title={`${percent}% concluído`}>
+    <span className="relative grid size-8 shrink-0 place-items-center">
       <svg viewBox="0 0 36 36" className="absolute inset-0 -rotate-90">
         <circle cx="18" cy="18" r={r} fill="none" stroke="currentColor" strokeWidth="3" className="text-foreground/10" />
         <circle
@@ -393,7 +763,11 @@ function ProgressRing({ percent, done }: { percent: number; done: boolean }) {
           </linearGradient>
         </defs>
       </svg>
-      {done ? <Trophy className="size-3.5 text-amber-400" /> : <span className="text-[9px] font-bold tabular-nums">{percent}%</span>}
+      {done ? (
+        <Trophy className="size-3.5 text-amber-400" />
+      ) : (
+        <span className="text-[9px] font-bold tabular-nums lg:hidden">{percent}</span>
+      )}
     </span>
   );
 }
