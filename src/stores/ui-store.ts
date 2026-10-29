@@ -20,7 +20,16 @@ interface PlaylistDialogState {
   videoIds?: string[];
 }
 
+interface CourseDialogState {
+  open: boolean;
+  /** Editar um curso existente (sem id = criar novo). */
+  courseId?: string;
+}
+
 interface UiState {
+  courseDialog: CourseDialogState;
+  openCourseDialog: (options?: Omit<CourseDialogState, "open">) => void;
+  closeCourseDialog: () => void;
   addDialog: AddDialogState;
   playlistDialog: PlaylistDialogState;
   editVideoId: string | null;
@@ -41,6 +50,9 @@ interface UiState {
 }
 
 export const useUi = create<UiState>()((set) => ({
+  courseDialog: { open: false },
+  openCourseDialog: (options) => set({ courseDialog: { open: true, ...options } }),
+  closeCourseDialog: () => set((s) => ({ courseDialog: { ...s.courseDialog, open: false } })),
   addDialog: { open: false },
   playlistDialog: { open: false },
   editVideoId: null,

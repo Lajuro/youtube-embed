@@ -54,7 +54,7 @@ import { googleSearch, googleSearchMore, googleWebSearchUrl } from "@/lib/google
 import { parseManyVideoIds } from "@/lib/youtube";
 import { GoogleSetupGuide } from "@/components/search/google-setup";
 import type { SearchPage, SearchResult } from "@/lib/youtube-search";
-import { useLibrary } from "@/stores/library-store";
+import { isInLibrary, useLibrary } from "@/stores/library-store";
 import { useCurrentVideoId, usePlayer } from "@/stores/player-store";
 import { useHydration, useSearchHistory, useSettings, useUi } from "@/stores/ui-store";
 
@@ -344,7 +344,7 @@ export function SearchView() {
 }
 
 function SearchResultItem({ result }: { result: SearchResult }) {
-  const inLibrary = useLibrary((s) => Boolean(s.videos[result.id]));
+  const inLibrary = useLibrary((s) => isInLibrary(s.videos[result.id]));
   const isFavorite = useLibrary((s) => s.favorites.includes(result.id));
   const playlists = useLibrary((s) => s.playlists);
   const isCurrent = useCurrentVideoId() === result.id;

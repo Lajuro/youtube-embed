@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Clock3,
+  GraduationCap,
   Coffee,
   Heart,
   Library,
@@ -19,6 +20,10 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
+import { Progress } from "@/components/ui/progress";
+import { CourseCover } from "@/components/courses/course-cover";
+import { sortCourses } from "@/components/courses/courses-view";
+import { continueCourse, courseStats, lessonTitle, nextLessonToWatch } from "@/lib/courses";
 import { Skeleton } from "@/components/ui/skeleton";
 import { STARTER_VIDEOS } from "@/components/dialogs/add-video-dialog";
 import { HydrationGate } from "@/components/hydration-gate";
@@ -28,7 +33,7 @@ import { VideoCard } from "@/components/video/video-card";
 import { addVideosToLibrary, playList } from "@/lib/actions";
 import { cn, formatTotalDuration, pluralize } from "@/lib/utils";
 import { parseManyVideoIds } from "@/lib/youtube";
-import { sortByAddedDesc, useLibrary } from "@/stores/library-store";
+import { courseLessons, isInLibrary, sortByAddedDesc, useLibrary } from "@/stores/library-store";
 import { usePlayer, type QueueSource } from "@/stores/player-store";
 import { useUi } from "@/stores/ui-store";
 
@@ -66,12 +71,13 @@ function Home() {
   const favorites = useLibrary((s) => s.favorites);
   const playlists = useLibrary((s) => s.playlists);
   const recent = useLibrary((s) => s.recent);
+  const courses = useLibrary((s) => s.courses);
 
   const all = useMemo(() => sortByAddedDesc(videos), [videos]);
-  const recentIds = useMemo(() => recent.filter((id) => videos[id]).slice(0, 10), [recent, videos]);
+  const recentIds = useMemo(() => recent.filter((id) => isInLibrary(videos[id])).slice(0, 10), [recent, videos]);
   const favoriteIds = useMemo(() => favorites.filter((id) => videos[id]), [favorites, videos]);
   const totalDuration = all.reduce((sum, v) => sum + (v.duration ?? 0), 0);
-  const isEmpty = all.length === 0;
+  const isEmpty = all.length === 0 && courses.length === 0;
 
   return (
     <div className="pb-16">
@@ -82,7 +88,9 @@ function Home() {
           <Onboarding />
         ) : (
           <>
-            <QuickAccess favoriteIds={favoriteIds} allIds={all.map((v) => v.id)} />
+            {all.length > 0 && <QuickAccess favoriteIds={favoriteIds} allIds={all.map((v) => v.id)} />}
+
+            <ContinueLearning />
 
             {recentIds.length > 0 && (
               <Section title="Tocados recentemente" icon={Clock3}>
@@ -106,9 +114,11 @@ function Home() {
               </Section>
             )}
 
-            <Section title="Adicionados recentemente" icon={Sparkles} href="/library">
-              <CardGrid ids={all.slice(0, 10).map((v) => v.id)} source={{ type: "library", label: "Biblioteca" }} />
-            </Section>
+            {all.length > 0 && (
+              <Section title="Adicionados recentemente" icon={Sparkles} href="/library">
+                <CardGrid ids={all.slice(0, 10).map((v) => v.id)} source={{ type: "library", label: "Biblioteca" }} />
+              </Section>
+            )}
 
             <p className="text-center text-xs text-muted-foreground">
               {pluralize(all.length, "vídeo", "vídeos")} na biblioteca
@@ -340,6 +350,60 @@ function QuickAccess({ favoriteIds, allIds }: { favoriteIds: string[]; allIds: s
         );
       })}
     </div>
+  );
+}
+
+/** Cursos em andamento, com a próxima aula e um botão para continuar. */
+function ContinueLearning() {
+  const courses = useLibrary((s) => s.courses);
+  const progress = useLibrary((s) => s.progress);
+  const videos = useLibrary((s) => s.videos);
+  const active = sortCourses(courses, progress, videos)
+    .filter((c) => {
+      const stats = courseStats(c, progress, videos);
+      return stats.total > 0 && stats.completed < stats.total;
+    })
+    .slice(0, 3);
+  if (!active.length) return null;
+
+  return (
+    <Section title={active.some((c) => c.lastOpenedAt) ? "Continue aprendendo" : "Seus cursos"} icon={GraduationCap} href="/courses">
+      <div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
+        {active.map((course) => {
+          const stats = courseStats(course, progress, videos);
+          const next = nextLessonToWatch(course, progress);
+          const number = next ? courseLessons(course).findIndex((l) => l.id === next.id) + 1 : 0;
+          return (
+            <div
+              key={course.id}
+              className="group/cl relative flex items-center gap-4 overflow-hidden rounded-2xl border bg-card/60 p-3 transition-colors hover:border-primary/40"
+            >
+              <Link href={`/courses/${course.id}`} className="absolute inset-0" aria-label={course.title} />
+              <CourseCover course={course} className="pointer-events-none w-32 shrink-0 rounded-xl sm:w-40" />
+              <div className="pointer-events-none min-w-0 flex-1">
+                <p className="truncate font-semibold">{course.title}</p>
+                {next && (
+                  <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                    Aula {number}: {lessonTitle(next, videos)}
+                  </p>
+                )}
+                <Progress value={stats.percent} className="mt-3" />
+                <p className="mt-1 text-xs text-muted-foreground">{stats.percent}% concluído</p>
+              </div>
+              <Button
+                size="icon-lg"
+                variant="brand"
+                className="relative shrink-0 rounded-full"
+                aria-label={`Continuar ${course.title}`}
+                onClick={() => continueCourse(course.id)}
+              >
+                <Play className="ml-0.5 fill-current" />
+              </Button>
+            </div>
+          );
+        })}
+      </div>
+    </Section>
   );
 }
 

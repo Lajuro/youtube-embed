@@ -2,9 +2,10 @@
 
 import { toast } from "sonner";
 
-import { useLibrary, type Video } from "@/stores/library-store";
+import { isInLibrary, useLibrary, type Video } from "@/stores/library-store";
 import { usePlayer, type QueueSource } from "@/stores/player-store";
 import { fetchVideoMetadata, watchUrl } from "@/lib/youtube";
+import { probeTitles } from "@/lib/youtube-prober";
 import { pluralize } from "@/lib/utils";
 
 /**
@@ -17,7 +18,11 @@ export function hydrateMetadata(id: string) {
   const video = useLibrary.getState().videos[id];
   if (!video || video.titleSource !== "pending") return;
   fetchVideoMetadata(id).then((meta) => {
-    if (!meta) return;
+    // oEmbed bloqueado (comum em rede corporativa): pergunta ao próprio player, escondido.
+    if (!meta) {
+      probeTitles([id]);
+      return;
+    }
     useLibrary.getState().updateVideo(id, {
       title: meta.title,
       author: meta.author,
@@ -31,7 +36,7 @@ export function addVideosToLibrary(ids: string[], extra?: Partial<Omit<Video, "i
   const { addVideo } = useLibrary.getState();
   let created = 0;
   for (const id of ids) {
-    const result = addVideo(id, extra);
+    const result = addVideo(id, { ...extra, courseOnly: false });
     if (result.created) created++;
     hydrateMetadata(id);
   }
@@ -40,7 +45,8 @@ export function addVideosToLibrary(ids: string[], extra?: Partial<Omit<Video, "i
 
 export function toggleFavorite(id: string) {
   const library = useLibrary.getState();
-  if (!library.videos[id]) addVideosToLibrary([id]);
+  // Favoritar uma aula também a coloca na biblioteca (senão ela sumiria da lista de favoritos).
+  if (!isInLibrary(library.videos[id])) addVideosToLibrary([id]);
   const isFav = library.toggleFavorite(id);
   const title = useLibrary.getState().videos[id]?.title;
   toast(isFav ? "Adicionado aos favoritos" : "Removido dos favoritos", {
@@ -167,7 +173,7 @@ export function downloadBackup() {
   a.click();
   URL.revokeObjectURL(url);
   toast.success("Backup exportado", {
-    description: `${pluralize(data.videos.length, "vídeo", "vídeos")} e ${pluralize(data.playlists.length, "playlist", "playlists")}`,
+    description: `${pluralize(data.videos.length, "vídeo", "vídeos")}, ${pluralize(data.playlists.length, "playlist", "playlists")} e ${pluralize(data.courses?.length ?? 0, "curso", "cursos")}`,
   });
 }
 
@@ -191,6 +197,7 @@ export function saveVideoInfo(info: KnownVideoInfo) {
     isLive: info.isLive || undefined,
     thumbnail: info.thumbnail,
     titleSource: "auto",
+    courseOnly: false,
   });
   return created;
 }

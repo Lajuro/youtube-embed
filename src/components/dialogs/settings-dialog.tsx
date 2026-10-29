@@ -25,7 +25,7 @@ import { CREATE_ENGINE_URL, GoogleCxForm } from "@/components/search/google-setu
 import { downloadBackup } from "@/lib/actions";
 import { cn, pluralize } from "@/lib/utils";
 import type { EmbedHost } from "@/lib/youtube";
-import { useLibrary, type LibraryBackup } from "@/stores/library-store";
+import { countLibraryVideos, useLibrary, type LibraryBackup } from "@/stores/library-store";
 import { usePlayer } from "@/stores/player-store";
 import { useSettings, useUi } from "@/stores/ui-store";
 
@@ -91,7 +91,7 @@ export function SettingsDialog() {
   const setOpen = useUi((s) => s.setSettingsOpen);
   const { theme, setTheme } = useTheme();
   const settings = useSettings();
-  const videoCount = useLibrary((s) => Object.keys(s.videos).length);
+  const videoCount = useLibrary((s) => countLibraryVideos(s.videos));
   const playlistCount = useLibrary((s) => s.playlists.length);
   const favoriteCount = useLibrary((s) => s.favorites.length);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -115,7 +115,7 @@ export function SettingsDialog() {
     const result = useLibrary.getState().importBackup(pendingBackup, mode);
     setPendingBackup(null);
     toast.success("Backup importado", {
-      description: `${pluralize(result.videos, "vídeo", "vídeos")} e ${pluralize(result.playlists, "playlist", "playlists")}`,
+      description: `${pluralize(result.videos, "vídeo", "vídeos")}, ${pluralize(result.playlists, "playlist", "playlists")} e ${pluralize(result.courses, "curso", "cursos")}`,
     });
   };
 
@@ -245,9 +245,9 @@ export function SettingsDialog() {
             {pendingBackup ? (
               <div className="grid gap-3 rounded-xl border border-primary/40 bg-primary/5 p-3">
                 <p className="text-sm">
-                  Backup com <strong>{pluralize(pendingBackup.videos.length, "vídeo", "vídeos")}</strong> e{" "}
-                  <strong>{pluralize(pendingBackup.playlists?.length ?? 0, "playlist", "playlists")}</strong>. Como
-                  importar?
+                  Backup com <strong>{pluralize(pendingBackup.videos.length, "vídeo", "vídeos")}</strong>,{" "}
+                  <strong>{pluralize(pendingBackup.playlists?.length ?? 0, "playlist", "playlists")}</strong> e{" "}
+                  <strong>{pluralize(pendingBackup.courses?.length ?? 0, "curso", "cursos")}</strong>. Como importar?
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <Button size="sm" variant="brand" onClick={() => applyBackup("merge")}>
@@ -286,7 +286,7 @@ export function SettingsDialog() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Apagar todos os dados?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Isso remove vídeos, favoritos, playlists e a fila deste navegador. Não dá para desfazer — se
+                        Isso remove vídeos, favoritos, playlists, cursos (com progresso e anotações) e a fila deste navegador. Não dá para desfazer — se
                         quiser, exporte um backup antes.
                       </AlertDialogDescription>
                     </AlertDialogHeader>

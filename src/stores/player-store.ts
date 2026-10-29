@@ -11,9 +11,28 @@ export type PlayerStatus = "idle" | "loading" | "playing" | "paused" | "bufferin
 export type VideoMode = "mini" | "hidden";
 
 export interface QueueSource {
-  type: "playlist" | "favorites" | "library" | "single" | "custom";
+  type: "playlist" | "favorites" | "library" | "single" | "custom" | "course";
   id?: string;
   label: string;
+}
+
+export const PLAYBACK_RATES = [0.75, 1, 1.25, 1.5, 1.75, 2] as const;
+
+/**
+ * Permite que outra parte do app diga "de onde começar" cada vídeo (ex.: cursos
+ * retomam a aula no ponto em que você parou). Registrado pelo CourseTracker.
+ */
+type StartResolver = (videoId: string, source: QueueSource | null) => number;
+let startResolver: StartResolver | null = null;
+export function setStartResolver(resolver: StartResolver | null) {
+  startResolver = resolver;
+}
+
+interface PlayQueueOptions {
+  /** Ignora o modo aleatório (aulas de um curso sempre seguem a ordem). */
+  ordered?: boolean;
+  /** Segundo em que o primeiro vídeo deve começar. */
+  startAt?: number;
 }
 
 interface PlayerState {
@@ -28,8 +47,9 @@ interface PlayerState {
   volume: number;
   muted: boolean;
   videoMode: VideoMode;
-  /** Posição salva para retomar depois de recarregar a página. */
+  /** Posição salva para retomar depois de recarregar a página (e onde o vídeo atual começa). */
   resumeAt: number;
+  playbackRate: number;
 
   /* ---- em memória ---- */
   status: PlayerStatus;
@@ -45,13 +65,13 @@ interface PlayerState {
   queueOpen: boolean;
 
   /* ---- ações ---- */
-  playQueue: (ids: string[], startIndex?: number, source?: QueueSource | null) => void;
+  playQueue: (ids: string[], startIndex?: number, source?: QueueSource | null, options?: PlayQueueOptions) => void;
   playVideo: (id: string, source?: QueueSource | null) => void;
   playNext: (ids: string[]) => void;
   addToQueue: (ids: string[]) => void;
   removeFromQueue: (index: number) => void;
   moveInQueue: (from: number, to: number) => void;
-  jumpTo: (index: number) => void;
+  jumpTo: (index: number, startAt?: number) => void;
   clearQueue: () => void;
   next: (auto?: boolean) => void;
   previous: () => void;
@@ -59,6 +79,7 @@ interface PlayerState {
   seek: (seconds: number) => void;
   seekBy: (delta: number) => void;
   setVolume: (volume: number) => void;
+  setPlaybackRate: (rate: number) => void;
   toggleMute: () => void;
   toggleShuffle: () => void;
   cycleRepeat: () => void;
@@ -77,16 +98,19 @@ export const usePlayer = create<PlayerState>()(
       const bridge = () => getBridge();
 
       /** Troca a faixa atual mantendo a fila. */
-      const goTo = (index: number, autoplay = true) => {
+      const goTo = (index: number, autoplay = true, startAt?: number) => {
+        const { queue, source } = get();
+        const videoId = queue[index];
+        const start = startAt ?? (videoId && startResolver ? startResolver(videoId, source) : 0);
         set((s) => ({
           index,
           playToken: s.playToken + 1,
           autoplay,
           status: "loading",
-          currentTime: 0,
+          currentTime: start,
           duration: 0,
           isLive: false,
-          resumeAt: 0,
+          resumeAt: start,
         }));
       };
 
@@ -101,6 +125,7 @@ export const usePlayer = create<PlayerState>()(
         muted: false,
         videoMode: "mini",
         resumeAt: 0,
+        playbackRate: 1,
 
         status: "idle",
         currentTime: 0,
@@ -112,9 +137,9 @@ export const usePlayer = create<PlayerState>()(
         expanded: false,
         queueOpen: false,
 
-        playQueue: (ids, startIndex = 0, source = null) => {
+        playQueue: (ids, startIndex = 0, source = null, options = {}) => {
           if (!ids.length) return;
-          const { shuffle } = get();
+          const shuffle = get().shuffle && !options.ordered;
           let queue = [...ids];
           let index = Math.min(Math.max(startIndex, 0), ids.length - 1);
           let originalQueue: string[] | null = null;
@@ -125,7 +150,7 @@ export const usePlayer = create<PlayerState>()(
             index = 0;
           }
           set({ queue, originalQueue, source });
-          goTo(index);
+          goTo(index, true, options.startAt);
         },
 
         playVideo: (id, source = null) => {
@@ -197,8 +222,8 @@ export const usePlayer = create<PlayerState>()(
           set({ queue: nextQueue, index: nextIndex });
         },
 
-        jumpTo: (i) => {
-          if (i >= 0 && i < get().queue.length) goTo(i);
+        jumpTo: (i, startAt) => {
+          if (i >= 0 && i < get().queue.length) goTo(i, true, startAt);
         },
 
         clearQueue: () => {
@@ -269,6 +294,11 @@ export const usePlayer = create<PlayerState>()(
           bridge().setVolume(v);
           if (v > 0 && get().muted) bridge().unMute();
           set({ volume: v, muted: v === 0 ? get().muted : false });
+        },
+
+        setPlaybackRate: (rate) => {
+          bridge().setPlaybackRate(rate);
+          set({ playbackRate: rate });
         },
 
         toggleMute: () => {
@@ -348,10 +378,19 @@ export const usePlayer = create<PlayerState>()(
         volume: s.volume,
         muted: s.muted,
         videoMode: s.videoMode,
+        playbackRate: s.playbackRate,
         resumeAt: s.isLive ? 0 : Math.floor(s.currentTime || s.resumeAt),
       }),
     }
   )
+);
+
+/**
+ * "Encaixe" do vídeo: uma página pode oferecer um elemento (ex.: a área de vídeo da
+ * sala de aula) para o player ocupar no lugar do mini player.
+ */
+export const usePlayerDock = create<{ el: HTMLElement | null; setEl: (el: HTMLElement | null) => void }>()(
+  (set) => ({ el: null, setEl: (el) => set({ el }) })
 );
 
 export function useCurrentVideoId() {

@@ -1,10 +1,12 @@
 "use client";
 
 import { AddVideoDialog } from "@/components/dialogs/add-video-dialog";
+import { CourseDialog } from "@/components/courses/course-dialog";
 import { EditVideoDialog } from "@/components/dialogs/edit-video-dialog";
 import { PlaylistDialog } from "@/components/dialogs/playlist-dialog";
 import { SettingsDialog } from "@/components/dialogs/settings-dialog";
 import { ShortcutsDialog } from "@/components/dialogs/shortcuts-dialog";
+import { BackgroundSync } from "@/components/background-sync";
 import { CommandPalette } from "@/components/command-palette";
 import { DocumentTitle } from "@/components/document-title";
 import { GlobalHotkeys } from "@/components/global-hotkeys";
@@ -33,12 +35,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <MobileSidebar />
       <AddVideoDialog />
       <PlaylistDialog />
+      <CourseDialog />
       <EditVideoDialog />
       <SettingsDialog />
       <ShortcutsDialog />
       <CommandPalette />
       <GlobalHotkeys />
       <DocumentTitle />
+      <BackgroundSync />
     </div>
   );
 }

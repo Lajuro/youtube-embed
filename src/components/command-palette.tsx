@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
   Download,
+  GraduationCap,
   Heart,
   House,
   Keyboard,
@@ -74,6 +75,7 @@ function PaletteBody({
   const { resolvedTheme, setTheme } = useTheme();
   const videos = useLibrary((s) => s.videos);
   const playlists = useLibrary((s) => s.playlists);
+  const courses = useLibrary((s) => s.courses);
   const favorites = useLibrary((s) => s.favorites);
   const status = usePlayer((s) => s.status);
   const hasQueue = usePlayer((s) => s.queue.length > 0);
@@ -148,6 +150,9 @@ function PaletteBody({
           <CommandItem value="nova playlist criar" onSelect={() => run(() => ui.openPlaylistDialog())}>
             <ListPlus /> Nova playlist
           </CommandItem>
+          <CommandItem value="novo curso criar importar playlist aulas" onSelect={() => run(() => ui.openCourseDialog())}>
+            <GraduationCap /> Novo curso
+          </CommandItem>
           {hasQueue && (
             <CommandItem value="tocar pausar play pause" onSelect={() => run(() => usePlayer.getState().togglePlay())}>
               {status === "playing" ? <Pause /> : <Play />}
@@ -216,7 +221,31 @@ function PaletteBody({
           <CommandItem value="playlists todas" onSelect={() => run(() => router.push("/playlists"))}>
             <ListMusic /> Playlists
           </CommandItem>
+          <CommandItem value="cursos aprender aulas" onSelect={() => run(() => router.push("/courses"))}>
+            <GraduationCap /> Cursos
+          </CommandItem>
         </CommandGroup>
+
+        {courses.length > 0 && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Cursos">
+              {courses.map((c) => (
+                <CommandItem
+                  key={c.id}
+                  value={`curso ${c.title} ${c.author ?? ""} ${c.id}`}
+                  onSelect={() => run(() => router.push(`/courses/${c.id}`))}
+                >
+                  <GraduationCap />
+                  <span className="truncate">{c.title}</span>
+                  <CommandShortcut className="tracking-normal">
+                    {pluralize(c.sections.reduce((n, s) => n + s.lessons.length, 0), "aula", "aulas")}
+                  </CommandShortcut>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
 
         {playlists.length > 0 && (
           <>

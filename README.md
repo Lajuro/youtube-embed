@@ -1,6 +1,6 @@
 # Sintonia 🎧
 
-Um "YouTube fora do YouTube": cole links de vídeos, organize em **playlists** e **favoritos** e deixe tocando enquanto trabalha — com um player embutido, fila de reprodução, aleatório, repetir e mini player.
+Um "YouTube fora do YouTube": cole links de vídeos, organize em **playlists** e **favoritos** e deixe tocando enquanto trabalha — com um player embutido, fila de reprodução, aleatório, repetir e mini player. E também uma **plataforma de cursos** estilo Udemy: vídeos do YouTube organizados em seções e aulas, com progresso e anotações.
 
 Não tem login nem servidor de dados: **tudo fica salvo no `localStorage` do seu navegador**.
 
@@ -56,6 +56,12 @@ npm start        # http://localhost:3000
 - **Adicionar vídeos** por link ou ID, em qualquer formato: `watch?v=`, `youtu.be/`, `shorts/`, `live/`, `embed/`, `music.youtube.com`, código `<iframe>` ou só o ID de 11 caracteres. Dá para colar vários de uma vez (um por linha).
 - **Colar em qualquer lugar**: com a página aberta, `Ctrl+V` em um link do YouTube já abre o diálogo de adicionar.
 - **Buscar no YouTube** direto no app, sem chave de API (veja [como funciona](#6-busca-sem-api)).
+- **Cursos** estilo Udemy (veja [como funciona](#7-cursos)):
+  - crie a partir de uma **playlist do YouTube** (importa todos os vídeos), de links soltos ou em branco;
+  - organize em **seções**: renomeie, reordene, arraste aulas, mova entre seções ou divida uma seção em duas;
+  - **sala de aula** com o vídeo, o conteúdo do curso ao lado e as aulas marcadas como concluídas automaticamente;
+  - **continua de onde parou** em cada aula, **velocidade** de 0,75x a 2x e **anotações com tempo** (clique no tempo para voltar àquele momento);
+  - "Continue aprendendo" no Início, e as aulas não se misturam com a sua biblioteca de músicas.
 - **Biblioteca** com busca, ordenação (recentes, título, mais tocados…) e visualização em lista ou grade.
 - **Favoritos** e **playlists** com capa em mosaico, descrição e **arrastar para reordenar**.
 - **Player** estilo app de música: tocar/pausar, anterior/próximo, aleatório, repetir (tudo/um), volume, barra de progresso e selo **AO VIVO** para rádios 24h.
@@ -114,7 +120,7 @@ Se um iframe for movido de lugar no DOM (ou se o `src` dele mudar), o navegador 
 ### 4. Títulos e miniaturas sem chave de API
 
 - **Miniaturas**: vêm de `https://i.ytimg.com/vi/<ID>/hqdefault.jpg`.
-- **Título e canal**: primeiro o app tenta o endpoint público de oEmbed (`youtube.com/oembed`, depois `noembed.com`). Se a rede bloquear, o próprio player informa o título (`videoData`) assim que o vídeo começa a tocar, e a biblioteca é atualizada automaticamente. Você também pode editar o título manualmente.
+- **Título e canal**: primeiro o app tenta o endpoint público de oEmbed (`youtube.com/oembed`, depois `noembed.com`). Se a rede bloquear, ele pergunta ao próprio player: um segundo player, invisível (a "sonda", em [`src/lib/youtube-prober.ts`](src/lib/youtube-prober.ts)), *prepara* o vídeo sem tocar (`cueVideoById`) e lê o título que o player informa (`videoData`). Você também pode editar o título manualmente.
 
 ### 5. Dados no navegador
 
@@ -122,7 +128,7 @@ O estado fica em três *stores* do [Zustand](https://zustand.docs.pmnd.rs) com o
 
 | Chave | O que guarda |
 | --- | --- |
-| `sintonia:library` | vídeos, favoritos, playlists e histórico |
+| `sintonia:library` | vídeos, favoritos, playlists, histórico, cursos, progresso das aulas e anotações |
 | `sintonia:player` | fila, posição, volume, aleatório/repetir |
 | `sintonia:settings` | preferências (domínio do player, luz ambiente…) |
 
@@ -159,20 +165,33 @@ Se a sua rede libera o YouTube mas exige proxy, rode `npm run dev:proxy` (ou `np
 
 > ⚠️ Limpar os dados do navegador apaga sua biblioteca. Use **Configurações → Exportar backup** de vez em quando.
 
+### 7. Cursos
+
+Um curso é uma lista de **seções**, e cada seção tem **aulas** (uma aula = um vídeo do YouTube, com título opcional próprio). Tudo fica no mesmo store da biblioteca, então entra no backup.
+
+- **Importar playlist sem API**: o app abre a playlist num player invisível (`/embed/videoseries?list=…`). Com uma playlist carregada, o player informa a lista de IDs dos vídeos (campo `playlist` das mensagens) — é o mesmo canal de `postMessage` usado para controlar o vídeo. Depois a sonda descobre o título e a duração de cada um.
+- **Aulas fora da biblioteca de músicas**: os vídeos adicionados só por causa de um curso ganham a marca `courseOnly`. Eles continuam servindo de "cache" de título e duração, mas não aparecem na Biblioteca. Excluir o curso apaga esses registros; vídeos que também estão na biblioteca ficam.
+- **Vídeo encaixado na sala de aula**: o iframe continua sendo um só (ver item 3). A sala de aula oferece um "palco" (`usePlayerDock`) e o `PlayerHost` se posiciona exatamente em cima dele; ao sair da página, o vídeo volta para o mini player sem recarregar.
+- **Progresso**: o [`BackgroundSync`](src/components/background-sync.tsx) salva a posição a cada 5 s, marca a aula como concluída ao chegar em 95% (ou no fim) e registra a última aula aberta. Ao tocar uma aula, o player começa do ponto salvo (`loadVideoById` com `startSeconds`).
+- **Velocidade**: comando `setPlaybackRate` do player, reaplicado a cada vídeo novo.
+
 ## Estrutura
 
 ```text
 src/
-├── app/                  rotas (início, biblioteca, favoritos, playlists)
+├── app/                  rotas (início, busca, biblioteca, favoritos, playlists, cursos)
 ├── components/
 │   ├── ui/               componentes shadcn/ui
 │   ├── player/           iframe, barra do player, fila, "Tocando agora"
 │   ├── video/            lista, cards, menus de contexto
+│   ├── courses/          cursos: lista, sala de aula, editor, anotações, importação
 │   ├── dialogs/          adicionar vídeo, playlist, configurações, atalhos
 │   └── layout/           barra lateral e topo
 ├── lib/
 │   ├── youtube.ts        parser de links, miniaturas, oEmbed
 │   ├── youtube-bridge.ts protocolo postMessage com o player
+│   ├── youtube-prober.ts player invisível que lê playlists e títulos
+│   ├── courses.ts        regras dos cursos (progresso, próxima aula, tocar aula)
 │   ├── google-cse.ts     busca pelo Google no navegador (Programmable Search Element)
 │   ├── youtube-search.ts busca direta no YouTube (roda no servidor)
 │   └── actions.ts        ações de alto nível (favoritar, tocar, backup…)
@@ -187,3 +206,4 @@ src/
 - **A busca dá "fetch failed (ENOTFOUND)"** — você está no modo "Direto no YouTube" e o servidor do app não alcança o youtube.com. Troque para **Google** em Configurações → Busca.
 - **Depois de atualizar o projeto, alguma mudança visual não apareceu** — apague a pasta `.next` e rode `npm run dev` de novo (ela guarda o resultado de compilações antigas).
 - **A busca pelo Google não carrega** — confira o ID do mecanismo; se `cse.google.com` estiver bloqueado na rede, use **Abrir no Google** e cole o link no app.
+- **A importação da playlist não encontrou vídeos** — a playlist precisa ser pública ou não listada, e o link precisa ter o trecho `list=…`. Se a sua rede bloquear também o `/embed/videoseries`, crie o curso a partir de links.

@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AudioLines, Heart, House, Keyboard, Library, ListMusic, Plus, Search, Settings, Volume2 } from "lucide-react";
+import { AudioLines, GraduationCap, Heart, House, Keyboard, Library, ListMusic, Plus, Search, Settings, Volume2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { PlaylistCover } from "@/components/playlist/playlist-cover";
 import { cn, pluralize } from "@/lib/utils";
-import { useLibrary } from "@/stores/library-store";
+import { countLibraryVideos, useLibrary } from "@/stores/library-store";
 import { usePlayer } from "@/stores/player-store";
 import { useHydration, useUi } from "@/stores/ui-store";
 
@@ -34,6 +34,7 @@ const NAV = [
   { href: "/library", label: "Biblioteca", icon: Library },
   { href: "/favorites", label: "Favoritos", icon: Heart },
   { href: "/playlists", label: "Playlists", icon: ListMusic },
+  { href: "/courses", label: "Cursos", icon: GraduationCap },
 ] as const;
 
 /**
@@ -55,7 +56,8 @@ function SidebarWithPath(props: { onNavigate?: () => void }) {
 
 function SidebarBody({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
   const hydrated = useHydration((s) => s.hydrated);
-  const videoCount = useLibrary((s) => Object.keys(s.videos).length);
+  const videoCount = useLibrary((s) => countLibraryVideos(s.videos));
+  const courseCount = useLibrary((s) => s.courses.length);
   const favoriteCount = useLibrary((s) => s.favorites.length);
   const playlists = useLibrary((s) => s.playlists);
   const source = usePlayer((s) => s.source);
@@ -66,6 +68,7 @@ function SidebarBody({ pathname, onNavigate }: { pathname: string; onNavigate?: 
     "/library": videoCount,
     "/favorites": favoriteCount,
     "/playlists": playlists.length,
+    "/courses": courseCount,
   };
 
   return (

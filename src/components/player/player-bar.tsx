@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   ChevronDown,
+  GraduationCap,
   Eye,
   EyeOff,
   Heart,
@@ -27,6 +29,7 @@ import { Kbd } from "@/components/ui/kbd";
 import { Slider } from "@/components/ui/slider";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { VideoThumbnail } from "@/components/video/video-thumbnail";
+import { PlaybackRateMenu } from "@/components/player/playback-rate-menu";
 import { PLAYER_BAR_HEIGHT } from "@/components/player/player-host";
 import { toggleFavorite } from "@/lib/actions";
 import { cn, formatTime } from "@/lib/utils";
@@ -86,6 +89,7 @@ export function PlayerBar() {
   const expanded = usePlayer((s) => s.expanded);
   const videoMode = usePlayer((s) => s.videoMode);
   const queueOpen = usePlayer((s) => s.queueOpen);
+  const source = usePlayer((s) => s.source);
   const hasQueue = usePlayer((s) => s.queue.length > 0);
   const openAddDialog = useUi((s) => s.openAddDialog);
 
@@ -122,7 +126,17 @@ export function PlayerBar() {
               <p className="truncate text-sm font-medium" title={video.title}>
                 {video.title}
               </p>
-              <p className="truncate text-xs text-muted-foreground">{video.author ?? "Canal desconhecido"}</p>
+              {source?.type === "course" && source.id ? (
+                <Link
+                  href={`/courses/${source.id}`}
+                  className="flex items-center gap-1 truncate text-xs text-muted-foreground hover:text-foreground hover:underline"
+                >
+                  <GraduationCap className="size-3.5 shrink-0 text-primary" />
+                  <span className="truncate">{source.label}</span>
+                </Link>
+              ) : (
+                <p className="truncate text-xs text-muted-foreground">{video.author ?? "Canal desconhecido"}</p>
+              )}
             </div>
             <IconButton
               label={isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
@@ -211,6 +225,7 @@ export function PlayerBar() {
 
       {/* Direita: fila, vídeo, volume */}
       <div className="hidden items-center justify-end gap-1 md:flex md:w-[30%]">
+        <PlaybackRateMenu className="hidden lg:inline-flex" />
         <IconButton
           label={videoMode === "hidden" ? "Mostrar mini player" : "Ocultar vídeo (só áudio)"}
           shortcut="V"

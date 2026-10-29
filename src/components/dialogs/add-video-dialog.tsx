@@ -24,7 +24,7 @@ import { VideoThumbnail } from "@/components/video/video-thumbnail";
 import { addVideosToLibrary, playList } from "@/lib/actions";
 import { cn, pluralize } from "@/lib/utils";
 import { fetchVideoMetadata, parseManyVideoIds, type VideoMetadata } from "@/lib/youtube";
-import { useLibrary } from "@/stores/library-store";
+import { isInLibrary, useLibrary } from "@/stores/library-store";
 import { useUi } from "@/stores/ui-store";
 
 /** Algumas rádios 24/7 para começar (transmissões ao vivo do canal Lofi Girl). */
@@ -169,7 +169,7 @@ function AddVideoForm({
         {ids.length > 0 && (
           <ul className="flex flex-col gap-2">
             {ids.map((id) => (
-              <PreviewItem key={id} id={id} inLibrary={Boolean(videos[id])} />
+              <PreviewItem key={id} id={id} inLibrary={isInLibrary(videos[id])} />
             ))}
           </ul>
         )}

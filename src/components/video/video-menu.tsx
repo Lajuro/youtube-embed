@@ -44,7 +44,7 @@ import {
   removeFromPlaylist,
   toggleFavorite,
 } from "@/lib/actions";
-import { useLibrary } from "@/stores/library-store";
+import { isInLibrary, useLibrary } from "@/stores/library-store";
 import { usePlayer } from "@/stores/player-store";
 import { useUi } from "@/stores/ui-store";
 
@@ -88,7 +88,8 @@ function VideoMenuItems({ kit, videoId, playlistId, onPlay }: VideoMenuOptions &
   const playlists = useLibrary((s) => s.playlists);
   const openPlaylistDialog = useUi((s) => s.openPlaylistDialog);
   const setEditVideoId = useUi((s) => s.setEditVideoId);
-  const inLibrary = useLibrary((s) => Boolean(s.videos[videoId]));
+  const exists = useLibrary((s) => Boolean(s.videos[videoId]));
+  const inLibrary = useLibrary((s) => isInLibrary(s.videos[videoId]));
 
   return (
     <>
@@ -130,7 +131,7 @@ function VideoMenuItems({ kit, videoId, playlistId, onPlay }: VideoMenuOptions &
         </SubContent>
       </Sub>
       <Separator />
-      {inLibrary && (
+      {exists && (
         <Item onSelect={() => setEditVideoId(videoId)}>
           <Pencil /> Editar título
         </Item>

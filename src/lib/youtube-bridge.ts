@@ -29,6 +29,9 @@ export interface PlayerInfo {
   playerState?: number;
   volume?: number;
   muted?: boolean;
+  playbackRate?: number;
+  /** IDs dos vídeos quando o player carregou uma playlist (embed/videoseries?list=...). */
+  playlist?: string[] | null;
   videoData?: {
     video_id?: string;
     title?: string;
@@ -88,6 +91,12 @@ export class YouTubeBridge {
     }, UNRESPONSIVE_AFTER_MS);
   }
 
+  /** Desliga de vez (para instâncias temporárias, como a sonda de informações). */
+  dispose() {
+    this.detach();
+    if (typeof window !== "undefined") window.removeEventListener("message", this.handleMessage);
+  }
+
   detach() {
     this.stopListening();
     if (this.unresponsiveTimer) clearTimeout(this.unresponsiveTimer);
@@ -114,6 +123,7 @@ export class YouTubeBridge {
   setVolume = (volume: number) => this.command("setVolume", Math.round(volume));
   mute = () => this.command("mute");
   unMute = () => this.command("unMute");
+  setPlaybackRate = (rate: number) => this.command("setPlaybackRate", rate);
   loadVideo = (videoId: string, startSeconds = 0) =>
     this.command("loadVideoById", { videoId, startSeconds });
   cueVideo = (videoId: string, startSeconds = 0) =>

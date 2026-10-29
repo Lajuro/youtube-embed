@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { getBridge, PlayerState, type PlayerInfo } from "@/lib/youtube-bridge";
 import { playerErrorMessage } from "@/lib/youtube";
 import { useLibrary } from "@/stores/library-store";
-import { useCurrentVideoId, usePlayer, type PlayerStatus } from "@/stores/player-store";
+import { useCurrentVideoId, usePlayer, usePlayerDock, type PlayerStatus } from "@/stores/player-store";
 import { useHydration, useSettings } from "@/stores/ui-store";
 
 /** Altura reservada para a barra do player na parte de baixo da tela. */
@@ -77,10 +77,26 @@ export function PlayerHost() {
   const expanded = usePlayer((s) => s.expanded);
   const videoMode = usePlayer((s) => s.videoMode);
   const embedHost = useSettings((s) => s.embedHost);
+  const dockEl = usePlayerDock((s) => s.el);
 
   const [seed, setSeed] = useState<IframeSeed | null>(null);
   const [rect, setRect] = useState<Rect | null>(null);
   const loadedTokenRef = useRef<number | null>(null);
+
+  // Onde o vídeo aparece: tela "Tocando agora" > encaixado numa página (ex.: curso) > mini player.
+  const mode = expanded ? "expanded" : dockEl ? "docked" : "mini";
+  // Só anima posição/tamanho ao trocar de modo; no resto do tempo o vídeo acompanha o palco sem atraso.
+  const [lastMode, setLastMode] = useState(mode);
+  const [animating, setAnimating] = useState(false);
+  if (mode !== lastMode) {
+    setLastMode(mode);
+    setAnimating(true);
+  }
+  useEffect(() => {
+    if (!animating) return;
+    const timer = setTimeout(() => setAnimating(false), 600);
+    return () => clearTimeout(timer);
+  }, [animating]);
 
   /* ---------- Criação / recriação do iframe ---------- */
   // Ajuste de estado durante o render (padrão recomendado pelo React em vez de um effect):
@@ -107,8 +123,9 @@ export function PlayerHost() {
     if (loadedTokenRef.current === playToken) return;
     loadedTokenRef.current = playToken;
     const bridge = getBridge();
-    if (usePlayer.getState().autoplay) bridge.loadVideo(currentId);
-    else bridge.cueVideo(currentId);
+    const { autoplay, resumeAt } = usePlayer.getState();
+    if (autoplay) bridge.loadVideo(currentId, resumeAt);
+    else bridge.cueVideo(currentId, resumeAt);
   }, [seed, currentId, playToken]);
 
   /* ---------- Eventos vindos do player ---------- */
@@ -128,6 +145,8 @@ export function PlayerHost() {
         const id = player.queue[player.index];
         if (playedToken.current !== token && id) {
           playedToken.current = token;
+          // O YouTube pode voltar à velocidade normal ao trocar de vídeo.
+          if (player.playbackRate !== 1) getBridge().setPlaybackRate(player.playbackRate);
           useLibrary.getState().markPlayed(id);
           const video = useLibrary.getState().videos[id];
           if (video?.unavailable) useLibrary.getState().updateVideo(id, { unavailable: false });
@@ -145,8 +164,9 @@ export function PlayerHost() {
 
     bridge.setHandlers({
       onReady: () => {
-        const { volume, muted } = usePlayer.getState();
+        const { volume, muted, playbackRate } = usePlayer.getState();
         bridge.setVolume(volume);
+        if (playbackRate !== 1) bridge.setPlaybackRate(playbackRate);
         if (muted) bridge.mute();
         else bridge.unMute();
         usePlayer.getState()._sync({ ready: true });
@@ -224,10 +244,12 @@ export function PlayerHost() {
 
   /* ---------- Posicionamento (mini x palco do "Tocando agora") ---------- */
   const measure = useCallback(() => {
-    if (usePlayer.getState().expanded) {
-      const stage = document.getElementById(PLAYER_STAGE_ID);
-      if (stage) {
-        const r = stage.getBoundingClientRect();
+    const stage = usePlayer.getState().expanded
+      ? document.getElementById(PLAYER_STAGE_ID)
+      : usePlayerDock.getState().el;
+    if (stage && stage.isConnected) {
+      const r = stage.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0) {
         setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
         return;
       }
@@ -236,9 +258,9 @@ export function PlayerHost() {
   }, []);
 
   useEffect(() => {
-    // O palco é montado junto com o overlay; mede no próximo frame.
+    // O palco é montado junto com o overlay/página; mede no próximo frame.
     const raf = requestAnimationFrame(measure);
-    const stage = document.getElementById(PLAYER_STAGE_ID);
+    const stage = expanded ? document.getElementById(PLAYER_STAGE_ID) : dockEl;
     const observer = new ResizeObserver(measure);
     if (stage) observer.observe(stage);
     window.addEventListener("resize", measure);
@@ -249,19 +271,22 @@ export function PlayerHost() {
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
     };
-  }, [expanded, measure, seed]);
+  }, [expanded, dockEl, measure, seed]);
 
   if (!seed || !rect) return null;
 
-  const hiddenMini = !expanded && videoMode === "hidden";
+  const hiddenMini = mode === "mini" && videoMode === "hidden";
 
   return (
     <div
       className={cn(
-        "group/host fixed overflow-hidden bg-black transition-[top,left,width,height,opacity,border-radius,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
-        expanded
-          ? "z-[45] rounded-2xl shadow-[0_30px_120px_-20px_rgba(0,0,0,0.8)]"
-          : "z-30 rounded-xl shadow-2xl ring-1 ring-white/10",
+        "group/host fixed overflow-hidden bg-black duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        animating
+          ? "transition-[top,left,width,height,opacity,border-radius,box-shadow]"
+          : "transition-[opacity,border-radius,box-shadow]",
+        mode === "expanded" && "z-[45] rounded-2xl shadow-[0_30px_120px_-20px_rgba(0,0,0,0.8)]",
+        mode === "docked" && "z-30 rounded-none shadow-xl sm:rounded-xl",
+        mode === "mini" && "z-30 rounded-xl shadow-2xl ring-1 ring-white/10",
         hiddenMini && "pointer-events-none opacity-0"
       )}
       style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
@@ -278,7 +303,7 @@ export function PlayerHost() {
         onLoad={(e) => getBridge().attach(e.currentTarget, `https://${seed.host}`)}
       />
 
-      {!expanded && !hiddenMini && (
+      {mode === "mini" && !hiddenMini && (
         <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-end gap-1 bg-gradient-to-b from-black/70 to-transparent p-1.5 opacity-0 transition-opacity group-hover/host:opacity-100">
           <Tooltip>
             <TooltipTrigger asChild>

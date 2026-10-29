@@ -19,6 +19,7 @@ function anyOverlayOpen() {
   const ui = useUi.getState();
   return (
     ui.addDialog.open ||
+    ui.courseDialog.open ||
     ui.playlistDialog.open ||
     ui.commandOpen ||
     ui.settingsOpen ||
