@@ -26,6 +26,7 @@ const FILES = [
   "package-lock.json",
   "package.json",
   "scripts/bundle.mjs",
+  "scripts/check-port.mjs",
   "scripts/dev-proxy.mjs",
   "src/app/api/search/route.ts",
   "src/app/courses/[id]/edit/page.tsx",
@@ -127,6 +128,7 @@ const FILES = [
   "src/lib/layout.ts",
   "src/lib/pwa.ts",
   "src/lib/utils.ts",
+  "src/lib/version.ts",
   "src/lib/youtube-bridge.ts",
   "src/lib/youtube-prober.ts",
   "src/lib/youtube-search.ts",
@@ -188,7 +190,12 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log("✔ Tudo baixado! Próximos passos:");
-console.log(`  cd "${path.relative(process.cwd(), target) || "."}"`);
-console.log("  npm install");
-console.log("  npm run dev");
+// Cache de compilações antigas: se ficar, o app pode continuar mostrando a versão anterior.
+fs.rmSync(path.join(target, ".next"), { recursive: true, force: true });
+
+console.log(`✔ Tudo baixado (Sintonia 2.0.0)! Próximos passos:`);
+console.log("  1. Feche qualquer “npm run dev” ou “npm start” que ainda esteja aberto (Ctrl+C).");
+console.log(`  2. cd "${path.relative(process.cwd(), target) || "."}"`);
+console.log("  3. npm install");
+console.log("  4. npm run dev        # abre em http://localhost:3000");
+console.log("  5. No navegador, recarregue com Ctrl+Shift+R.");

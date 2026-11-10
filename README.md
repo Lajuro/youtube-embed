@@ -233,7 +233,7 @@ src/
 - **O vídeo aparece mas os botões do app não controlam** — a rede pode estar bloqueando a comunicação com o player. Teste o outro domínio em **Configurações → Player** (`youtube-nocookie.com`). Os controles do próprio vídeo continuam funcionando.
 - **Os títulos aparecem como "Vídeo abc123…"** — o oEmbed está bloqueado na sua rede; o título real aparece assim que o vídeo tocar.
 - **A busca dá "fetch failed (ENOTFOUND)"** — você está no modo "Direto no YouTube" e o servidor do app não alcança o youtube.com. Troque para **Google** em Configurações → Busca.
-- **Depois de atualizar o projeto, alguma mudança visual não apareceu** — apague a pasta `.next` e rode `npm run dev` de novo (ela guarda o resultado de compilações antigas).
+- **Atualizei, mas continua aparecendo a versão antiga** — quase sempre é um `npm run dev` antigo ainda aberto em outro terminal: o que está em `localhost:3000` é ele. Feche-o (Ctrl+C) e rode de novo; o `npm run dev` agora avisa quando a porta 3000 já está ocupada. Depois recarregue o navegador com `Ctrl+Shift+R` e confira a versão no rodapé das **Configurações**. O instalador já apaga a pasta `.next` (cache de compilações antigas).
 - **Não aparece a opção de instalar como app** — o navegador só oferece em `localhost` ou HTTPS, e algumas empresas bloqueiam a instalação por política. O app funciona igual no navegador.
 - **O aviso sonoro do timer não toca** — navegadores só liberam som depois de um clique na página; ao clicar em "Começar foco" ele é liberado.
 - **A busca pelo Google não carrega** — confira o ID do mecanismo; se `cse.google.com` estiver bloqueado na rede, use **Abrir no Google** e cole o link no app.

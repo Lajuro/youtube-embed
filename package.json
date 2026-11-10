@@ -1,10 +1,10 @@
 {
   "name": "sintonia",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "dev:proxy": "node scripts/dev-proxy.mjs dev",
+    "dev": "node scripts/check-port.mjs && next dev -p 3000",
+    "dev:proxy": "node scripts/check-port.mjs && node scripts/dev-proxy.mjs dev -p 3000",
     "build": "next build",
     "start": "next start",
     "start:proxy": "node scripts/dev-proxy.mjs start",

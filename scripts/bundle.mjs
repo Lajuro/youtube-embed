@@ -38,6 +38,7 @@ const files = git("ls-files", "--cached", "--others", "--exclude-standard")
   .sort();
 
 const branch = git("rev-parse", "--abbrev-ref", "HEAD");
+const version = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")).version;
 
 // Texto vai como texto (comprime muito melhor); binários, em base64.
 const entries = files.map((path) => {
@@ -65,7 +66,7 @@ const installer = `#!/usr/bin/env node
  *   3. Entre na pasta e rode:  npm install  e depois  npm run dev
  *
  * Se aparecer "SyntaxError" ou "corrompido", o arquivo foi salvo incompleto:
- * baixe/copie de novo (o arquivo termina com a linha "console.log(\"  npm run dev...").
+ * baixe/copie de novo (o arquivo termina com a linha "console.log(\"  5. No navegador...").
  */
 "use strict";
 
@@ -96,6 +97,14 @@ if (fs.existsSync(target) && fs.readdirSync(target).length > 0 && !force) {
   process.exit(1);
 }
 
+// A pasta .next guarda o resultado de compilações antigas: se ficar, "npm start" (ou o
+// cache do "npm run dev") pode continuar mostrando a versão anterior do app.
+const staleBuild = path.join(target, ".next");
+if (fs.existsSync(staleBuild)) {
+  fs.rmSync(staleBuild, { recursive: true, force: true });
+  console.log("• Pasta .next antiga apagada (cache da versão anterior).");
+}
+
 let written = 0;
 for (const [relative, encoding, data] of entries) {
   const destination = path.resolve(target, relative);
@@ -110,11 +119,14 @@ for (const [relative, encoding, data] of entries) {
 }
 
 console.log(\`✔ \${written} arquivos criados em \${target}\`);
+console.log(\`  Versão: Sintonia ${version} (confira em Configurações, no rodapé)\`);
 console.log("");
 console.log("Próximos passos:");
-console.log(\`  cd "\${path.relative(process.cwd(), target) || "."}"\`);
-console.log("  npm install");
-console.log("  npm run dev        # abre em http://localhost:3000");
+console.log("  1. Feche qualquer “npm run dev” ou “npm start” que ainda esteja aberto (Ctrl+C no terminal).");
+console.log(\`  2. cd "\${path.relative(process.cwd(), target) || "."}"\`);
+console.log("  3. npm install");
+console.log("  4. npm run dev        # abre em http://localhost:3000");
+console.log("  5. No navegador, recarregue com Ctrl+Shift+R.");
 `;
 
 const downloader = `#!/usr/bin/env node
@@ -186,10 +198,15 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log("✔ Tudo baixado! Próximos passos:");
-console.log(\`  cd "\${path.relative(process.cwd(), target) || "."}"\`);
-console.log("  npm install");
-console.log("  npm run dev");
+// Cache de compilações antigas: se ficar, o app pode continuar mostrando a versão anterior.
+fs.rmSync(path.join(target, ".next"), { recursive: true, force: true });
+
+console.log(\`✔ Tudo baixado (Sintonia ${version})! Próximos passos:\`);
+console.log("  1. Feche qualquer “npm run dev” ou “npm start” que ainda esteja aberto (Ctrl+C).");
+console.log(\`  2. cd "\${path.relative(process.cwd(), target) || "."}"\`);
+console.log("  3. npm install");
+console.log("  4. npm run dev        # abre em http://localhost:3000");
+console.log("  5. No navegador, recarregue com Ctrl+Shift+R.");
 `;
 
 if (check) {
@@ -208,6 +225,8 @@ if (check) {
 mkdirSync(OUT_DIR, { recursive: true });
 writeFileSync(INSTALLER, installer);
 writeFileSync(DOWNLOADER, downloader);
+// Garante que os scripts gerados são JavaScript válido antes de alguém baixá-los.
+for (const file of [INSTALLER, DOWNLOADER]) execFileSync(process.execPath, ["--check", file], { stdio: "inherit" });
 const kb = (n) => `${(n / 1024).toFixed(0)} KB`;
 console.log(`✔ ${files.length} arquivos empacotados`);
 console.log(`  instalador/sintonia-instalador.cjs  ${kb(Buffer.byteLength(installer))}`);

@@ -25,6 +25,7 @@ import { CREATE_ENGINE_URL, GoogleCxForm } from "@/components/search/google-setu
 import { ACCENTS, resolveAccent } from "@/lib/accents";
 import { promptInstall, useInstall } from "@/lib/pwa";
 import { downloadBackup } from "@/lib/actions";
+import { APP_VERSION } from "@/lib/version";
 import { cn, pluralize } from "@/lib/utils";
 import type { EmbedHost } from "@/lib/youtube";
 import { countLibraryVideos, useLibrary, type LibraryBackup } from "@/stores/library-store";
@@ -377,6 +378,9 @@ export function SettingsDialog() {
             )}
           </Section>
         </div>
+        <p className="border-t pt-4 text-xs text-muted-foreground">
+          Sintonia {APP_VERSION} · tudo salvo apenas neste navegador
+        </p>
       </DialogContent>
     </Dialog>
   );
