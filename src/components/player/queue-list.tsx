@@ -49,11 +49,11 @@ export function QueueList({ className, compact = false }: { className?: string; 
   if (!queue.length) {
     return (
       <div className={cn("flex flex-col items-center justify-center gap-2 px-6 py-16 text-center", className)}>
-        <div className="grid size-12 place-items-center rounded-full bg-muted">
+        <div className="mb-1 grid size-10 place-items-center rounded-lg bg-muted">
           <ListX className="size-5 text-muted-foreground" />
         </div>
-        <p className="font-medium">A fila está vazia</p>
-        <p className="text-sm text-muted-foreground">Toque uma playlist ou adicione vídeos à fila pelo menu “⋯”.</p>
+        <p className="text-[15px] font-semibold">A fila está vazia</p>
+        <p className="text-sm text-muted-foreground">Toque uma playlist ou adicione vídeos à fila pelo menu de cada vídeo.</p>
       </div>
     );
   }
@@ -62,9 +62,7 @@ export function QueueList({ className, compact = false }: { className?: string; 
     <div className={cn("flex flex-col gap-5", className)}>
       {currentId && (
         <section>
-          <h3 className="mb-2 px-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-            Tocando agora
-          </h3>
+          <h3 className="mb-1.5 px-2 text-xs font-medium text-muted-foreground">Tocando agora</h3>
           <QueueItem
             id={currentId}
             current
@@ -78,20 +76,17 @@ export function QueueList({ className, compact = false }: { className?: string; 
       )}
 
       <section className="min-h-0">
-        <div className="mb-2 flex items-end justify-between gap-2 px-2">
+        <div className="mb-1.5 flex items-center justify-between gap-2 px-2">
           <div className="min-w-0">
-            <h3 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">A seguir</h3>
-            {source && (
-              <p className="truncate text-xs text-muted-foreground/80">
-                De: <span className="text-foreground/80">{source.label}</span>
-              </p>
-            )}
+            <h3 className="truncate text-xs font-medium text-muted-foreground">
+              A seguir{source && <span className="font-normal"> · {source.label}</span>}
+            </h3>
           </div>
           {upcoming.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 text-xs text-muted-foreground"
+              className="-mr-1 h-6 px-2 text-xs text-muted-foreground"
               onClick={() => usePlayer.getState().clearQueue()}
             >
               Limpar
@@ -110,7 +105,7 @@ export function QueueList({ className, compact = false }: { className?: string; 
               onDragEnd={onDragEnd}
             >
               <SortableContext items={upcoming.map((u) => u.key)} strategy={verticalListSortingStrategy}>
-                <div className="flex flex-col gap-0.5">
+                <div className="flex flex-col gap-px">
                   {upcoming.map(({ id, i, key }) => (
                     <SortableQueueItem
                       key={key}
@@ -154,7 +149,7 @@ function SortableQueueItem(props: QueueItemProps & { sortId: string }) {
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
-      className={cn(isDragging && "relative z-10 rounded-lg bg-accent shadow-xl")}
+      className={cn(isDragging && "relative z-10 rounded-md bg-accent shadow-xl")}
     >
       <QueueItem {...props} handleProps={{ ...attributes, ...listeners }} />
     </div>
@@ -174,8 +169,8 @@ function QueueItem({
   return (
     <div
       className={cn(
-        "group/q flex items-center gap-2 rounded-lg p-1.5 pr-2 transition-colors hover:bg-accent/60",
-        current && "bg-primary/10"
+        "group/q flex items-center gap-2 rounded-md p-1.5 pr-2 transition-colors hover:bg-accent/60",
+        current && "bg-accent/60"
       )}
       onDoubleClick={() => queueIndex !== undefined && usePlayer.getState().jumpTo(queueIndex)}
     >
@@ -193,13 +188,13 @@ function QueueItem({
       )}
       <button
         type="button"
-        className="relative shrink-0 cursor-pointer overflow-hidden rounded-md"
+        className="relative shrink-0 cursor-pointer overflow-hidden rounded-[5px]"
         onClick={() =>
           current ? usePlayer.getState().togglePlay() : queueIndex !== undefined && usePlayer.getState().jumpTo(queueIndex)
         }
         aria-label="Tocar"
       >
-        <VideoThumbnail id={id} className="aspect-video w-16" />
+        <VideoThumbnail id={id} className="aspect-video w-14" />
         <span
           className={cn(
             "absolute inset-0 grid place-items-center bg-black/55 text-white opacity-0 transition-opacity group-hover/q:opacity-100",
@@ -210,10 +205,10 @@ function QueueItem({
         </span>
       </button>
       <div className="min-w-0 flex-1">
-        <p className={cn("truncate text-sm font-medium", current && "text-primary")} title={title}>
+        <p className={cn("truncate text-[13px] leading-tight font-medium", current && "text-primary")} title={title}>
           {title ?? id}
         </p>
-        <p className="truncate text-xs text-muted-foreground">{author ?? "Canal desconhecido"}</p>
+        <p className="mt-0.5 truncate text-xs text-muted-foreground">{author ?? "Canal desconhecido"}</p>
       </div>
       <span className="shrink-0 text-xs text-muted-foreground tabular-nums group-hover/q:hidden">
         {duration ? formatTime(duration) : ""}

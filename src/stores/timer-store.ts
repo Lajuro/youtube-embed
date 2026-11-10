@@ -6,7 +6,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 export type FocusPhase = "idle" | "focus" | "break";
 
 export const FOCUS_PRESETS = [
-  { id: "classic", label: "25 / 5", hint: "Pomodoro clássico", focus: 25, short: 5, long: 15 },
+  { id: "classic", label: "25 / 5", hint: "Clássico", focus: 25, short: 5, long: 15 },
   { id: "deep", label: "50 / 10", hint: "Concentrado", focus: 50, short: 10, long: 20 },
   { id: "flow", label: "90 / 20", hint: "Imersão", focus: 90, short: 20, long: 30 },
 ] as const;

@@ -17,11 +17,11 @@ function Progress({
       aria-valuemax={100}
       aria-valuenow={Math.round(pct)}
       data-slot="progress"
-      className={cn("relative h-1.5 w-full overflow-hidden rounded-full bg-foreground/10", className)}
+      className={cn("relative h-1 w-full overflow-hidden rounded-full bg-foreground/10", className)}
       {...props}
     >
       <div
-        className={cn("h-full rounded-full bg-brand-gradient transition-[width] duration-500", indicatorClassName)}
+        className={cn("h-full rounded-full bg-primary transition-[width] duration-500", indicatorClassName)}
         style={{ width: `${pct}%` }}
       />
     </div>

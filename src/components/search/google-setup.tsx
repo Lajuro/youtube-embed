@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ExternalLink, KeyRound, Search } from "lucide-react";
+import { Check, ExternalLink, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -48,7 +48,7 @@ export function GoogleCxForm({ className, onSaved }: { className?: string; onSav
         aria-label="ID do mecanismo de pesquisa do Google"
         className="font-mono text-sm"
       />
-      <Button type="submit" variant="brand" disabled={!valid || parsed === saved}>
+      <Button type="submit" disabled={!valid || parsed === saved}>
         {parsed === saved && saved ? <Check /> : <KeyRound />}
         {parsed === saved && saved ? "Salvo" : "Salvar"}
       </Button>
@@ -78,41 +78,33 @@ export function GoogleSetupGuide({ query }: { query?: string }) {
   ];
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border bg-card/60 p-5 backdrop-blur md:p-6">
-      <div className="pointer-events-none absolute -top-24 -right-24 size-64 rounded-full bg-brand-gradient opacity-15 blur-3xl" />
-      <div className="relative">
-        <div className="flex items-start gap-3">
-          <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-gradient text-white shadow-lg">
-            <Search className="size-5" />
-          </div>
-          <div>
-            <h3 className="font-semibold">Ative a busca pelo Google (uma vez só)</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              A busca roda no seu navegador, pelo Google — o mesmo caminho que já funciona na sua rede. É gratuito e{" "}
-              <strong className="text-foreground">não é uma chave de API</strong>: é só o ID de um “mecanismo de pesquisa”
-              restrito ao youtube.com.
-            </p>
-          </div>
-        </div>
+    <div className="max-w-3xl rounded-xl border bg-card p-5 md:p-6">
+      <div>
+        <h3 className="text-[15px] font-semibold">Ative a busca pelo Google</h3>
+        <p className="mt-1 text-sm text-pretty text-muted-foreground">
+          Configuração única. A busca roda no seu navegador, pelo Google — o mesmo caminho que já funciona na sua rede. É
+          gratuito e <strong className="font-medium text-foreground">não é uma chave de API</strong>: é só o ID de um
+          “mecanismo de pesquisa” restrito ao youtube.com.
+        </p>
 
         <ol className="mt-5 grid gap-3">
           {steps.map((step, i) => (
             <li key={i} className="flex gap-3 text-sm">
-              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
+              <span className="grid size-5 shrink-0 place-items-center rounded-full border text-[11px] font-medium text-muted-foreground tabular-nums">
                 {i + 1}
               </span>
-              <span className="pt-0.5 text-muted-foreground [&_strong]:text-foreground">{step}</span>
+              <span className="text-pretty text-muted-foreground [&_strong]:font-medium [&_strong]:text-foreground">{step}</span>
             </li>
           ))}
         </ol>
 
         <GoogleCxForm className="mt-5" />
 
-        <div className="mt-5 flex flex-col gap-2 border-t pt-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-5 flex flex-col gap-2 border-t pt-4 text-[13px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <span>
             Sem configurar: busque no Google, copie o link do vídeo e cole aqui com <Kbd>Ctrl</Kbd>+<Kbd>V</Kbd>.
           </span>
-          <Button asChild variant="outline" size="sm" className="rounded-full">
+          <Button asChild variant="outline" size="sm">
             <a href={googleWebSearchUrl(query || "lofi")} target="_blank" rel="noreferrer">
               <ExternalLink /> Abrir no Google
             </a>

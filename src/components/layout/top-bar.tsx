@@ -19,18 +19,18 @@ export function TopBar() {
 
   return (
     <header
-      className="sticky top-0 z-20 flex items-center gap-2 bg-background/65 px-3 backdrop-blur-xl md:px-5"
+      className="sticky top-0 z-20 flex items-center gap-2 bg-background/75 px-3 backdrop-blur-xl md:px-6"
       style={{ height: TOP_BAR_HEIGHT }}
     >
       <Button variant="ghost" size="icon-sm" className="lg:hidden" onClick={() => setMobileNavOpen(true)} aria-label="Abrir menu">
         <Menu />
       </Button>
       <Logo compact className="mr-1 lg:hidden" />
-      <div className="hidden items-center md:flex">
-        <Button variant="ghost" size="icon-sm" className="rounded-full text-muted-foreground" onClick={() => router.back()} aria-label="Voltar">
+      <div className="-ml-1.5 hidden items-center md:flex">
+        <Button variant="ghost" size="icon-sm" className="text-muted-foreground" onClick={() => router.back()} aria-label="Voltar">
           <ChevronLeft />
         </Button>
-        <Button variant="ghost" size="icon-sm" className="rounded-full text-muted-foreground" onClick={() => router.forward()} aria-label="Avançar">
+        <Button variant="ghost" size="icon-sm" className="text-muted-foreground" onClick={() => router.forward()} aria-label="Avançar">
           <ChevronRight />
         </Button>
       </div>
@@ -38,10 +38,10 @@ export function TopBar() {
       <button
         type="button"
         onClick={() => setCommandOpen(true)}
-        className="flex h-9 min-w-0 flex-1 cursor-pointer items-center gap-2.5 rounded-full border border-transparent bg-foreground/[0.06] px-3.5 text-sm text-muted-foreground transition-colors hover:border-border hover:bg-foreground/[0.08] md:max-w-md"
+        className="flex h-8 min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md border bg-muted/40 px-2.5 text-[13px] text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground md:max-w-sm"
       >
-        <Search className="size-4 shrink-0" />
-        <span className="truncate">Buscar ou colar um link do YouTube…</span>
+        <Search className="size-3.5 shrink-0" />
+        <span className="truncate">Buscar ou colar um link…</span>
         <KbdGroup className="ml-auto hidden sm:inline-flex">
           <Kbd>Ctrl</Kbd>
           <Kbd>K</Kbd>
@@ -55,7 +55,7 @@ export function TopBar() {
             <Button
               variant="ghost"
               size="icon-sm"
-              className="rounded-full text-muted-foreground"
+              className="text-muted-foreground"
               onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
               aria-label="Alternar tema"
             >
@@ -65,8 +65,8 @@ export function TopBar() {
           </TooltipTrigger>
           <TooltipContent>Alternar tema</TooltipContent>
         </Tooltip>
-        <Button variant="brand" size="sm" className="h-9 rounded-full px-4 max-sm:size-9 max-sm:p-0" onClick={() => openAddDialog()}>
-          <Plus className="size-4" />
+        <Button variant="outline" size="sm" className="ml-1 max-sm:size-8 max-sm:p-0" onClick={() => openAddDialog()}>
+          <Plus />
           <span className="hidden sm:inline">Adicionar</span>
         </Button>
       </div>

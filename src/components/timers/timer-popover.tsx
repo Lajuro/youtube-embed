@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
-import { Bell, Brain, Coffee, ListEnd, Moon, Pause, Play, Plus, SkipForward, Square, Timer, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Bell, Brain, ListEnd, Moon, Pause, Play, Plus, SkipForward, Square, Timer, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -72,8 +72,8 @@ export function TimerButton({ className }: { className?: string }) {
               size={running ? "sm" : "icon-sm"}
               aria-label={label}
               className={cn(
-                "relative rounded-full text-muted-foreground",
-                running && "h-8 gap-1.5 bg-foreground/[0.06] px-3 text-foreground tabular-nums",
+                "relative text-muted-foreground",
+                running && "h-8 gap-1.5 border px-2.5 text-[13px] text-foreground tabular-nums",
                 className
               )}
             >
@@ -81,8 +81,8 @@ export function TimerButton({ className }: { className?: string }) {
                 <>
                   <span
                     className={cn(
-                      "size-2 rounded-full",
-                      phase === "focus" ? "bg-primary" : "bg-emerald-500",
+                      "size-1.5 rounded-full",
+                      phase === "focus" ? "bg-primary" : "bg-success",
                       endsAt && "animate-pulse"
                     )}
                   />
@@ -93,16 +93,14 @@ export function TimerButton({ className }: { className?: string }) {
                 <Timer />
               )}
               {sleeping && (
-                <span className="absolute -top-0.5 -right-0.5 grid size-4 place-items-center rounded-full bg-primary text-primary-foreground ring-2 ring-background">
-                  <Moon className="size-2.5 fill-current" />
-                </span>
+                <span className="absolute top-1 right-1 size-1.5 rounded-full bg-primary ring-2 ring-background" />
               )}
             </Button>
           </PopoverTrigger>
         </TooltipTrigger>
         <TooltipContent>{label}</TooltipContent>
       </Tooltip>
-      <PopoverContent align="end" className="w-[22rem] p-3">
+      <PopoverContent align="end" className="w-[21rem] p-3">
         <Tabs value={tab} onValueChange={(v) => setTab(v as "focus" | "sleep")}>
           <TabsList className="w-full">
             <TabsTrigger value="focus">
@@ -141,13 +139,13 @@ function FocusPanel({ now }: { now: number }) {
     <div className="grid gap-4 pt-2">
       <div className="flex items-center gap-4">
         <ProgressRing progress={progress} phase={timer.phase}>
-          <span className="text-2xl font-bold tracking-tight tabular-nums">{clock(left)}</span>
-          <span className="text-[11px] font-medium text-muted-foreground">
+          <span className="text-xl font-semibold tracking-tight tabular-nums">{clock(left)}</span>
+          <span className="text-[11px] text-muted-foreground">
             {timer.phase === "break" ? (timer.longBreak ? "Pausa longa" : "Pausa curta") : "Foco"}
           </span>
         </ProgressRing>
         <div className="min-w-0 flex-1">
-          <p className="font-semibold">
+          <p className="text-sm font-semibold">
             {timer.phase === "idle"
               ? "Pronto para focar?"
               : timer.phase === "focus"
@@ -162,7 +160,7 @@ function FocusPanel({ now }: { now: number }) {
             {timer.phase === "idle"
               ? "Blocos de foco com pausas no meio. A cada 4, uma pausa longa."
               : timer.phase === "focus"
-                ? "Celular longe, uma tarefa só."
+                ? "Uma tarefa de cada vez."
                 : "Levante, alongue, beba água."}
           </p>
           <div className="mt-2 flex items-center gap-1.5" aria-label={`${doneInCycle} de ${SESSIONS_PER_CYCLE} focos do ciclo`}>
@@ -170,8 +168,8 @@ function FocusPanel({ now }: { now: number }) {
               <span
                 key={i}
                 className={cn(
-                  "h-1.5 flex-1 rounded-full transition-colors",
-                  running && i < doneInCycle ? "bg-brand-gradient" : "bg-foreground/10"
+                  "h-1 flex-1 rounded-full transition-colors",
+                  running && i < doneInCycle ? "bg-primary" : "bg-foreground/10"
                 )}
               />
             ))}
@@ -182,8 +180,8 @@ function FocusPanel({ now }: { now: number }) {
       <div className="flex gap-2">
         {!running ? (
           <Button
-            variant="brand"
-            className="flex-1 rounded-full"
+           
+            className="flex-1"
             onClick={() => {
               unlockAudio();
               timer.startFocus();
@@ -194,11 +192,11 @@ function FocusPanel({ now }: { now: number }) {
         ) : (
           <>
             {paused ? (
-              <Button variant="brand" className="flex-1 rounded-full" onClick={timer.resume}>
+              <Button className="flex-1" onClick={timer.resume}>
                 <Play className="fill-current" /> Continuar
               </Button>
             ) : (
-              <Button variant="secondary" className="flex-1 rounded-full" onClick={timer.pause}>
+              <Button variant="secondary" className="flex-1" onClick={timer.pause}>
                 <Pause className="fill-current" /> Pausar
               </Button>
             )}
@@ -207,7 +205,7 @@ function FocusPanel({ now }: { now: number }) {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="rounded-full"
+                 
                   aria-label={timer.phase === "focus" ? "Pular para a pausa" : "Pular a pausa"}
                   onClick={() => {
                     unlockAudio();
@@ -222,7 +220,7 @@ function FocusPanel({ now }: { now: number }) {
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" className="rounded-full" aria-label="Encerrar o timer" onClick={timer.stop}>
+                <Button variant="outline" size="icon" aria-label="Encerrar o timer" onClick={timer.stop}>
                   <Square className="size-3.5 fill-current" />
                 </Button>
               </TooltipTrigger>
@@ -242,26 +240,24 @@ function FocusPanel({ now }: { now: number }) {
             disabled={running}
             onClick={() => timer.setPreset(p.id)}
             className={cn(
-              "cursor-pointer rounded-xl border px-2 py-1.5 text-center transition-colors hover:bg-accent/60 disabled:cursor-not-allowed disabled:opacity-60",
-              timer.preset === p.id && "border-primary bg-primary/10 text-primary"
+              "cursor-pointer rounded-lg border px-2 py-1.5 text-center transition-colors hover:bg-accent/60 disabled:cursor-not-allowed disabled:opacity-60",
+              timer.preset === p.id && "border-primary bg-accent/40 ring-1 ring-primary"
             )}
           >
-            <span className="block text-sm font-semibold tabular-nums">{p.label}</span>
+            <span className="block text-[13px] font-medium tabular-nums">{p.label}</span>
             <span className="block text-[10px] text-muted-foreground">{p.hint}</span>
           </button>
         ))}
       </div>
 
       <Label className="flex cursor-pointer items-center justify-between gap-3 font-normal">
-        <span className="flex items-center gap-2 text-sm">
-          <Coffee className="size-4 text-muted-foreground" /> Pausar a música nas pausas
-        </span>
+        <span className="text-[13px]">Pausar a música nas pausas</span>
         <Switch checked={timer.pauseMusicOnBreak} onCheckedChange={timer.setPauseMusicOnBreak} />
       </Label>
 
       <div className="flex items-center justify-between gap-2 border-t pt-3 text-xs text-muted-foreground">
         <span>
-          Hoje: <strong className="text-foreground tabular-nums">{todaySessions}</strong>{" "}
+          Hoje: <span className="font-medium text-foreground tabular-nums">{todaySessions}</span>{" "}
           {todaySessions === 1 ? "foco concluído" : "focos concluídos"}
         </span>
         {permission === "default" && (
@@ -279,30 +275,13 @@ function FocusPanel({ now }: { now: number }) {
 }
 
 function ProgressRing({ progress, phase, children }: { progress: number; phase: FocusPhase; children: React.ReactNode }) {
-  // O id vira referência url(#...) do gradiente; tira os caracteres especiais do useId.
-  const id = `ring-${useId().replace(/[^\w-]/g, "")}`;
-  const size = 112;
-  const stroke = 8;
+  const size = 96;
+  const stroke = 5;
   const r = (size - stroke) / 2;
   const circumference = 2 * Math.PI * r;
   return (
     <div className="relative grid shrink-0 place-items-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90" aria-hidden>
-        <defs>
-          <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-            {phase === "break" ? (
-              <>
-                <stop offset="0" stopColor="#34d399" />
-                <stop offset="1" stopColor="#22d3ee" />
-              </>
-            ) : (
-              <>
-                <stop offset="0" style={{ stopColor: "var(--brand-from)" }} />
-                <stop offset="1" style={{ stopColor: "var(--brand-to)" }} />
-              </>
-            )}
-          </linearGradient>
-        </defs>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} className="stroke-foreground/10" />
         <circle
           cx={size / 2}
@@ -311,10 +290,9 @@ function ProgressRing({ progress, phase, children }: { progress: number; phase: 
           fill="none"
           strokeWidth={stroke}
           strokeLinecap="round"
-          stroke={`url(#${id})`}
           strokeDasharray={circumference}
           strokeDashoffset={circumference * (1 - Math.min(1, Math.max(0, progress)))}
-          className="transition-[stroke-dashoffset] duration-1000 ease-linear"
+          className={cn("transition-[stroke-dashoffset] duration-1000 ease-linear", phase === "break" ? "stroke-success" : "stroke-primary")}
         />
       </svg>
       <div className="absolute inset-0 grid place-content-center text-center">{children}</div>
@@ -338,26 +316,24 @@ function SleepPanel({ now }: { now: number }) {
   if (sleepAt || stopAfterCurrent) {
     return (
       <div className="grid gap-4 pt-2">
-        <div className="flex items-center gap-3 rounded-xl bg-primary/10 p-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
-            <Moon className="size-5" />
-          </span>
+        <div className="flex items-center gap-3 rounded-lg border px-3.5 py-3">
+          <Moon className="size-4 shrink-0 text-muted-foreground" />
           <div className="min-w-0">
-            <p className="text-sm text-muted-foreground">A música para</p>
-            <p className="text-lg font-semibold tabular-nums">
+            <p className="text-xs text-muted-foreground">A música para</p>
+            <p className="text-base font-semibold tabular-nums">
               {sleepAt ? `em ${now ? clock(Math.max(0, sleepAt - now)) : "--:--"}` : "ao fim deste vídeo"}
             </p>
           </div>
         </div>
         <div className="flex gap-2">
           {sleepAt && (
-            <Button variant="outline" className="flex-1 rounded-full" onClick={() => useTimer.setState({ sleepAt: sleepAt + 15 * 60_000 })}>
+            <Button variant="outline" className="flex-1" onClick={() => useTimer.setState({ sleepAt: sleepAt + 15 * 60_000 })}>
               <Plus /> 15 min
             </Button>
           )}
           <Button
             variant="ghost"
-            className="flex-1 rounded-full"
+            className="flex-1"
             onClick={() => {
               setSleep(null);
               setStopAfterCurrent(false);
@@ -373,17 +349,17 @@ function SleepPanel({ now }: { now: number }) {
 
   return (
     <div className="grid gap-3 pt-2">
-      <p className="text-sm text-muted-foreground">Pausar a música automaticamente daqui a…</p>
+      <p className="text-[13px] text-muted-foreground">Pausar a música automaticamente daqui a…</p>
       <div className="grid grid-cols-3 gap-1.5">
         {SLEEP_OPTIONS.map((minutes) => (
-          <Button key={minutes} variant="outline" className="rounded-xl tabular-nums" onClick={() => choose(minutes)}>
+          <Button key={minutes} variant="outline" size="sm" className="tabular-nums" onClick={() => choose(minutes)}>
             {minutes < 60 ? `${minutes} min` : minutes % 60 ? `${Math.floor(minutes / 60)} h ${minutes % 60}` : `${minutes / 60} h`}
           </Button>
         ))}
       </div>
       <Button
-        variant="secondary"
-        className="rounded-xl"
+        variant="outline"
+        size="sm"
         disabled={!hasQueue || isLive}
         onClick={() => {
           setSleep(null);
@@ -393,7 +369,7 @@ function SleepPanel({ now }: { now: number }) {
         <ListEnd /> Ao fim deste vídeo
       </Button>
       <p className="text-xs text-muted-foreground">
-        Útil para não ficar tocando depois do expediente ou de uma aula. O volume baixa aos poucos antes de parar.
+        O volume baixa aos poucos antes de parar.
       </p>
     </div>
   );

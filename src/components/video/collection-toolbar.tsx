@@ -83,23 +83,23 @@ export function CollectionToolbar({
 }) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <div className="relative w-full max-w-64">
-        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+      <div className="relative w-full max-w-56">
+        <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
         <input
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
           placeholder="Filtrar…"
           aria-label="Filtrar vídeos"
-          className="h-9 w-full rounded-full border bg-foreground/[0.04] pr-8 pl-9 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/60 focus:bg-transparent"
+          className="h-8 w-full rounded-md border bg-background/40 pr-8 pl-8 text-[13px] transition-[border-color,box-shadow] outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-[3px] focus:ring-ring/30"
         />
         {query && (
           <button
             type="button"
             onClick={() => onQueryChange("")}
             aria-label="Limpar filtro"
-            className="absolute top-1/2 right-2.5 -translate-y-1/2 cursor-pointer text-muted-foreground hover:text-foreground"
+            className="absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer text-muted-foreground hover:text-foreground"
           >
-            <X className="size-4" />
+            <X className="size-3.5" />
           </button>
         )}
       </div>
@@ -123,11 +123,11 @@ export function CollectionToolbar({
       </DropdownMenu>
 
       {view && onViewChange && (
-        <div className="flex items-center rounded-full border p-0.5">
+        <div className="flex items-center gap-0.5 rounded-md border p-0.5">
           <Button
             size="icon-xs"
             variant="ghost"
-            className={cn("rounded-full", view === "list" && "bg-accent text-foreground")}
+            className={cn("size-6 rounded-[5px] text-muted-foreground", view === "list" && "bg-accent text-foreground")}
             onClick={() => onViewChange("list")}
             aria-label="Ver em lista"
             aria-pressed={view === "list"}
@@ -137,7 +137,7 @@ export function CollectionToolbar({
           <Button
             size="icon-xs"
             variant="ghost"
-            className={cn("rounded-full", view === "grid" && "bg-accent text-foreground")}
+            className={cn("size-6 rounded-[5px] text-muted-foreground", view === "grid" && "bg-accent text-foreground")}
             onClick={() => onViewChange("grid")}
             aria-label="Ver em grade"
             aria-pressed={view === "grid"}

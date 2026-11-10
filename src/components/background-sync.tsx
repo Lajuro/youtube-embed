@@ -16,7 +16,7 @@ function celebrateIfDone(courseId: string, lessonId: string) {
   if (!course) return;
   const lessons = courseLessons(course);
   if (lessons.length && lessons.every((l) => l.id === lessonId || progress[l.id]?.completed)) {
-    toast.success(`Você concluiu “${course.title}”! 🎉`, { description: "Parabéns pela dedicação.", duration: 8000 });
+    toast.success(`Curso concluído: ${course.title}`, { description: "Você assistiu a todas as aulas.", duration: 8000 });
   }
 }
 

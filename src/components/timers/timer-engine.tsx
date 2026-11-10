@@ -59,7 +59,7 @@ export function TimerEngine() {
           timer.startPhase("break", long);
           playChime("break");
           notify(
-            long ? "Hora da pausa longa ☕" : "Hora da pausa ☕",
+            long ? "Hora da pausa longa" : "Hora da pausa",
             `Foco concluído! Descanse ${phaseMinutes(timer, "break", long)} min: levante, alongue, beba água.`
           );
           if (timer.pauseMusicOnBreak && isPlaying()) {
@@ -69,7 +69,7 @@ export function TimerEngine() {
         } else {
           timer.startPhase("focus");
           playChime("focus");
-          notify("De volta ao foco 🎯", `Mais ${phaseMinutes(timer, "focus")} min de concentração.`);
+          notify("De volta ao foco", `Mais ${phaseMinutes(timer, "focus")} min de concentração.`);
           if (timer.musicPausedByTimer) {
             timer.setMusicPausedByTimer(false);
             const player = usePlayer.getState();
@@ -88,7 +88,7 @@ export function TimerEngine() {
           // Devolve o volume normal para a próxima vez que você der play.
           if (fading) setTimeout(restoreVolume, 400);
           fading = false;
-          if (wasPlaying) toast("Música pausada pelo desligamento automático", { icon: "🌙" });
+          if (wasPlaying) toast("Música pausada pelo desligamento automático");
         } else if (left <= SLEEP_FADE_MS && isPlaying()) {
           fading = true;
           const { volume, muted } = usePlayer.getState();

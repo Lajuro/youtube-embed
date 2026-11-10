@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CollectionPlayButtons } from "@/components/collection-actions";
 import { EmptyState } from "@/components/empty-state";
 import { HydrationGate } from "@/components/hydration-gate";
-import { MetaDot, PageHeader } from "@/components/page-header";
+import { CollectionIcon, MetaDot, PageHeader } from "@/components/page-header";
 import { CollectionToolbar, useFilteredIds, type SortKey } from "@/components/video/collection-toolbar";
 import { VideoCard } from "@/components/video/video-card";
 import { VideoList } from "@/components/video/video-list";
@@ -41,15 +41,10 @@ function LibraryContent() {
   return (
     <div className="pb-16">
       <PageHeader
-        eyebrow="Coleção"
+        eyebrow="Sua coleção"
         title="Biblioteca"
-        accent="color-mix(in oklch, oklch(0.6 0.18 250) 45%, transparent)"
-        cover={
-          <div className="grid size-32 place-items-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-2xl md:size-40">
-            <Library className="size-12 md:size-16" />
-          </div>
-        }
-        description="Todos os vídeos que você já adicionou."
+        backdropVideoId={allIds[0]}
+        cover={<CollectionIcon icon={Library} />}
         meta={
           <>
             <span className="font-medium text-foreground">{pluralize(allIds.length, "vídeo", "vídeos")}</span>
@@ -63,7 +58,7 @@ function LibraryContent() {
         actions={
           <>
             <CollectionPlayButtons ids={ids} source={SOURCE} />
-            <Button variant="outline" className="rounded-full" onClick={() => openAddDialog()}>
+            <Button variant="outline" size="sm" className="ml-1" onClick={() => openAddDialog()}>
               <Plus /> Adicionar vídeos
             </Button>
             {allIds.length > 0 && (
@@ -90,7 +85,7 @@ function LibraryContent() {
             description="Cole um link do YouTube para adicionar o primeiro vídeo."
             className="mx-2"
           >
-            <Button variant="brand" className="rounded-full" onClick={() => openAddDialog()}>
+            <Button onClick={() => openAddDialog()}>
               <Plus /> Adicionar vídeo
             </Button>
           </EmptyState>
@@ -99,7 +94,7 @@ function LibraryContent() {
         ) : view === "list" ? (
           <VideoList ids={ids} source={SOURCE} />
         ) : (
-          <div className="stagger grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+          <div className="stagger grid grid-cols-2 pt-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
             {ids.map((id, i) => (
               <VideoCard key={id} id={id} onPlay={() => playList(ids, i, SOURCE)} />
             ))}

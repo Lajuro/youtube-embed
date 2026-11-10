@@ -8,14 +8,6 @@ import { cn } from "@/lib/utils";
 import { thumbnailUrl, type ThumbnailQuality } from "@/lib/youtube";
 import { useLibrary } from "@/stores/library-store";
 
-/** Gera um gradiente estável a partir do ID (usado quando a imagem não carrega). */
-export function gradientFor(seed: string) {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0;
-  const hue = Math.abs(hash) % 360;
-  return `linear-gradient(135deg, oklch(0.55 0.17 ${hue}), oklch(0.35 0.14 ${(hue + 60) % 360}))`;
-}
-
 interface VideoThumbnailProps {
   id: string;
   alt?: string;
@@ -38,19 +30,16 @@ export function VideoThumbnail({
 }: VideoThumbnailProps) {
   const stored = useLibrary((s) => s.videos[id]?.thumbnail);
   const alternative = fallbackSrc ?? stored;
-  // 0 = i.ytimg.com, 1 = imagem alternativa, 2 = gradiente
+  // 0 = i.ytimg.com, 1 = imagem alternativa, 2 = sem imagem (ícone neutro)
   const [attempt, setAttempt] = useState(0);
   const src = attempt === 0 ? thumbnailUrl(id, quality) : alternative;
   const failed = attempt >= 2 || !src;
 
   return (
-    <div
-      className={cn("relative overflow-hidden bg-muted", className)}
-      style={failed ? { backgroundImage: gradientFor(id) } : undefined}
-    >
+    <div className={cn("relative overflow-hidden bg-muted", className)}>
       {failed ? (
-        <div className="absolute inset-0 grid place-items-center text-white/80">
-          <Music2 className="size-1/3 max-h-10 max-w-10" />
+        <div className="absolute inset-0 grid place-items-center text-muted-foreground/60">
+          <Music2 className="size-1/3 max-h-8 max-w-8" />
         </div>
       ) : (
         <img

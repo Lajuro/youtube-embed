@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { CollectionPlayButtons } from "@/components/collection-actions";
 import { EmptyState } from "@/components/empty-state";
 import { HydrationGate } from "@/components/hydration-gate";
-import { MetaDot, PageHeader } from "@/components/page-header";
+import { CollectionIcon, MetaDot, PageHeader } from "@/components/page-header";
 import { CollectionToolbar, useFilteredIds, type SortKey } from "@/components/video/collection-toolbar";
 import { VideoList } from "@/components/video/video-list";
 import { formatTotalDuration, pluralize } from "@/lib/utils";
@@ -40,14 +40,10 @@ function FavoritesContent() {
   return (
     <div className="pb-16">
       <PageHeader
-        eyebrow="Coleção"
+        eyebrow="Sua coleção"
         title="Favoritos"
-        cover={
-          <div className="grid size-32 place-items-center rounded-2xl bg-brand-gradient text-white shadow-2xl md:size-40">
-            <Heart className="size-12 fill-current md:size-16" />
-          </div>
-        }
-        description="Os vídeos que você mais curte, sempre à mão."
+        backdropVideoId={allIds[0]}
+        cover={<CollectionIcon icon={Heart} />}
         meta={
           <>
             <span className="font-medium text-foreground">{pluralize(allIds.length, "vídeo", "vídeos")}</span>
@@ -80,10 +76,10 @@ function FavoritesContent() {
           <EmptyState
             icon={Heart}
             title="Nenhum favorito ainda"
-            description="Toque no ♥ de um vídeo (ou aperte F enquanto ele toca) para guardá-lo aqui."
+            description="Clique no coração de um vídeo (ou aperte F enquanto ele toca) para guardá-lo aqui."
             className="mx-2"
           >
-            <Button asChild variant="outline" className="rounded-full">
+            <Button asChild variant="outline">
               <Link href="/library">
                 <Library /> Ir para a biblioteca
               </Link>

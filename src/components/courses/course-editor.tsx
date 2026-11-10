@@ -72,7 +72,7 @@ export function CourseEditor({ courseId }: { courseId: string }) {
     return (
       <div className="px-4 py-10 md:px-8">
         <EmptyState icon={GraduationCap} title="Curso não encontrado">
-          <Button asChild variant="outline" className="rounded-full">
+          <Button asChild variant="outline">
             <Link href="/courses">Ver todos os cursos</Link>
           </Button>
         </EmptyState>
@@ -104,40 +104,48 @@ function Editor({ course }: { course: Course }) {
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 pt-6 pb-20 md:px-8">
+    <div className="mx-auto max-w-4xl px-4 pt-6 pb-20 md:px-8 md:pt-8">
       {/* Cabeçalho */}
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-        <CourseCover course={course} className="w-full shrink-0 rounded-2xl shadow-xl sm:w-56" />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <CourseCover course={course} className="w-full shrink-0 rounded-lg ring-1 ring-foreground/[0.08] sm:w-40" />
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">Editar curso</p>
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-balance md:text-3xl">{course.title}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="text-[13px] font-medium text-muted-foreground">Editar curso</p>
+          <h1 className="mt-0.5 text-2xl font-semibold tracking-tight text-balance">{course.title}</h1>
+          <p className="mt-1 text-[13px] text-muted-foreground">
             {pluralize(course.sections.length, "seção", "seções")} · {pluralize(total, "aula", "aulas")}
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button asChild variant="brand" className="rounded-full">
-              <Link href={`/courses/${course.id}`}>
-                <Play className="fill-current" /> Ir para a sala de aula
-              </Link>
-            </Button>
-            <Button variant="outline" className="rounded-full" onClick={() => openCourseDialog({ courseId: course.id })}>
-              <Pencil /> Detalhes
-            </Button>
-            <Button variant="ghost" className="rounded-full text-destructive hover:text-destructive" onClick={() => setConfirmDelete(true)}>
-              <Trash2 /> Excluir curso
-            </Button>
-          </div>
+        </div>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => openCourseDialog({ courseId: course.id })}>
+            <Pencil /> Detalhes
+          </Button>
+          <Button asChild size="sm">
+            <Link href={`/courses/${course.id}`}>
+              <Play className="fill-current" /> Abrir sala de aula
+            </Link>
+          </Button>
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon-sm" className="text-muted-foreground" aria-label="Mais opções do curso">
+                <MoreHorizontal />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem variant="destructive" onSelect={() => setConfirmDelete(true)}>
+                <Trash2 /> Excluir curso
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl border border-dashed bg-muted/20 p-4 text-sm text-muted-foreground">
-        <strong className="text-foreground">Dicas:</strong> arraste as aulas pela alça ⋮⋮ para reordenar. Importou uma
-        playlist inteira numa seção só? Use <Scissors className="inline size-3.5" />{" "}
-        <em>“Começar nova seção aqui”</em> no menu de uma aula para dividir.
-      </div>
+      <p className="mt-6 text-[13px] text-pretty text-muted-foreground">
+        Arraste as aulas pela alça para reordenar. Para dividir uma seção, use{" "}
+        <span className="font-medium text-foreground">Começar nova seção aqui</span> no menu de uma aula.
+      </p>
 
       {/* Seções */}
-      <div className="mt-6 grid gap-4">
+      <div className="mt-4 grid gap-3">
         {course.sections.map((section, index) => (
           <SectionCard
             key={section.id}
@@ -156,7 +164,7 @@ function Editor({ course }: { course: Course }) {
         ))}
       </div>
 
-      <Button variant="outline" className="mt-4 w-full rounded-xl border-dashed py-6" onClick={addSection}>
+      <Button variant="outline" size="sm" className="mt-3" onClick={addSection}>
         <FolderPlus /> Nova seção
       </Button>
 
@@ -250,22 +258,22 @@ function SectionCard({
   };
 
   return (
-    <section className="overflow-hidden rounded-2xl border bg-card/60">
-      <header className="flex items-center gap-2 border-b bg-muted/40 px-4 py-3">
-        <span className="shrink-0 text-sm font-semibold text-muted-foreground">Seção {index + 1}:</span>
+    <section className="overflow-hidden rounded-xl border bg-card">
+      <header className="flex items-center gap-2 border-b py-2 pr-2 pl-4">
+        <span className="shrink-0 text-[13px] text-muted-foreground tabular-nums">{index + 1}.</span>
         <EditableText
           value={section.title}
           editing={editing}
           onEditingChange={onEditingChange}
           onSave={(title) => library.renameSection(course.id, section.id, title)}
-          className="min-w-0 flex-1 font-semibold"
+          className="min-w-0 flex-1 text-sm font-semibold"
           ariaLabel="Nome da seção"
         />
         <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">
           {pluralize(stats.total, "aula", "aulas")}
           {stats.duration > 0 && ` · ${formatTotalDuration(stats.duration)}`}
         </span>
-        <div className="flex shrink-0 items-center">
+        <div className="flex shrink-0 items-center text-muted-foreground">
           <Button
             size="icon-xs"
             variant="ghost"
@@ -307,7 +315,7 @@ function SectionCard({
       </header>
 
       {section.lessons.length === 0 ? (
-        <p className="px-4 py-6 text-center text-sm text-muted-foreground">Nenhuma aula nesta seção ainda.</p>
+        <p className="px-4 py-5 text-[13px] text-muted-foreground">Nenhuma aula nesta seção ainda.</p>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVertical]} onDragEnd={onDragEnd}>
           <SortableContext items={section.lessons.map((l) => l.id)} strategy={verticalListSortingStrategy}>
@@ -327,8 +335,8 @@ function SectionCard({
         </DndContext>
       )}
 
-      <div className="border-t px-2 py-2">
-        <Button variant="ghost" size="sm" className="text-primary" onClick={onAdd}>
+      <div className="border-t p-1.5">
+        <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={onAdd}>
           <Plus /> Adicionar aulas
         </Button>
       </div>
@@ -360,28 +368,28 @@ function LessonRow({
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn(
-        "group/lesson flex items-center gap-3 bg-card/0 px-2 py-2 sm:px-3",
+        "group/lesson flex items-center gap-3 py-1.5 pr-2 pl-2 sm:pl-3",
         isDragging && "relative z-10 bg-accent shadow-xl"
       )}
     >
       <button
         type="button"
         aria-label="Arrastar para reordenar"
-        className="cursor-grab touch-none text-muted-foreground/60 hover:text-foreground active:cursor-grabbing"
+        className="cursor-grab touch-none text-muted-foreground/50 hover:text-foreground active:cursor-grabbing"
         {...attributes}
         {...listeners}
       >
         <GripVertical className="size-4" />
       </button>
-      <span className="w-6 shrink-0 text-right text-xs text-muted-foreground tabular-nums">{number}.</span>
-      <VideoThumbnail id={lesson.videoId} className="hidden aspect-video w-20 shrink-0 rounded-md sm:block" />
+      <span className="w-5 shrink-0 text-right text-xs text-muted-foreground tabular-nums">{number}</span>
+      <VideoThumbnail id={lesson.videoId} className="hidden aspect-video w-16 shrink-0 rounded-[5px] sm:block" />
       <div className="min-w-0 flex-1">
         <EditableText
           value={lessonTitle(lesson, videos)}
           editing={editing}
           onEditingChange={setEditing}
           onSave={(title) => library.renameLesson(course.id, lesson.id, title === video?.title ? "" : title)}
-          className={cn("text-sm font-medium", video?.titleSource === "pending" && !lesson.title && "text-muted-foreground italic")}
+          className={cn("text-[13px] font-medium", video?.titleSource === "pending" && !lesson.title && "text-muted-foreground italic")}
           ariaLabel="Título da aula"
         />
         <p className="truncate text-xs text-muted-foreground">

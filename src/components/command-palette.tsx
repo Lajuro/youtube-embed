@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/command";
 import { PlaylistCover } from "@/components/playlist/playlist-cover";
 import { VideoThumbnail } from "@/components/video/video-thumbnail";
-import { ACCENTS, accentGradient } from "@/lib/accents";
+import { ACCENTS } from "@/lib/accents";
 import { addVideosToLibrary, downloadBackup, playList } from "@/lib/actions";
 import { unlockAudio } from "@/lib/chime";
 import { pluralize } from "@/lib/utils";
@@ -116,7 +116,7 @@ function PaletteBody({
               value={`__yt-search ${search}`}
               onSelect={() => run(() => router.push(`/search?q=${encodeURIComponent(search.trim())}`))}
             >
-              <Search className="text-primary" />
+              <Search />
               Buscar “{search.trim()}” no YouTube
               <CommandShortcut>↵</CommandShortcut>
             </CommandItem>
@@ -135,7 +135,7 @@ function PaletteBody({
                 })
               }
             >
-              <Play className="text-primary" />
+              <Play />
               Adicionar e tocar {pluralize(pastedIds.length, "vídeo", "vídeos")}
               <CommandShortcut>↵</CommandShortcut>
             </CommandItem>
@@ -249,7 +249,7 @@ function PaletteBody({
                 onSelect={() => run(() => useSettings.getState().setAccent(a.id))}
               >
                 <Palette />
-                <span className="size-3.5 rounded-full" style={{ backgroundImage: accentGradient(a) }} />
+                <span className="size-3 rounded-full" style={{ backgroundColor: a.swatch }} />
                 Cor {a.label}
               </CommandItem>
             ))}

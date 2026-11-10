@@ -73,7 +73,7 @@ function EditVideoForm({ videoId, onDone }: { videoId: string; onDone: () => voi
         <DialogTitle>Editar vídeo</DialogTitle>
         <DialogDescription>Personalize como ele aparece nas suas listas.</DialogDescription>
       </DialogHeader>
-      <VideoThumbnail id={videoId} quality="hqdefault" className="aspect-video w-full rounded-xl" />
+      <VideoThumbnail id={videoId} quality="hqdefault" className="aspect-video w-full rounded-lg ring-1 ring-foreground/[0.08]" />
       <div className="grid gap-1.5">
         <Label htmlFor="video-title">Título</Label>
         <Input id="video-title" autoFocus value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -86,7 +86,7 @@ function EditVideoForm({ videoId, onDone }: { videoId: string; onDone: () => voi
         <Button type="button" variant="ghost" onClick={restore} disabled={restoring}>
           <RotateCcw className={restoring ? "animate-spin" : undefined} /> Restaurar original
         </Button>
-        <Button type="submit" variant="brand">
+        <Button type="submit">
           Salvar
         </Button>
       </DialogFooter>

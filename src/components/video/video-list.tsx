@@ -92,14 +92,14 @@ export function VideoList({ ids, source, playlistId, onReorder, dateLabel = "Adi
       <div
         className={cn(
           GRID,
-          "sticky top-0 z-10 mb-1 border-b bg-background/80 px-3 py-2 text-xs font-medium tracking-wide text-muted-foreground uppercase backdrop-blur-md"
+          "sticky top-0 z-10 mb-1 border-b bg-background/85 px-3 py-2 text-xs font-medium text-muted-foreground backdrop-blur-md"
         )}
       >
         <span className="text-center">#</span>
         <span>Título</span>
         <span className="hidden md:block">{dateLabel}</span>
         <span className="hidden justify-end md:flex">
-          <Clock3 className="size-4" />
+          <Clock3 className="size-3.5" />
         </span>
         <span />
       </div>
@@ -183,8 +183,8 @@ function RowContent({
         onDoubleClick={onPlay}
         className={cn(
           GRID,
-          "group/row relative rounded-lg px-3 py-2 transition-colors hover:bg-accent/60 data-[state=open]:bg-accent/60",
-          isCurrent && "bg-primary/[0.07]",
+          "group/row relative rounded-md px-3 py-1.5 transition-colors hover:bg-accent/60 data-[state=open]:bg-accent/60",
+          isCurrent && "bg-accent/50",
           menuOpen && "bg-accent/60",
           dragging && "z-20 bg-accent shadow-2xl ring-1 ring-border"
         )}
@@ -203,7 +203,7 @@ function RowContent({
           )}
           <span
             className={cn(
-              "text-sm tabular-nums text-muted-foreground group-hover/row:hidden",
+              "text-[13px] tabular-nums text-muted-foreground group-hover/row:hidden",
               isCurrent && "hidden"
             )}
           >
@@ -226,7 +226,7 @@ function RowContent({
 
         {/* Miniatura + título */}
         <div className="flex min-w-0 items-center gap-3">
-          <VideoThumbnail id={video.id} className="aspect-video w-[72px] shrink-0 rounded-md" />
+          <VideoThumbnail id={video.id} className="aspect-video w-16 shrink-0 rounded-[5px]" />
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <p
@@ -257,11 +257,11 @@ function RowContent({
           </div>
         </div>
 
-        <span className="hidden truncate text-sm text-muted-foreground md:block" suppressHydrationWarning>
+        <span className="hidden truncate text-[13px] text-muted-foreground md:block" suppressHydrationWarning>
           {date ? formatRelative(date) : "—"}
         </span>
 
-        <span className="hidden justify-end text-sm tabular-nums text-muted-foreground md:flex">
+        <span className="hidden justify-end text-[13px] tabular-nums text-muted-foreground md:flex">
           {video.isLive ? <Radio className="size-4 text-red-500" /> : formatTime(video.duration)}
         </span>
 

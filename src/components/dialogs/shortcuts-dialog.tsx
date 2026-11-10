@@ -52,13 +52,13 @@ export function ShortcutsDialog() {
             adicioná-lo. No “Tocando agora”, <Kbd>↑</Kbd> <Kbd>↓</Kbd> também mudam o volume.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-6 sm:grid-cols-2">
+        <div className="grid gap-x-10 gap-y-6 sm:grid-cols-2">
           {SHORTCUTS.map((group) => (
             <div key={group.group}>
-              <h3 className="mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">{group.group}</h3>
-              <ul className="grid gap-1">
+              <h3 className="mb-1.5 text-xs font-medium text-muted-foreground">{group.group}</h3>
+              <ul className="-mx-2 grid">
                 {group.items.map((item) => (
-                  <li key={item.label} className="flex items-center justify-between gap-4 rounded-md px-2 py-1.5 text-sm hover:bg-accent/50">
+                  <li key={item.label} className="flex items-center justify-between gap-4 rounded-md px-2 py-1.5 text-[13px]">
                     <span>{item.label}</span>
                     <KbdGroup>
                       {item.keys.map((k) => (

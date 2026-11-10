@@ -5,16 +5,15 @@ import { ListMusic } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { thumbnailUrl } from "@/lib/youtube";
-import { gradientFor } from "@/components/video/video-thumbnail";
 
 /** Capa estilo "mosaico" com as 4 primeiras miniaturas da playlist. */
 export function PlaylistCover({
-  seed,
   videoIds,
   className,
   iconClassName,
 }: {
-  seed: string;
+  /** Mantido por compatibilidade: a capa vazia agora é neutra, sem cor derivada do id. */
+  seed?: string;
   videoIds: string[];
   className?: string;
   iconClassName?: string;
@@ -23,11 +22,8 @@ export function PlaylistCover({
 
   if (ids.length === 0) {
     return (
-      <div
-        className={cn("grid aspect-square place-items-center overflow-hidden text-white/90", className)}
-        style={{ backgroundImage: gradientFor(seed) }}
-      >
-        <ListMusic className={cn("size-1/3", iconClassName)} />
+      <div className={cn("grid aspect-square place-items-center overflow-hidden bg-muted text-muted-foreground/70", className)}>
+        <ListMusic className={cn("size-1/3 max-h-10 max-w-10", iconClassName)} />
       </div>
     );
   }

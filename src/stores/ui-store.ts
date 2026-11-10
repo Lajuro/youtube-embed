@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-import type { AccentId } from "@/lib/accents";
+import { DEFAULT_ACCENT, type AccentId } from "@/lib/accents";
 import type { EmbedHost } from "@/lib/youtube";
 
 interface AddDialogState {
@@ -126,7 +126,7 @@ export const useSettings = create<SettingsState>()(
   persist(
     (set) => ({
       embedHost: "www.youtube.com",
-      accent: "violet",
+      accent: DEFAULT_ACCENT,
       miniCorner: "bottom-right",
       ambient: true,
       autoSkipErrors: true,
@@ -150,7 +150,16 @@ export const useSettings = create<SettingsState>()(
     }),
     {
       name: "sintonia:settings",
-      version: 1,
+      version: 2,
+      // v2: paleta de destaque nova (cores chapadas). Os nomes antigos viram os equivalentes.
+      migrate: (persisted, version) => {
+        const state = persisted as Partial<SettingsState> & { accent?: string };
+        if (version < 2) {
+          const renamed: Record<string, AccentId> = { aqua: "teal", forest: "green", sunset: "amber", rose: "rose" };
+          state.accent = renamed[state.accent ?? ""] ?? DEFAULT_ACCENT;
+        }
+        return state as SettingsState;
+      },
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
       partialize: (s) => ({

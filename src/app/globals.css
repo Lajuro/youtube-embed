@@ -32,8 +32,7 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --color-brand-from: var(--brand-from);
-  --color-brand-to: var(--brand-to);
+  --color-success: var(--success);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -96,110 +95,110 @@
 }
 
 /*
- * Cores de destaque: tudo deriva de dois matizes (--p-h/--p-c: cor principal; --b-h/--b-c:
- * segunda cor do gradiente). Os cinzas também levam um pouquinho do matiz principal, então
- * trocar o destaque (Configurações → Aparência) muda o clima do app inteiro.
+ * Sistema de cores.
+ *
+ * Os tons de cinza são neutros (um fio de azul, hue 270, para não ficarem "sujos") e NÃO
+ * mudam com a cor de destaque. O destaque é uma cor só, chapada, usada com parcimônia:
+ * ação principal da tela, item ativo, progresso e foco. Trocar o destaque
+ * (Configurações → Aparência) só altera --p-h (matiz) e --p-c (intensidade).
  */
 :root {
+  --p-h: 262;
+  --p-c: 0.19;
+}
+:root[data-accent="violet"] {
   --p-h: 292;
-  --p-c: 0.24;
-  --b-h: 352;
-  --b-c: 0.22;
+  --p-c: 0.2;
 }
-:root[data-accent="ocean"] {
-  --p-h: 255;
-  --p-c: 0.19;
-  --b-h: 205;
-  --b-c: 0.14;
+:root[data-accent="teal"] {
+  --p-h: 195;
+  --p-c: 0.11;
 }
-:root[data-accent="aqua"] {
-  --p-h: 192;
-  --p-c: 0.12;
-  --b-h: 165;
-  --b-c: 0.14;
+:root[data-accent="green"] {
+  --p-h: 152;
+  --p-c: 0.15;
 }
-:root[data-accent="forest"] {
-  --p-h: 150;
-  --p-c: 0.16;
-  --b-h: 118;
-  --b-c: 0.17;
-}
-:root[data-accent="sunset"] {
-  --p-h: 45;
-  --p-c: 0.19;
-  --b-h: 15;
-  --b-c: 0.2;
+:root[data-accent="amber"] {
+  --p-h: 58;
+  --p-c: 0.15;
 }
 :root[data-accent="rose"] {
-  --p-h: 0;
-  --p-c: 0.21;
-  --b-h: 320;
-  --b-c: 0.2;
+  --p-h: 12;
+  --p-c: 0.19;
 }
 
 /* Tema claro */
 :root {
-  --radius: 0.75rem;
-  --brand-from: oklch(0.6 var(--p-c) var(--p-h));
-  --brand-to: oklch(0.68 var(--b-c) var(--b-h));
-  --background: oklch(0.985 0.004 var(--p-h));
-  --foreground: oklch(0.18 0.02 var(--p-h));
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.205 0.006 270);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.02 var(--p-h));
+  --card-foreground: oklch(0.205 0.006 270);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.02 var(--p-h));
-  --primary: oklch(0.56 var(--p-c) var(--p-h));
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.955 0.008 var(--p-h));
-  --secondary-foreground: oklch(0.22 0.02 var(--p-h));
-  --muted: oklch(0.955 0.008 var(--p-h));
-  --muted-foreground: oklch(0.5 0.02 var(--p-h));
-  --accent: oklch(0.94 0.014 var(--p-h));
-  --accent-foreground: oklch(0.22 0.02 var(--p-h));
-  --destructive: oklch(0.58 0.22 25);
-  --border: oklch(0.9 0.01 var(--p-h));
-  --input: oklch(0.9 0.01 var(--p-h));
-  --ring: oklch(0.56 var(--p-c) var(--p-h) / 60%);
-  --sidebar: oklch(0.97 0.006 var(--p-h));
-  --sidebar-foreground: oklch(0.22 0.02 var(--p-h));
-  --sidebar-primary: oklch(0.56 var(--p-c) var(--p-h));
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.93 0.014 var(--p-h));
-  --sidebar-accent-foreground: oklch(0.2 0.02 var(--p-h));
-  --sidebar-border: oklch(0.91 0.01 var(--p-h));
-  --sidebar-ring: oklch(0.56 var(--p-c) var(--p-h) / 60%);
+  --popover-foreground: oklch(0.205 0.006 270);
+  --primary: oklch(0.53 var(--p-c) var(--p-h));
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.96 0.003 270);
+  --secondary-foreground: oklch(0.24 0.006 270);
+  --muted: oklch(0.965 0.003 270);
+  --muted-foreground: oklch(0.5 0.01 270);
+  --accent: oklch(0.955 0.004 270);
+  --accent-foreground: oklch(0.24 0.006 270);
+  --destructive: oklch(0.56 0.21 25);
+  --success: oklch(0.56 0.14 155);
+  --border: oklch(0.92 0.004 270);
+  --input: oklch(0.89 0.004 270);
+  --ring: oklch(0.53 var(--p-c) var(--p-h) / 55%);
+  --sidebar: oklch(0.98 0.002 270);
+  --sidebar-foreground: oklch(0.24 0.006 270);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: oklch(0.945 0.004 270);
+  --sidebar-accent-foreground: oklch(0.205 0.006 270);
+  --sidebar-border: oklch(0.925 0.004 270);
+  --sidebar-ring: var(--ring);
+  --shadow-color: oklch(0.2 0.02 270 / 12%);
 }
 
 /* Tema escuro (padrão) */
 .dark {
-  --brand-from: oklch(0.66 calc(var(--p-c) * 0.92) var(--p-h));
-  --brand-to: oklch(0.72 calc(var(--b-c) * 0.86) var(--b-h));
-  --background: oklch(0.14 0.012 var(--p-h));
-  --foreground: oklch(0.97 0.004 var(--p-h));
-  --card: oklch(0.18 0.014 var(--p-h));
-  --card-foreground: oklch(0.97 0.004 var(--p-h));
-  --popover: oklch(0.2 0.016 var(--p-h));
-  --popover-foreground: oklch(0.97 0.004 var(--p-h));
-  --primary: oklch(0.7 calc(var(--p-c) * 0.8) var(--p-h));
-  --primary-foreground: oklch(0.15 0.02 var(--p-h));
-  --secondary: oklch(0.24 0.016 var(--p-h));
-  --secondary-foreground: oklch(0.97 0.004 var(--p-h));
-  --muted: oklch(0.23 0.014 var(--p-h));
-  --muted-foreground: oklch(0.7 0.016 var(--p-h));
-  --accent: oklch(0.26 0.02 var(--p-h));
-  --accent-foreground: oklch(0.97 0.004 var(--p-h));
-  --destructive: oklch(0.68 0.2 22);
+  --background: oklch(0.165 0.004 270);
+  --foreground: oklch(0.96 0.003 270);
+  --card: oklch(0.195 0.005 270);
+  --card-foreground: oklch(0.96 0.003 270);
+  --popover: oklch(0.21 0.005 270);
+  --popover-foreground: oklch(0.96 0.003 270);
+  --primary: oklch(0.62 calc(var(--p-c) * 0.95) var(--p-h));
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.245 0.005 270);
+  --secondary-foreground: oklch(0.96 0.003 270);
+  --muted: oklch(0.235 0.005 270);
+  --muted-foreground: oklch(0.69 0.008 270);
+  --accent: oklch(0.255 0.006 270);
+  --accent-foreground: oklch(0.96 0.003 270);
+  --destructive: oklch(0.66 0.19 22);
+  --success: oklch(0.72 0.15 155);
   --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 11%);
-  --ring: oklch(0.7 calc(var(--p-c) * 0.8) var(--p-h) / 55%);
-  --sidebar: oklch(0.12 0.01 var(--p-h));
-  --sidebar-foreground: oklch(0.95 0.004 var(--p-h));
-  --sidebar-primary: oklch(0.7 calc(var(--p-c) * 0.8) var(--p-h));
-  --sidebar-primary-foreground: oklch(0.15 0.02 var(--p-h));
-  --sidebar-accent: oklch(0.21 0.016 var(--p-h));
-  --sidebar-accent-foreground: oklch(0.97 0.004 var(--p-h));
+  --input: oklch(1 0 0 / 13%);
+  --ring: oklch(0.62 calc(var(--p-c) * 0.95) var(--p-h) / 60%);
+  --sidebar: oklch(0.145 0.004 270);
+  --sidebar-foreground: oklch(0.93 0.003 270);
+  --sidebar-accent: oklch(0.225 0.005 270);
+  --sidebar-accent-foreground: oklch(0.96 0.003 270);
   --sidebar-border: oklch(1 0 0 / 7%);
-  --sidebar-ring: oklch(0.7 calc(var(--p-c) * 0.8) var(--p-h) / 55%);
+  --shadow-color: oklch(0 0 0 / 45%);
+}
+
+/* Destaque "grafite": sem cor — a ação principal usa o próprio contraste (preto/branco). */
+:root[data-accent="graphite"] {
+  --primary: oklch(0.24 0.006 270);
+  --primary-foreground: oklch(0.99 0 0);
+  --ring: oklch(0.24 0.006 270 / 40%);
+}
+.dark[data-accent="graphite"] {
+  --primary: oklch(0.95 0.003 270);
+  --primary-foreground: oklch(0.18 0.004 270);
+  --ring: oklch(0.95 0.003 270 / 45%);
 }
 
 @layer base {
@@ -215,9 +214,11 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
   ::selection {
-    background: color-mix(in oklch, var(--primary) 35%, transparent);
+    background: color-mix(in oklch, var(--primary) 30%, transparent);
   }
 }
 
@@ -242,7 +243,7 @@
 @keyframes page-enter {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(6px);
   }
 }
 @keyframes fade-enter {
@@ -253,11 +254,11 @@
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.98);
+    transform: translateY(8px);
   }
 }
 #main > :not(header) {
-  animation: page-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation: page-enter 0.32s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 /* Páginas com o vídeo encaixado só esmaecem (o player é posicionado pelo retângulo do palco). */
 #main > [data-enter="fade"] {
@@ -265,7 +266,7 @@
 }
 /* Grades de cards: cada item aparece um pouquinho depois do anterior. */
 .stagger > * {
-  animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation: rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
   animation-delay: 360ms;
 }
 .stagger > :nth-child(1) { animation-delay: 0ms; }
@@ -289,14 +290,11 @@
 }
 
 @layer utilities {
-  .text-gradient {
-    background-image: linear-gradient(110deg, var(--brand-from), var(--brand-to));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-  .bg-brand-gradient {
-    background-image: linear-gradient(135deg, var(--brand-from), var(--brand-to));
+  /* Sombra discreta para elementos elevados (cards em hover, capas). */
+  .shadow-soft {
+    box-shadow:
+      0 1px 2px var(--shadow-color),
+      0 8px 24px -8px var(--shadow-color);
   }
   .scrollbar-none {
     scrollbar-width: none;

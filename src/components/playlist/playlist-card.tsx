@@ -16,14 +16,10 @@ export function PlaylistCard({ playlist, className }: { playlist: Playlist; clas
   const ids = playlist.videoIds.filter((id) => videos[id]);
 
   return (
-    <div className={cn("group/pl relative rounded-xl p-3 transition-colors hover:bg-accent/50", className)}>
-      <Link href={`/playlists/${playlist.id}`} className="absolute inset-0 z-0 rounded-xl" aria-label={playlist.name} />
+    <div className={cn("group/pl relative rounded-lg p-2.5 transition-colors hover:bg-accent/60", className)}>
+      <Link href={`/playlists/${playlist.id}`} className="absolute inset-0 z-0 rounded-lg" aria-label={playlist.name} />
       <div className="pointer-events-none relative">
-        <PlaylistCover
-          seed={playlist.id}
-          videoIds={ids}
-          className="w-full rounded-lg shadow-lg shadow-black/20 transition-transform duration-500 group-hover/pl:scale-[1.02]"
-        />
+        <PlaylistCover videoIds={ids} className="w-full rounded-md ring-1 ring-foreground/[0.06]" />
         {ids.length > 0 && (
           <button
             type="button"
@@ -34,17 +30,17 @@ export function PlaylistCard({ playlist, className }: { playlist: Playlist; clas
             }
             aria-label={`Tocar ${playlist.name}`}
             className={cn(
-              "pointer-events-auto absolute right-2 bottom-2 z-10 grid size-12 translate-y-2 cursor-pointer place-items-center rounded-full bg-brand-gradient text-white opacity-0 shadow-xl transition-all duration-300 group-hover/pl:translate-y-0 group-hover/pl:opacity-100 hover:scale-105",
+              "pointer-events-auto absolute right-2 bottom-2 z-10 grid size-10 translate-y-1 cursor-pointer place-items-center rounded-full bg-primary text-primary-foreground opacity-0 shadow-lg shadow-black/30 transition-all duration-200 group-hover/pl:translate-y-0 group-hover/pl:opacity-100 hover:scale-105 focus-visible:translate-y-0 focus-visible:opacity-100",
               playingThis && isPlaying && "translate-y-0 opacity-100"
             )}
           >
-            {playingThis && isPlaying ? <Pause className="size-5 fill-current" /> : <Play className="ml-0.5 size-5 fill-current" />}
+            {playingThis && isPlaying ? <Pause className="size-4 fill-current" /> : <Play className="ml-0.5 size-4 fill-current" />}
           </button>
         )}
       </div>
-      <div className="pointer-events-none relative mt-3 min-w-0">
-        <p className={cn("truncate font-semibold", playingThis && "text-primary")}>{playlist.name}</p>
-        <p className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">
+      <div className="pointer-events-none relative mt-2.5 min-w-0">
+        <p className={cn("truncate text-sm font-medium", playingThis && "text-primary")}>{playlist.name}</p>
+        <p className="mt-0.5 line-clamp-1 text-[13px] text-muted-foreground">
           {playlist.description || pluralize(ids.length, "vídeo", "vídeos")}
         </p>
       </div>

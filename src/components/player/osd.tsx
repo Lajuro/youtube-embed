@@ -56,18 +56,18 @@ export function Osd() {
         key={message.label}
         className={
           isLeaving
-            ? "flex items-center gap-3 rounded-2xl bg-popover/90 px-4 py-2.5 text-popover-foreground shadow-2xl ring-1 ring-border backdrop-blur-xl animate-out fade-out zoom-out-95 fill-mode-forwards"
-            : "flex items-center gap-3 rounded-2xl bg-popover/90 px-4 py-2.5 text-popover-foreground shadow-2xl ring-1 ring-border backdrop-blur-xl animate-in fade-in zoom-in-90 slide-in-from-bottom-2 duration-200"
+            ? "flex items-center gap-3 rounded-lg bg-popover/95 px-3.5 py-2 text-popover-foreground shadow-xl shadow-black/25 ring-1 ring-border backdrop-blur-xl animate-out fade-out zoom-out-95 fill-mode-forwards"
+            : "flex items-center gap-3 rounded-lg bg-popover/95 px-3.5 py-2 text-popover-foreground shadow-xl shadow-black/25 ring-1 ring-border backdrop-blur-xl animate-in fade-in zoom-in-90 slide-in-from-bottom-2 duration-200"
         }
         style={isLeaving ? { animationDuration: `${FADE_MS}ms` } : undefined}
       >
-        <Icon className="size-5 shrink-0 text-primary" />
-        <span className="text-sm font-medium whitespace-nowrap">{message.label}</span>
+        <Icon className="size-4 shrink-0 text-muted-foreground" />
+        <span className="text-[13px] font-medium whitespace-nowrap">{message.label}</span>
         {message.value !== undefined && (
           <span className="flex items-center gap-2">
-            <span className="h-1.5 w-28 overflow-hidden rounded-full bg-foreground/10">
+            <span className="h-1 w-28 overflow-hidden rounded-full bg-foreground/15">
               <span
-                className="block h-full rounded-full bg-brand-gradient transition-[width] duration-150"
+                className="block h-full rounded-full bg-foreground transition-[width] duration-150"
                 style={{ width: `${Math.max(0, Math.min(100, message.value))}%` }}
               />
             </span>

@@ -38,16 +38,15 @@ export function AmbientBackdrop({ videoId, className }: { videoId: string | null
         key={videoId}
         src={thumbnailUrl(videoId, "hqdefault")}
         alt=""
-        className="absolute inset-0 size-full scale-125 object-cover opacity-50 blur-3xl saturate-150 animate-in fade-in duration-1000 dark:opacity-40"
+        className="absolute inset-0 size-full scale-125 object-cover opacity-50 blur-3xl saturate-150 animate-in fade-in duration-1000 dark:opacity-45"
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/70 to-background" />
-      <div className="bg-noise absolute inset-0 opacity-[0.04] mix-blend-overlay" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background/25 via-background/70 to-background" />
     </div>
   );
 }
 
 /** O vídeo usa a maior largura que ainda cabe na altura (descontando topo, título e barra do player). */
-const stageMaxWidth = (bar: number) => `max(18rem, calc((100dvh - ${bar}px - 190px) * 16 / 9))`;
+const stageMaxWidth = (bar: number) => `max(18rem, calc((100dvh - ${bar}px - 170px) * 16 / 9))`;
 
 export function NowPlaying() {
   const expanded = usePlayer((s) => s.expanded);
@@ -81,80 +80,84 @@ export function NowPlaying() {
     >
       <AmbientBackdrop videoId={currentId} />
 
-      <header className="relative flex items-center justify-between gap-4 px-4 py-3 md:px-8 md:py-4">
-        <Button variant="ghost" size="icon" onClick={() => setExpanded(false)} aria-label="Fechar">
-          <ChevronDown className="size-5" />
-        </Button>
+      <header className="relative flex h-13 shrink-0 items-center justify-between gap-4 px-3 md:px-6">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon-sm" onClick={() => setExpanded(false)} aria-label="Fechar">
+              <ChevronDown className="size-5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent className="flex items-center gap-2">
+            Fechar <Kbd>Esc</Kbd>
+          </TooltipContent>
+        </Tooltip>
         <div className="min-w-0 text-center">
-          <p className="text-[11px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">Tocando agora</p>
-          {source && <p className="truncate text-sm font-medium">{source.label}</p>}
+          <p className="text-xs text-muted-foreground">Tocando de</p>
+          <p className="truncate text-[13px] font-medium">{source?.label ?? "Fila"}</p>
         </div>
         <div className="flex items-center gap-1">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
-                size="icon"
-                className="hidden lg:inline-flex"
+                size="icon-sm"
+                className="hidden text-muted-foreground lg:inline-flex"
                 aria-pressed={!showQueue}
                 aria-label={showQueue ? "Modo cinema" : "Mostrar a fila"}
                 onClick={() => setShowQueue(!showQueue)}
               >
-                {showQueue ? <RectangleHorizontal className="size-5" /> : <PanelRight className="size-5" />}
+                {showQueue ? <RectangleHorizontal /> : <PanelRight />}
               </Button>
             </TooltipTrigger>
             <TooltipContent className="flex items-center gap-2">
               {showQueue ? "Modo cinema" : "Mostrar a fila"} <Kbd>T</Kbd>
             </TooltipContent>
           </Tooltip>
-          <span className="hidden items-center gap-1.5 pl-2 text-xs text-muted-foreground xl:flex">
-            <Kbd>Esc</Kbd> fecha
-          </span>
+          {/* Mantém o título centralizado quando o botão de cinema não aparece. */}
+          <span className="w-8 lg:hidden" />
         </div>
       </header>
 
       <div
         className={cn(
-          "relative grid min-h-0 flex-1 grid-cols-1 gap-6 overflow-y-auto scrollbar-thin px-4 pb-5 md:px-8 lg:gap-8 lg:overflow-hidden",
-          showQueue && "lg:grid-cols-[minmax(0,1fr)_360px]"
+          "relative grid min-h-0 flex-1 grid-cols-1 gap-6 overflow-y-auto scrollbar-thin px-4 pt-2 pb-5 md:px-8 lg:gap-8 lg:overflow-hidden",
+          showQueue && "lg:grid-cols-[minmax(0,1fr)_340px]"
         )}
       >
         <div className="flex min-w-0 flex-col items-center lg:justify-center">
           {/* O iframe é posicionado exatamente sobre este elemento (ver PlayerHost). */}
           <div
             id={PLAYER_STAGE_ID}
-            className="aspect-video w-full rounded-2xl bg-black/40"
+            className="aspect-video w-full rounded-xl bg-black/40"
             style={{ maxWidth }}
           />
           <div
-            className="mt-5 flex w-full items-start justify-between gap-4"
+            className="mt-4 flex w-full items-start justify-between gap-4"
             style={{ maxWidth }}
           >
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                {isLive && <Badge variant="live">Ao vivo</Badge>}
-                {!isLive && duration > 0 && (
-                  <span className="text-xs text-muted-foreground tabular-nums">{formatTime(duration)}</span>
-                )}
-              </div>
-              <h2 className="mt-1 line-clamp-2 text-xl font-bold tracking-tight text-balance md:text-2xl">
+              <h2 className="line-clamp-2 text-lg font-semibold tracking-tight text-balance md:text-xl">
                 {video?.title ?? currentId}
               </h2>
-              <p className="mt-1 truncate text-sm text-muted-foreground">{video?.author ?? "Canal desconhecido"}</p>
+              <p className="mt-1 flex items-center gap-2 truncate text-sm text-muted-foreground">
+                {isLive && <Badge variant="live">Ao vivo</Badge>}
+                <span className="truncate">{video?.author ?? "Canal desconhecido"}</span>
+                {!isLive && duration > 0 && <span className="tabular-nums">· {formatTime(duration)}</span>}
+              </p>
             </div>
-            <div className="flex shrink-0 items-center gap-1">
+            <div className="flex shrink-0 items-center gap-0.5 text-muted-foreground">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => toggleFavorite(currentId)}
                 aria-label={isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
               >
-                <FavoriteHeart active={isFavorite} className="size-5" />
+                <FavoriteHeart active={isFavorite} className="size-[18px]" />
               </Button>
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" aria-label="Adicionar à playlist">
-                    <ListPlus className="size-5" />
+                    <ListPlus className="size-[18px]" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -181,11 +184,11 @@ export function NowPlaying() {
                 onClick={() => copyVideoLink(currentId)}
                 aria-label="Copiar link"
               >
-                <Copy className="size-5" />
+                <Copy className="size-[18px]" />
               </Button>
               <VideoDropdownMenu videoId={currentId}>
                 <Button variant="ghost" size="icon" aria-label="Mais opções">
-                  <MoreHorizontal className="size-5" />
+                  <MoreHorizontal className="size-[18px]" />
                 </Button>
               </VideoDropdownMenu>
             </div>
@@ -194,7 +197,7 @@ export function NowPlaying() {
 
         <aside
           className={cn(
-            "min-h-0 rounded-2xl border bg-background/40 p-3 backdrop-blur-xl lg:overflow-y-auto lg:scrollbar-thin",
+            "min-h-0 rounded-xl border bg-background/50 p-2.5 backdrop-blur-xl lg:overflow-y-auto lg:scrollbar-thin",
             !showQueue && "lg:hidden"
           )}
         >

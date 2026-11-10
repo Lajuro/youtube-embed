@@ -88,7 +88,7 @@ function PlaylistContent({ id }: { id: string }) {
           title="Playlist não encontrada"
           description="Ela pode ter sido apagada, ou foi criada em outro navegador."
         >
-          <Button asChild variant="outline" className="rounded-full">
+          <Button asChild variant="outline">
             <Link href="/playlists">Ver todas as playlists</Link>
           </Button>
         </EmptyState>
@@ -107,11 +107,7 @@ function PlaylistContent({ id }: { id: string }) {
         title={playlist.name}
         backdropVideoId={allIds[0]}
         cover={
-          <PlaylistCover
-            seed={playlist.id}
-            videoIds={allIds}
-            className="size-32 rounded-2xl shadow-2xl shadow-black/40 md:size-40"
-          />
+          <PlaylistCover videoIds={allIds} className="size-28 rounded-xl shadow-soft ring-1 ring-foreground/[0.08] md:size-36" />
         }
         description={playlist.description}
         meta={
@@ -131,7 +127,7 @@ function PlaylistContent({ id }: { id: string }) {
             <CollectionPlayButtons ids={ids} source={source} />
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="rounded-full">
+                <Button variant="outline" size="sm" className="ml-1">
                   <ListPlus /> Adicionar
                 </Button>
               </DropdownMenuTrigger>
@@ -146,7 +142,7 @@ function PlaylistContent({ id }: { id: string }) {
             </DropdownMenu>
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full" aria-label="Mais opções">
+                <Button variant="ghost" size="icon-sm" className="text-muted-foreground" aria-label="Mais opções">
                   <MoreHorizontal />
                 </Button>
               </DropdownMenuTrigger>
@@ -196,10 +192,10 @@ function PlaylistContent({ id }: { id: string }) {
             description="Cole links do YouTube ou escolha vídeos que já estão na sua biblioteca."
             className="mx-2"
           >
-            <Button variant="brand" className="rounded-full" onClick={() => openAddDialog({ playlistId: playlist.id })}>
+            <Button onClick={() => openAddDialog({ playlistId: playlist.id })}>
               <Link2 /> Colar links
             </Button>
-            <Button variant="outline" className="rounded-full" onClick={() => setPickerOpen(true)}>
+            <Button variant="outline" onClick={() => setPickerOpen(true)}>
               <Library /> Escolher da biblioteca
             </Button>
           </EmptyState>
@@ -214,7 +210,7 @@ function PlaylistContent({ id }: { id: string }) {
               onReorder={canReorder ? (from, to) => reorderPlaylist(playlist.id, from, to) : undefined}
             />
             {canReorder && allIds.length > 1 && (
-              <p className="mt-4 px-3 text-xs text-muted-foreground">Dica: arraste pela alça ⋮⋮ para reordenar.</p>
+              <p className="mt-4 px-3 text-xs text-muted-foreground">Arraste um vídeo pela alça à esquerda para reordenar.</p>
             )}
           </>
         )}
@@ -299,7 +295,7 @@ function PickerBody({ playlistId, existing, onDone }: { playlistId: string; exis
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Filtrar por título ou canal…"
-          className="mt-2 h-10 w-full rounded-lg border bg-transparent px-3 text-sm outline-none focus:border-primary/60"
+          className="mt-2 h-9 w-full rounded-md border bg-transparent px-3 text-sm transition-[border-color,box-shadow] outline-none focus:border-ring focus:ring-[3px] focus:ring-ring/30"
         />
       </DialogHeader>
       <div className="min-h-0 flex-1 overflow-y-auto scrollbar-thin p-2">
@@ -318,7 +314,7 @@ function PickerBody({ playlistId, existing, onDone }: { playlistId: string; exis
               onClick={() => toggle(id)}
               className={cn(
                 "flex w-full cursor-pointer items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-accent/60 disabled:cursor-default disabled:opacity-50",
-                checked && !inPlaylist && "bg-primary/10"
+                checked && !inPlaylist && "bg-accent/60"
               )}
             >
               <span
@@ -345,7 +341,7 @@ function PickerBody({ playlistId, existing, onDone }: { playlistId: string; exis
           Cancelar
         </Button>
         <Button
-          variant="brand"
+         
           disabled={!selected.length}
           onClick={() => {
             addToPlaylist(playlistId, selected);

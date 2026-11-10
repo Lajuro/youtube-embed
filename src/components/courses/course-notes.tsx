@@ -73,9 +73,9 @@ export function CourseNotes({ course, currentLesson }: CourseNotesProps) {
   return (
     <div className="grid gap-4">
       {draft ? (
-        <div className="grid gap-2 rounded-xl border border-primary/40 bg-primary/5 p-3">
-          <p className="flex items-center gap-2 text-sm font-medium">
-            <span className="rounded-md bg-primary px-1.5 py-0.5 text-xs font-semibold text-primary-foreground tabular-nums">
+        <div className="grid gap-2.5 rounded-lg border bg-card p-3">
+          <p className="flex items-center gap-2 text-[13px] font-medium">
+            <span className="rounded-[5px] border px-1.5 py-0.5 text-xs font-medium tabular-nums">
               {formatTime(draft.time)}
             </span>
             Nova anotação
@@ -88,14 +88,14 @@ export function CourseNotes({ course, currentLesson }: CourseNotesProps) {
               if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) finishDraft(true);
               if (e.key === "Escape") finishDraft(false);
             }}
-            placeholder="O que vale lembrar deste momento? (Ctrl+Enter salva)"
+            placeholder="O que vale lembrar deste momento?"
             className="min-h-24 resize-none bg-background"
           />
           <div className="flex justify-end gap-2">
             <Button size="sm" variant="ghost" onClick={() => finishDraft(false)}>
               Cancelar
             </Button>
-            <Button size="sm" variant="brand" disabled={!draft.text.trim()} onClick={() => finishDraft(true)}>
+            <Button size="sm" disabled={!draft.text.trim()} onClick={() => finishDraft(true)}>
               Salvar anotação
             </Button>
           </div>
@@ -105,13 +105,13 @@ export function CourseNotes({ course, currentLesson }: CourseNotesProps) {
           type="button"
           disabled={!currentLesson}
           onClick={startDraft}
-          className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-dashed px-4 py-3 text-left text-sm text-muted-foreground transition-colors hover:border-primary/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-dashed px-3.5 py-2.5 text-left text-[13px] text-muted-foreground transition-colors hover:border-foreground/25 hover:bg-accent/40 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
         >
           <span className="flex items-center gap-2">
             <Plus className="size-4" />
             {currentLesson ? (
               <>
-                Criar uma anotação em <strong className="text-foreground tabular-nums">{formatTime(currentTime)}</strong>
+                Criar anotação em <span className="font-medium text-foreground tabular-nums">{formatTime(currentTime)}</span>
               </>
             ) : (
               "Comece uma aula para criar anotações"
@@ -122,8 +122,8 @@ export function CourseNotes({ course, currentLesson }: CourseNotesProps) {
       )}
 
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold">Suas anotações</h3>
-        <div className="flex rounded-full border p-0.5 text-xs">
+        <h3 className="text-[15px] font-semibold">Suas anotações</h3>
+        <div className="flex rounded-md border p-0.5 text-xs">
           {(
             [
               ["all", "Todas as aulas"],
@@ -135,7 +135,7 @@ export function CourseNotes({ course, currentLesson }: CourseNotesProps) {
               type="button"
               onClick={() => setScope(value)}
               className={cn(
-                "cursor-pointer rounded-full px-2.5 py-1 transition-colors",
+                "cursor-pointer rounded-[5px] px-2 py-1 transition-colors",
                 scope === value ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -146,28 +146,28 @@ export function CourseNotes({ course, currentLesson }: CourseNotesProps) {
       </div>
 
       {list.length === 0 ? (
-        <p className="py-6 text-center text-sm text-muted-foreground">
+        <p className="py-6 text-[13px] text-muted-foreground">
           {scope === "lesson" ? "Nenhuma anotação nesta aula." : "Nenhuma anotação ainda."}
         </p>
       ) : (
-        <ul className="grid gap-3">
+        <ul className="grid divide-y border-y">
           {list.map((note) => {
             const info = lessonInfo.get(note.lessonId)!;
             const isEditing = editing?.id === note.id;
             return (
-              <li key={note.id} className="group/note rounded-xl border bg-card/50 p-3">
+              <li key={note.id} className="group/note py-3">
                 <div className="flex items-start gap-3">
                   <button
                     type="button"
                     onClick={() => jumpTo(note)}
                     title="Ir para este momento"
-                    className="shrink-0 cursor-pointer rounded-md bg-foreground px-1.5 py-0.5 text-xs font-semibold text-background tabular-nums transition-transform hover:scale-105"
+                    className="mt-0.5 shrink-0 cursor-pointer rounded-[5px] border px-1.5 py-0.5 text-xs font-medium tabular-nums transition-colors hover:bg-accent"
                   >
                     {formatTime(note.time)}
                   </button>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs text-muted-foreground">
-                      {info.label}: {lessonTitle(info.lesson, videos)}
+                      {info.label} · {lessonTitle(info.lesson, videos)}
                     </p>
                     {isEditing ? (
                       <div className="mt-2 grid gap-2">
@@ -194,7 +194,7 @@ export function CourseNotes({ course, currentLesson }: CourseNotesProps) {
                         </div>
                       </div>
                     ) : (
-                      <p className="mt-1 text-sm whitespace-pre-wrap">{note.text}</p>
+                      <p className="mt-1 text-sm text-pretty whitespace-pre-wrap">{note.text}</p>
                     )}
                   </div>
                   {!isEditing && (

@@ -435,11 +435,11 @@ export function PlayerHost() {
       ref={hostRef}
       className={cn(
         "group/host fixed -top-[9999px] -left-[9999px] size-0 overflow-hidden bg-black",
-        mode === "expanded" && "z-[45] rounded-2xl shadow-[0_30px_120px_-20px_rgba(0,0,0,0.8)]",
+        mode === "expanded" && "z-[45] rounded-xl shadow-[0_24px_80px_-24px_rgba(0,0,0,0.7)] ring-1 ring-white/[0.06]",
         mode === "docked" && "z-30",
-        mode === "float" && "z-40 rounded-xl shadow-2xl ring-1 ring-white/10",
-        mode === "mini" && "z-30 rounded-xl shadow-2xl ring-1 ring-white/10",
-        dragging && "z-50 scale-[1.03] shadow-[0_24px_80px_-12px_rgba(0,0,0,0.7)] ring-primary/60",
+        mode === "float" && "z-40 rounded-lg shadow-2xl shadow-black/40 ring-1 ring-white/10",
+        mode === "mini" && "z-30 rounded-lg shadow-2xl shadow-black/40 ring-1 ring-white/10",
+        dragging && "z-50 scale-[1.02] shadow-[0_24px_80px_-12px_rgba(0,0,0,0.7)] ring-white/30",
         hidden && "pointer-events-none z-0 opacity-0"
       )}
       aria-hidden={hidden}

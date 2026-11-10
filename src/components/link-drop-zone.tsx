@@ -99,14 +99,14 @@ export function LinkDropZone() {
 
   return (
     // pointer-events-none: o "soltar" chega no elemento de baixo (campos de texto seguem funcionando).
-    <div className="pointer-events-none fixed inset-0 z-[70] bg-background/60 p-4 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="grid size-full place-items-center rounded-3xl border-2 border-dashed border-primary/60 bg-primary/5">
+    <div className="pointer-events-none fixed inset-0 z-[70] bg-background/70 p-3 backdrop-blur-[2px] animate-in fade-in duration-150">
+      <div className="grid size-full place-items-center rounded-xl border border-dashed border-foreground/30">
         <div className="flex flex-col items-center text-center animate-in zoom-in-95 duration-200">
-          <span className="grid size-16 animate-bounce place-items-center rounded-2xl bg-brand-gradient text-white shadow-xl">
-            <Link2 className="size-7" />
+          <span className="grid size-11 place-items-center rounded-lg bg-primary text-primary-foreground">
+            <Link2 className="size-5" />
           </span>
-          <p className="mt-5 text-2xl font-bold tracking-tight">Solte para adicionar</p>
-          <p className="mt-1 text-sm text-muted-foreground">Links de vídeos ou playlists do YouTube</p>
+          <p className="mt-4 text-lg font-semibold tracking-tight">Solte para adicionar</p>
+          <p className="mt-1 text-[13px] text-muted-foreground">Links de vídeos ou playlists do YouTube</p>
         </div>
       </div>
     </div>

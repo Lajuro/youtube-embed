@@ -84,12 +84,8 @@ function PlaylistForm({
       </DialogHeader>
 
       <div className="flex gap-4">
-        <PlaylistCover
-          seed={existing?.id ?? name ?? "nova"}
-          videoIds={coverIds}
-          className="size-28 shrink-0 rounded-xl shadow-lg"
-        />
-        <div className="grid flex-1 content-start gap-3">
+        <PlaylistCover videoIds={coverIds} className="size-[72px] shrink-0 rounded-lg ring-1 ring-foreground/[0.08]" />
+        <div className="grid flex-1 content-center gap-3">
           <div className="grid gap-1.5">
             <Label htmlFor="playlist-name">Nome</Label>
             <Input
@@ -105,7 +101,9 @@ function PlaylistForm({
       </div>
 
       <div className="grid gap-1.5">
-        <Label htmlFor="playlist-description">Descrição (opcional)</Label>
+        <Label htmlFor="playlist-description">
+          Descrição <span className="font-normal text-muted-foreground">(opcional)</span>
+        </Label>
         <Textarea
           id="playlist-description"
           value={description}
@@ -120,7 +118,7 @@ function PlaylistForm({
         <Button type="button" variant="ghost" onClick={onDone}>
           Cancelar
         </Button>
-        <Button type="submit" variant="brand">
+        <Button type="submit">
           {isEdit ? "Salvar" : "Criar playlist"}
         </Button>
       </DialogFooter>

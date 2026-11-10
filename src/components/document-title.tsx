@@ -22,7 +22,7 @@ export function DocumentTitle() {
     const base = title && playing ? `▶ ${title} · Sintonia` : "Sintonia";
     const timer =
       phase !== "idle" && now
-        ? `${phase === "focus" ? "🎯" : "☕"} ${formatTime(Math.ceil(timeLeft({ endsAt, remaining }, now) / 1000))}${endsAt ? "" : " ⏸"} · `
+        ? `${formatTime(Math.ceil(timeLeft({ endsAt, remaining }, now) / 1000))} ${phase === "focus" ? "Foco" : "Pausa"}${endsAt ? "" : " (pausado)"} · `
         : "";
     document.title = timer + base;
   }, [title, playing, phase, endsAt, remaining, now]);

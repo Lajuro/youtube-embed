@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, GraduationCap, Link2, ListVideo, Loader2 } from "lucide-react";
+import { FileText, Link2, ListVideo, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -119,7 +119,7 @@ function CourseForm({ courseId, onDone }: { courseId?: string; onDone: () => voi
       // Os que o player não informou ainda tentam pelos outros caminhos.
       for (const id of ids) hydrateMetadata(id);
       toast.success(`Playlist importada: ${pluralize(ids.length, "aula", "aulas")}`, {
-        description: "Dica: em “Editar conteúdo” você divide as aulas em seções.",
+        description: "Em “Editar” você divide as aulas em seções.",
       });
       onDone();
     } catch (err) {
@@ -136,13 +136,13 @@ function CourseForm({ courseId, onDone }: { courseId?: string; onDone: () => voi
         <DialogHeader>
           <DialogTitle>Importando a playlist…</DialogTitle>
           <DialogDescription>
-            {pluralize(importing.total, "aula encontrada", "aulas encontradas")}. Agora estou buscando o título de cada
-            vídeo — pode fechar esta janela, continua em segundo plano.
+            {pluralize(importing.total, "aula encontrada", "aulas encontradas")}. Buscando o título de cada vídeo — você
+            pode fechar esta janela, o processo continua em segundo plano.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-2">
           <Progress value={pct} />
-          <p className="text-sm text-muted-foreground tabular-nums">
+          <p className="text-[13px] text-muted-foreground tabular-nums">
             {importing.done} de {importing.total} títulos
           </p>
         </div>
@@ -158,14 +158,11 @@ function CourseForm({ courseId, onDone }: { courseId?: string; onDone: () => voi
   return (
     <form onSubmit={submit} className="grid gap-5">
       <DialogHeader>
-        <div className="mb-1 grid size-10 place-items-center rounded-xl bg-brand-gradient text-white shadow-lg">
-          <GraduationCap className="size-5" />
-        </div>
         <DialogTitle>{isEdit ? "Editar curso" : "Novo curso"}</DialogTitle>
         <DialogDescription>
           {isEdit
             ? "Mude o nome, o instrutor ou a descrição."
-            : "Organize vídeos do YouTube em seções e aulas, com progresso e anotações — estilo Udemy."}
+            : "Organize vídeos do YouTube em seções e aulas, com progresso e anotações."}
         </DialogDescription>
       </DialogHeader>
 
@@ -182,11 +179,15 @@ function CourseForm({ courseId, onDone }: { courseId?: string; onDone: () => voi
           />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="course-author">Instrutor ou canal (opcional)</Label>
+          <Label htmlFor="course-author">
+            Instrutor ou canal <span className="font-normal text-muted-foreground">(opcional)</span>
+          </Label>
           <Input id="course-author" value={author} maxLength={80} onChange={(e) => setAuthor(e.target.value)} />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="course-description">Descrição (opcional)</Label>
+          <Label htmlFor="course-description">
+            Descrição <span className="font-normal text-muted-foreground">(opcional)</span>
+          </Label>
           <Textarea
             id="course-description"
             value={description}
@@ -212,12 +213,12 @@ function CourseForm({ courseId, onDone }: { courseId?: string; onDone: () => voi
                 }}
                 aria-pressed={origin === o.value}
                 className={cn(
-                  "flex cursor-pointer flex-col items-start gap-1 rounded-xl border p-3 text-left transition-all hover:bg-accent/50",
-                  origin === o.value && "border-primary bg-primary/5 ring-1 ring-primary"
+                  "flex cursor-pointer flex-col items-start gap-1 rounded-lg border p-3 text-left transition-colors hover:bg-accent/50",
+                  origin === o.value && "border-primary bg-accent/40 ring-1 ring-primary"
                 )}
               >
-                <o.icon className={cn("size-4", origin === o.value ? "text-primary" : "text-muted-foreground")} />
-                <span className="text-sm font-medium">{o.title}</span>
+                <o.icon className={cn("size-4", origin === o.value ? "text-foreground" : "text-muted-foreground")} />
+                <span className="mt-0.5 text-[13px] font-medium">{o.title}</span>
                 <span className="text-xs text-muted-foreground">{o.description}</span>
               </button>
             ))}
@@ -257,7 +258,7 @@ function CourseForm({ courseId, onDone }: { courseId?: string; onDone: () => voi
             </div>
           )}
 
-          {error && <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}</p>}
+          {error && <p className="rounded-lg border border-destructive/40 px-3 py-2.5 text-[13px] text-destructive">{error}</p>}
         </div>
       )}
 
@@ -265,7 +266,7 @@ function CourseForm({ courseId, onDone }: { courseId?: string; onDone: () => voi
         <Button type="button" variant="ghost" onClick={onDone}>
           Cancelar
         </Button>
-        <Button type="submit" variant="brand" disabled={!canSubmit || reading}>
+        <Button type="submit" disabled={!canSubmit || reading}>
           {reading && <Loader2 className="animate-spin" />}
           {isEdit ? "Salvar" : reading ? "Lendo a playlist…" : "Criar curso"}
         </Button>

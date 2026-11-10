@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ChevronDown, Heart, Link2, ListMusic, Loader2, Play, Plus, Search, Sparkles } from "lucide-react";
+import { Check, ChevronDown, ListMusic, Loader2, Play, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -22,15 +22,15 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { VideoThumbnail } from "@/components/video/video-thumbnail";
 import { addVideosToLibrary, playList } from "@/lib/actions";
-import { cn, pluralize } from "@/lib/utils";
+import { pluralize } from "@/lib/utils";
 import { fetchVideoMetadata, parseManyVideoIds, type VideoMetadata } from "@/lib/youtube";
 import { isInLibrary, useLibrary } from "@/stores/library-store";
 import { useUi } from "@/stores/ui-store";
 
 /** Algumas rádios 24/7 para começar (transmissões ao vivo do canal Lofi Girl). */
 export const STARTER_VIDEOS = [
-  { id: "jfKfPfyJRdk", label: "lofi hip hop radio 📚" },
-  { id: "4xDzrJKXOOY", label: "synthwave radio 🌌" },
+  { id: "jfKfPfyJRdk", label: "Lofi hip hop" },
+  { id: "4xDzrJKXOOY", label: "Synthwave" },
 ];
 
 export function AddVideoDialog() {
@@ -103,20 +103,12 @@ function AddVideoForm({
         submit(true);
       }}
     >
-      <div className="relative overflow-hidden border-b px-6 pt-6 pb-5">
-        <div className="pointer-events-none absolute -top-24 -right-16 size-56 rounded-full bg-brand-gradient opacity-25 blur-3xl" />
-        <DialogHeader className="relative">
-          <div className="mb-1 grid size-10 place-items-center rounded-xl bg-brand-gradient text-white shadow-lg">
-            <Link2 className="size-5" />
-          </div>
-          <DialogTitle>Adicionar vídeos</DialogTitle>
-          <DialogDescription>
-            Cole um link do YouTube, um ID ou até vários links de uma vez (um por linha).
-          </DialogDescription>
-        </DialogHeader>
-      </div>
+      <DialogHeader className="px-6 pt-6 pb-4">
+        <DialogTitle>Adicionar vídeos</DialogTitle>
+        <DialogDescription>Cole um link do YouTube, um ID ou vários links de uma vez (um por linha).</DialogDescription>
+      </DialogHeader>
 
-      <div className="flex max-h-[min(60vh,560px)] flex-col gap-4 overflow-y-auto scrollbar-thin px-6 py-5">
+      <div className="flex max-h-[min(60vh,560px)] flex-col gap-3 overflow-y-auto scrollbar-thin px-6 pt-1 pb-5">
         <Textarea
           autoFocus
           value={value}
@@ -132,13 +124,12 @@ function AddVideoForm({
         />
 
         {hasText && ids.length === 0 && (
-          <div className="-mt-1 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-muted/30 p-3 text-sm">
-            <span className="text-muted-foreground">Isso não é um link. Quer buscar no YouTube?</span>
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-muted/40 py-2 pr-2 pl-3 text-[13px]">
+            <span className="text-muted-foreground">Isso não é um link. Buscar no YouTube?</span>
             <Button
               type="button"
               size="sm"
-              variant="brand"
-              className="rounded-full"
+              variant="secondary"
               onClick={() => {
                 router.push(`/search?q=${encodeURIComponent(value.trim())}`);
                 onDone();
@@ -150,15 +141,14 @@ function AddVideoForm({
         )}
 
         {!hasText && (
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <Sparkles className="size-4 text-primary" />
-            Sem ideias? Experimente:
+          <div className="flex flex-wrap items-center gap-1.5 text-[13px] text-muted-foreground">
+            <span className="mr-0.5">Sugestões:</span>
             {STARTER_VIDEOS.map((s) => (
               <button
                 key={s.id}
                 type="button"
                 onClick={() => setValue(`https://www.youtube.com/watch?v=${s.id}`)}
-                className="cursor-pointer rounded-full border px-2.5 py-0.5 text-xs transition-colors hover:border-primary hover:text-foreground"
+                className="cursor-pointer rounded-md border px-2 py-0.5 text-xs transition-colors hover:bg-accent hover:text-foreground"
               >
                 {s.label}
               </button>
@@ -174,11 +164,10 @@ function AddVideoForm({
           </ul>
         )}
 
-        <div className="flex flex-col gap-3 rounded-xl border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
           <Label className="cursor-pointer gap-2.5 font-normal">
             <Switch checked={favorite} onCheckedChange={setFavorite} />
-            <Heart className={cn("size-4", favorite ? "fill-primary text-primary" : "text-muted-foreground")} />
-            Favoritar
+            Adicionar aos favoritos
           </Label>
 
           <DropdownMenu modal={false}>
@@ -221,7 +210,7 @@ function AddVideoForm({
         </div>
       </div>
 
-      <div className="flex flex-col-reverse items-stretch gap-2 border-t bg-muted/20 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col-reverse items-stretch gap-2 border-t px-6 py-3.5 sm:flex-row sm:items-center sm:justify-between">
         <p className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:flex">
           <Kbd>Enter</Kbd> tocar · <Kbd>Alt</Kbd>+<Kbd>Enter</Kbd> só adicionar
         </p>
@@ -229,7 +218,7 @@ function AddVideoForm({
           <Button type="button" variant="outline" disabled={!ids.length} onClick={() => submit(false)} className="flex-1 sm:flex-none">
             <Plus /> Adicionar
           </Button>
-          <Button type="submit" variant="brand" disabled={!ids.length} className="flex-1 sm:flex-none">
+          <Button type="submit" disabled={!ids.length} className="flex-1 sm:flex-none">
             <Play className="fill-current" /> Adicionar e tocar
           </Button>
         </div>
@@ -256,8 +245,8 @@ function PreviewItem({ id, inLibrary }: { id: string; inLibrary: boolean }) {
   const loading = !title && meta === undefined;
 
   return (
-    <li className="flex items-center gap-3 rounded-xl border bg-card/50 p-2 animate-in fade-in slide-in-from-bottom-1">
-      <VideoThumbnail id={id} className="aspect-video w-24 shrink-0 rounded-lg" />
+    <li className="flex items-center gap-3 rounded-lg border p-2 animate-in fade-in slide-in-from-bottom-1">
+      <VideoThumbnail id={id} className="aspect-video w-20 shrink-0 rounded-[5px]" />
       <div className="min-w-0 flex-1">
         {loading ? (
           <div className="flex flex-col gap-1.5">
@@ -266,7 +255,7 @@ function PreviewItem({ id, inLibrary }: { id: string; inLibrary: boolean }) {
           </div>
         ) : (
           <>
-            <p className="line-clamp-2 text-sm font-medium">{title ?? "Título será carregado ao tocar"}</p>
+            <p className="line-clamp-2 text-[13px] leading-snug font-medium">{title ?? "Título será carregado ao tocar"}</p>
             <p className="truncate text-xs text-muted-foreground">
               {author ?? <span className="font-mono">{id}</span>}
             </p>

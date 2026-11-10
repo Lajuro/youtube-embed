@@ -8,7 +8,6 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
-  Clock3,
   GraduationCap,
   Keyboard,
   ListChecks,
@@ -74,7 +73,7 @@ import { setAdvanceGuard, useCurrentVideoId, usePlayer, usePlayerDock } from "@/
 import { useSettings, useUi } from "@/stores/ui-store";
 
 /** Altura do cabeçalho da sala de aula. */
-const HEADER = "3.5rem";
+const HEADER = "3.25rem";
 /** Segundos da contagem para a próxima aula. */
 const COUNTDOWN = 5;
 
@@ -85,7 +84,7 @@ export function CourseClassroom({ courseId }: { courseId: string }) {
     return (
       <div className="px-4 py-10 md:px-8">
         <EmptyState icon={GraduationCap} title="Curso não encontrado" description="Ele pode ter sido excluído, ou foi criado em outro navegador.">
-          <Button asChild variant="outline" className="rounded-full">
+          <Button asChild variant="outline">
             <Link href="/courses">Ver todos os cursos</Link>
           </Button>
         </EmptyState>
@@ -189,7 +188,7 @@ function Classroom({ course }: { course: Course }) {
 
           <div className="mx-auto w-full max-w-5xl px-4 pb-16 md:px-8">
             <Tabs value={activeTab} onValueChange={setTab}>
-              <TabsList className="h-10 w-full justify-start gap-1 rounded-none border-b bg-transparent p-0 sm:w-auto">
+              <TabsList className="h-10 w-full justify-start gap-4 rounded-none border-b bg-transparent p-0">
                 {[
                   { value: "content", icon: ListChecks, label: "Conteúdo", className: contentTab },
                   { value: "overview", icon: BookOpen, label: "Visão geral" },
@@ -199,11 +198,11 @@ function Classroom({ course }: { course: Course }) {
                     key={t.value}
                     value={t.value}
                     className={cn(
-                      "h-10 flex-none rounded-none border-0 border-b-2 border-transparent px-3 text-muted-foreground shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none dark:data-[state=active]:bg-transparent",
+                      "h-10 flex-none rounded-none border-0 border-b-2 border-transparent px-0 text-[13px] text-muted-foreground shadow-none data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none dark:data-[state=active]:border-foreground dark:data-[state=active]:bg-transparent",
                       t.className
                     )}
                   >
-                    <t.icon /> {t.label}
+                    {t.label}
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -227,19 +226,19 @@ function Classroom({ course }: { course: Course }) {
 
         {/* Conteúdo do curso (desktop) — some no modo cinema */}
         {!theater && (
-          <aside className="hidden w-[340px] shrink-0 flex-col border-l bg-sidebar/50 animate-in fade-in slide-in-from-right-4 duration-300 lg:flex xl:w-[380px]">
-            <div className="flex items-start justify-between gap-2 border-b px-4 py-3">
+          <aside className="hidden w-[340px] shrink-0 flex-col border-l bg-sidebar animate-in fade-in slide-in-from-right-2 duration-200 lg:flex xl:w-[360px]">
+            <div className="flex items-start justify-between gap-2 border-b py-3 pr-2.5 pl-4">
               <div className="min-w-0 flex-1">
-                <h2 className="text-sm font-semibold">Conteúdo do curso</h2>
-                <Progress value={stats.percent} className="mt-2.5" />
-                <p className="mt-1.5 text-xs text-muted-foreground">
+                <h2 className="text-[13px] font-semibold">Conteúdo do curso</h2>
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   {stats.completed} de {pluralize(stats.total, "aula", "aulas")}
                   {stats.remaining > 0 && ` · faltam ${formatTotalDuration(stats.remaining)}`}
                 </p>
+                <Progress value={stats.percent} className="mt-2.5" />
               </div>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="icon-sm" variant="ghost" className="-mr-1 text-muted-foreground" onClick={() => setTheater(true)} aria-label="Fechar painel (modo cinema)">
+                  <Button size="icon-xs" variant="ghost" className="text-muted-foreground" onClick={() => setTheater(true)} aria-label="Fechar painel (modo cinema)">
                     <X />
                   </Button>
                 </TooltipTrigger>
@@ -286,12 +285,12 @@ function ClassroomHeader({
   const setShortcutsOpen = useUi((s) => s.setShortcutsOpen);
 
   return (
-    <header className="flex shrink-0 items-center gap-2 border-b px-2 md:gap-3 md:px-4" style={{ height: HEADER }}>
+    <header className="flex shrink-0 items-center gap-2 border-b px-2 md:gap-2.5 md:px-4" style={{ height: HEADER }}>
       <Logo compact className="hidden md:flex" />
-      <div className="hidden h-6 w-px bg-border md:block" />
+      <div className="hidden h-5 w-px bg-border md:block" />
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button asChild variant="ghost" size="icon-sm" aria-label="Voltar para os cursos">
+          <Button asChild variant="ghost" size="icon-sm" className="text-muted-foreground" aria-label="Voltar para os cursos">
             <Link href="/courses">
               <ChevronLeft />
             </Link>
@@ -300,8 +299,8 @@ function ClassroomHeader({
         <TooltipContent>Voltar para os cursos</TooltipContent>
       </Tooltip>
       <div className="min-w-0 flex-1">
-        <h1 className="truncate text-sm font-semibold md:text-[15px]">{course.title}</h1>
-        {course.author && <p className="hidden truncate text-xs text-muted-foreground sm:block">{course.author}</p>}
+        <h1 className="truncate text-sm leading-tight font-semibold">{course.title}</h1>
+        {course.author && <p className="hidden truncate text-xs leading-tight text-muted-foreground sm:block">{course.author}</p>}
       </div>
 
       {!playingThis && <BackgroundAudioChip />}
@@ -310,7 +309,7 @@ function ClassroomHeader({
         <TimerButton />
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className="flex items-center gap-2 rounded-full px-1.5 py-1">
+            <span className="flex items-center gap-2 px-1.5 py-1">
               <ProgressRing percent={percent} done={done} />
               <span className="hidden text-xs font-medium text-muted-foreground tabular-nums lg:inline">
                 {done ? "Concluído" : `${percent}%`}
@@ -399,7 +398,7 @@ function BackgroundAudioChip() {
   const playing = status === "playing" || status === "buffering";
 
   return (
-    <div className="hidden max-w-64 items-center gap-2 rounded-full border bg-muted/40 py-1 pr-1 pl-2.5 text-xs md:flex">
+    <div className="hidden h-8 max-w-64 items-center gap-2 rounded-md border pr-0.5 pl-2.5 text-xs md:flex">
       {playing ? <Equalizer className="shrink-0" /> : <span className="size-1.5 shrink-0 rounded-full bg-muted-foreground" />}
       <span className="min-w-0 truncate text-muted-foreground" title={title}>
         {title ?? "Tocando"}
@@ -407,13 +406,13 @@ function BackgroundAudioChip() {
       <Button
         size="icon-xs"
         variant="ghost"
-        className="shrink-0 rounded-full"
+        className="shrink-0"
         aria-label={playing ? "Pausar" : "Tocar"}
         onClick={() => usePlayer.getState().togglePlay()}
       >
         {playing ? <Pause className="fill-current" /> : <Play className="fill-current" />}
       </Button>
-      <Button size="icon-xs" variant="ghost" className="shrink-0 rounded-full" aria-label="Parar" onClick={() => usePlayer.getState().stop()}>
+      <Button size="icon-xs" variant="ghost" className="shrink-0" aria-label="Parar" onClick={() => usePlayer.getState().stop()}>
         <X />
       </Button>
     </div>
@@ -448,19 +447,19 @@ function LessonBar({
     <div className="mx-auto w-full max-w-5xl px-4 pt-5 pb-4 md:px-8">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0">
-          <p className="text-xs font-medium text-muted-foreground">
-            Seção {sectionIndex + 1}: {course.sections[sectionIndex]?.title} · Aula {lessonIndex + 1} de {lessons.length}
+          <p className="text-xs text-muted-foreground">
+            {course.sections[sectionIndex]?.title} · Aula {lessonIndex + 1} de {lessons.length}
           </p>
-          <h2 className="mt-1 text-xl font-bold tracking-tight text-balance md:text-2xl">{lessonTitle(lesson, videos)}</h2>
+          <h2 className="mt-1 text-lg font-semibold tracking-tight text-balance md:text-xl">{lessonTitle(lesson, videos)}</h2>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
-          <div className="flex items-center rounded-full border">
+          <div className="flex h-8 items-center rounded-md border [&>button]:size-[30px] [&>button]:rounded-[7px]">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  className="rounded-full"
+                 
                   disabled={!prev}
                   aria-label="Aula anterior"
                   onClick={() => prev && playLesson(course.id, prev.id)}
@@ -476,7 +475,7 @@ function LessonBar({
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  className="rounded-full"
+                 
                   disabled={!next}
                   aria-label="Próxima aula"
                   onClick={() => next && playLesson(course.id, next.id)}
@@ -488,20 +487,19 @@ function LessonBar({
             </Tooltip>
           </div>
           <Button
-            variant={completed ? "secondary" : "outline"}
+            variant="outline"
             size="sm"
-            className={cn("rounded-full", completed && "text-emerald-500")}
             onClick={() => {
               const nowDone = toggleLessonCompleted(lesson.id);
-              if (nowDone) toast.success("Aula concluída! ✅");
+              if (nowDone) toast.success("Aula marcada como concluída");
             }}
           >
-            <Check />
+            <Check className={cn(completed && "text-success")} strokeWidth={completed ? 3 : 2} />
             {completed ? "Concluída" : "Marcar como concluída"}
           </Button>
-          {playingThis && <PlaybackRateMenu showIcon className="rounded-full border" />}
-          <Label className="flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-normal text-muted-foreground">
-            <Switch checked={autoplay} onCheckedChange={setAutoplay} className="scale-90" />
+          {playingThis && <PlaybackRateMenu showIcon className="border text-[13px]" />}
+          <Label className="flex h-8 cursor-pointer items-center gap-2 pl-1 text-[13px] font-normal text-muted-foreground">
+            <Switch checked={autoplay} onCheckedChange={setAutoplay} />
             Reprodução automática
           </Label>
         </div>
@@ -519,9 +517,9 @@ function Poster({ course, lesson, lessonNumber }: { course: Course; lesson?: Les
     return (
       <div className="absolute inset-0 grid place-items-center p-6 text-center text-white">
         <div>
-          <GraduationCap className="mx-auto size-10 text-white/70" />
-          <p className="mt-3 font-semibold">Este curso ainda não tem aulas</p>
-          <Button asChild variant="brand" className="mt-4 rounded-full">
+          <GraduationCap className="mx-auto size-8 text-white/60" />
+          <p className="mt-3 text-[15px] font-semibold">Este curso ainda não tem aulas</p>
+          <Button asChild className="mt-4">
             <Link href={`/courses/${course.id}/edit`}>
               <Pencil /> Adicionar aulas
             </Link>
@@ -546,18 +544,18 @@ function Poster({ course, lesson, lessonNumber }: { course: Course; lesson?: Les
           if (fallback && e.currentTarget.src !== fallback) e.currentTarget.src = fallback;
           else e.currentTarget.style.display = "none";
         }}
-        className="absolute inset-0 size-full scale-110 object-cover opacity-45 blur-sm transition-transform duration-700 group-hover/poster:scale-[1.15]"
+        className="absolute inset-0 size-full object-cover opacity-60 transition-opacity duration-300 group-hover/poster:opacity-70"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/30" />
-      <div className="relative flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-        <span className="grid size-16 place-items-center rounded-full bg-brand-gradient shadow-2xl transition-transform group-hover/poster:scale-110 md:size-20">
-          <Play className="ml-1 size-7 fill-current md:size-8" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/20" />
+      <div className="relative flex h-full flex-col items-center justify-center p-6 text-center">
+        <span className="grid size-14 place-items-center rounded-full bg-white text-black shadow-2xl transition-transform duration-200 group-hover/poster:scale-105 md:size-16">
+          <Play className="ml-1 size-6 fill-current" />
         </span>
-        <span className="text-xs font-medium tracking-widest text-white/70 uppercase">
-          {resumeAt ? `Continuar de ${formatTime(resumeAt)}` : lessonNumber === 1 ? "Começar o curso" : "Assistir"}
+        <span className="mt-5 line-clamp-2 max-w-xl text-base font-semibold md:text-lg">
+          Aula {lessonNumber} · {lessonTitle(lesson, videos)}
         </span>
-        <span className="line-clamp-2 max-w-xl text-base font-semibold md:text-xl">
-          Aula {lessonNumber}: {lessonTitle(lesson, videos)}
+        <span className="mt-1 text-[13px] text-white/70">
+          {resumeAt ? `Continuar de ${formatTime(resumeAt)}` : lessonNumber === 1 ? "Começar o curso" : "Assistir aula"}
         </span>
       </div>
     </button>
@@ -596,33 +594,32 @@ function EndScreen({ course, lesson }: { course: Course; lesson: Lesson }) {
   const allDone = lessons.every((l) => progress[l.id]?.completed);
 
   return (
-    <div className="absolute inset-0 z-[31] grid place-items-center bg-black/85 p-4 text-white backdrop-blur-md animate-in fade-in duration-500">
+    <div className="absolute inset-0 z-[31] grid place-items-center bg-black/90 p-4 text-white animate-in fade-in duration-300">
       {next ? (
         <div className="w-full max-w-lg text-center">
-          <p className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-400">
-            <Check className="size-3.5" /> Aula concluída
+          <p className="inline-flex items-center gap-1.5 text-[13px] text-white/70">
+            <Check className="size-3.5 text-emerald-400" strokeWidth={3} /> Aula concluída · a seguir
           </p>
-          <p className="mt-4 text-xs font-medium tracking-widest text-white/60 uppercase">A seguir</p>
-          <div className="mt-3 flex items-center gap-4 rounded-2xl bg-white/5 p-3 text-left ring-1 ring-white/10">
+          <div className="mt-3 flex items-center gap-3.5 rounded-lg bg-white/[0.06] p-2.5 text-left ring-1 ring-white/10">
             <div className="relative shrink-0">
-              <VideoThumbnail id={next.videoId} className="aspect-video w-28 rounded-lg sm:w-40" />
+              <VideoThumbnail id={next.videoId} className="aspect-video w-28 rounded-md sm:w-36" />
               {counting && <CountdownRing remaining={remaining} />}
             </div>
             <div className="min-w-0">
               <p className="text-xs text-white/60">Aula {index + 2}</p>
-              <p className="line-clamp-2 font-semibold">{lessonTitle(next, videos)}</p>
+              <p className="mt-0.5 line-clamp-2 text-[15px] font-medium">{lessonTitle(next, videos)}</p>
             </div>
           </div>
           <div className="mt-5 flex flex-wrap justify-center gap-2">
-            <Button variant="brand" className="rounded-full" onClick={() => playLesson(course.id, next.id)}>
+            <Button className="bg-white text-black hover:bg-white/90" onClick={() => playLesson(course.id, next.id)}>
               <SkipForward className="fill-current" /> {counting ? `Assistir agora (${remaining})` : "Assistir próxima aula"}
             </Button>
             {counting ? (
-              <Button variant="ghost" className="rounded-full text-white hover:bg-white/10 hover:text-white" onClick={() => setCancelled(true)}>
+              <Button variant="ghost" className="text-white hover:bg-white/10 hover:text-white" onClick={() => setCancelled(true)}>
                 Cancelar
               </Button>
             ) : (
-              <Button variant="ghost" className="rounded-full text-white hover:bg-white/10 hover:text-white" onClick={replay}>
+              <Button variant="ghost" className="text-white hover:bg-white/10 hover:text-white" onClick={replay}>
                 <RotateCcw /> Rever esta aula
               </Button>
             )}
@@ -630,18 +627,18 @@ function EndScreen({ course, lesson }: { course: Course; lesson: Lesson }) {
         </div>
       ) : (
         <div className="max-w-md text-center">
-          <div className="mx-auto grid size-16 place-items-center rounded-full bg-amber-400/15 text-amber-400">
-            <Trophy className="size-8" />
+          <div className="mx-auto grid size-12 place-items-center rounded-full bg-white/10">
+            {allDone ? <Trophy className="size-5" /> : <Check className="size-5" />}
           </div>
-          <p className="mt-4 text-xl font-bold">{allDone ? "Você concluiu o curso! 🎉" : "Você chegou à última aula"}</p>
+          <p className="mt-4 text-lg font-semibold">{allDone ? "Curso concluído" : "Você chegou à última aula"}</p>
           <p className="mt-1 text-sm text-white/70">
-            {allDone ? "Parabéns pela dedicação." : "Ainda há aulas não concluídas — confira o conteúdo do curso."}
+            {allDone ? "Parabéns! Você assistiu a todas as aulas." : "Ainda há aulas não concluídas — confira o conteúdo do curso."}
           </p>
           <div className="mt-5 flex flex-wrap justify-center gap-2">
-            <Button variant="ghost" className="rounded-full text-white hover:bg-white/10 hover:text-white" onClick={replay}>
+            <Button variant="ghost" className="text-white hover:bg-white/10 hover:text-white" onClick={replay}>
               <RotateCcw /> Rever esta aula
             </Button>
-            <Button asChild variant="brand" className="rounded-full">
+            <Button asChild className="bg-white text-black hover:bg-white/90">
               <Link href="/courses">Ver meus cursos</Link>
             </Button>
           </div>
@@ -655,7 +652,7 @@ function CountdownRing({ remaining }: { remaining: number }) {
   const r = 18;
   const c = 2 * Math.PI * r;
   return (
-    <span className="absolute inset-0 grid place-items-center rounded-lg bg-black/55">
+    <span className="absolute inset-0 grid place-items-center rounded-md bg-black/55">
       <svg viewBox="0 0 44 44" className="size-12 -rotate-90">
         <circle cx="22" cy="22" r={r} fill="none" stroke="rgba(255,255,255,.2)" strokeWidth="3" />
         <circle
@@ -683,48 +680,42 @@ function Overview({ course, onEdit }: { course: Course; onEdit: () => void }) {
   const progress = useLibrary((s) => s.progress);
   const stats = courseStats(course, progress, videos);
   const items = [
-    { icon: ListChecks, label: "Aulas", value: `${stats.total}` },
-    { icon: Clock3, label: "Duração", value: stats.duration ? formatTotalDuration(stats.duration) : "—" },
-    { icon: Check, label: "Concluídas", value: `${stats.completed} (${stats.percent}%)` },
+    { label: "Aulas", value: `${stats.total}` },
+    { label: "Duração total", value: stats.duration ? formatTotalDuration(stats.duration) : "—" },
+    { label: "Concluídas", value: `${stats.completed} (${stats.percent}%)` },
     {
-      icon: Trophy,
-      label: "Falta",
-      value: stats.remaining
-        ? formatTotalDuration(stats.remaining)
-        : stats.total && stats.completed === stats.total
-          ? "Nada! 🎉"
-          : "—",
+      label: "Tempo restante",
+      value: stats.remaining ? formatTotalDuration(stats.remaining) : stats.total && stats.completed === stats.total ? "Concluído" : "—",
     },
   ];
 
   return (
-    <div className="grid gap-6">
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+    <div className="grid gap-8">
+      <dl className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-4">
         {items.map((item) => (
-          <div key={item.label} className="rounded-xl border bg-card/50 p-3">
-            <item.icon className="size-4 text-primary" />
-            <p className="mt-2 text-lg font-semibold tabular-nums">{item.value}</p>
-            <p className="text-xs text-muted-foreground">{item.label}</p>
+          <div key={item.label}>
+            <dt className="text-xs text-muted-foreground">{item.label}</dt>
+            <dd className="mt-1 text-lg font-semibold tracking-tight">{item.value}</dd>
           </div>
         ))}
-      </div>
+      </dl>
 
-      <div>
+      <div className="border-t pt-6">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="font-semibold">Sobre o curso</h3>
-          <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={onEdit}>
+          <h3 className="text-[15px] font-semibold">Sobre o curso</h3>
+          <Button variant="ghost" size="sm" className="-mr-2 text-muted-foreground" onClick={onEdit}>
             <Pencil /> Editar detalhes
           </Button>
         </div>
-        {course.author && <p className="mt-1 text-sm text-muted-foreground">Por {course.author}</p>}
-        <p className={cn("mt-2 text-sm whitespace-pre-wrap", !course.description && "text-muted-foreground italic")}>
+        {course.author && <p className="mt-1 text-[13px] text-muted-foreground">Por {course.author}</p>}
+        <p className={cn("mt-2 max-w-3xl text-sm text-pretty whitespace-pre-wrap", !course.description && "text-muted-foreground")}>
           {course.description || "Sem descrição."}
         </p>
       </div>
 
-      <div className="rounded-xl border border-dashed p-4 text-xs text-muted-foreground">
-        <p className="mb-2 font-medium text-foreground">Atalhos na sala de aula</p>
-        <div className="grid gap-1.5 sm:grid-cols-2">
+      <div className="border-t pt-6">
+        <h3 className="text-[15px] font-semibold">Atalhos na sala de aula</h3>
+        <div className="mt-3 grid gap-2 text-[13px] text-muted-foreground sm:grid-cols-2 lg:grid-cols-4">
           {[
             ["Espaço", "Tocar / pausar"],
             ["← →", "Voltar / avançar 10 s"],
@@ -745,7 +736,7 @@ function ProgressRing({ percent, done }: { percent: number; done: boolean }) {
   const r = 14;
   const c = 2 * Math.PI * r;
   return (
-    <span className="relative grid size-8 shrink-0 place-items-center">
+    <span className="relative grid size-7 shrink-0 place-items-center">
       <svg viewBox="0 0 36 36" className="absolute inset-0 -rotate-90">
         <circle cx="18" cy="18" r={r} fill="none" stroke="currentColor" strokeWidth="3" className="text-foreground/10" />
         <circle
@@ -753,22 +744,16 @@ function ProgressRing({ percent, done }: { percent: number; done: boolean }) {
           cy="18"
           r={r}
           fill="none"
-          stroke="url(#course-ring)"
+          stroke="currentColor"
           strokeWidth="3"
           strokeLinecap="round"
           strokeDasharray={c}
           strokeDashoffset={c - (c * percent) / 100}
-          className="transition-[stroke-dashoffset] duration-700"
+          className={cn("transition-[stroke-dashoffset] duration-700", done ? "text-success" : "text-primary")}
         />
-        <defs>
-          <linearGradient id="course-ring" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="var(--brand-from)" />
-            <stop offset="1" stopColor="var(--brand-to)" />
-          </linearGradient>
-        </defs>
       </svg>
       {done ? (
-        <Trophy className="size-3.5 text-amber-400" />
+        <Check className="size-3 text-success" strokeWidth={3.5} />
       ) : (
         <span className="text-[9px] font-bold tabular-nums lg:hidden">{percent}</span>
       )}

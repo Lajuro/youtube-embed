@@ -72,7 +72,7 @@ npm start        # http://localhost:3000
 - **Timer de foco (Pomodoro)** no ícone de relógio do topo: blocos de 25/5, 50/10 ou 90/20 min, pausa longa a cada 4 focos, aviso sonoro, contagem no título da aba e, se quiser, **a música pausa sozinha nas pausas** e volta quando o foco recomeça.
 - **Desligamento automático**: pare a música daqui a 15 min… 2 h ou **ao fim do vídeo atual**, com o volume baixando aos poucos.
 - **Seu dia**: no Início, minutos de música e de estudo de hoje, focos concluídos, dias seguidos de uso e um gráfico dos últimos 7 dias.
-- **Cores de destaque**: violeta, oceano, água-marinha, floresta, pôr do sol ou rosa (Configurações → Aparência, ou `Ctrl+K` → "cor").
+- **Cor de destaque**: azul, violeta, azul-petróleo, verde, âmbar, rosa ou grafite (Configurações → Aparência, ou `Ctrl+K` → "cor"). É uma cor só, chapada, usada com parcimônia — o resto da interface é neutro.
 - **Avisos na tela** (estilo TV) ao usar o teclado: volume, velocidade, ±10 s, aleatório, repetir.
 - **Instalar como app** (PWA): no Chrome/Edge, Configurações → App → Instalar. Abre numa janela própria, com atalho na barra de tarefas e no menu Iniciar.
 - **Modo cinema** (`T`): no "Tocando agora" esconde a fila; na sala de aula esconde o conteúdo do curso — o vídeo ocupa a largura toda.
@@ -194,7 +194,7 @@ Um curso é uma lista de **seções**, e cada seção tem **aulas** (uma aula = 
 
 ### 8. Detalhes de interface
 
-- **Cores de destaque**: todas as cores do tema saem de duas variáveis CSS de matiz (`--p-h` e `--b-h`, em [`globals.css`](src/app/globals.css)), usadas dentro de `oklch()`. Trocar a cor é só mudar o atributo `data-accent` do `<html>` — até os cinzas ganham um toque do matiz escolhido. Um script mínimo no `<head>` aplica a cor salva antes da página aparecer, para não "piscar" o violeta padrão.
+- **Sistema de cores**: os cinzas da interface são neutros e fixos; a cor de destaque sai de duas variáveis CSS (`--p-h`, o matiz, e `--p-c`, a intensidade, em [`globals.css`](src/app/globals.css)) usadas dentro de `oklch()`. Trocar a cor é só mudar o atributo `data-accent` do `<html>`. Um script mínimo no `<head>` aplica a cor salva antes da página aparecer, para não "piscar" a cor padrão. A única cor que não vem do destaque é a "luz ambiente": a capa do vídeo, bem desfocada, atrás dos cabeçalhos e do "Tocando agora".
 - **Animações**: as páginas entram com um leve "subir e aparecer" e os cards aparecem em cascata (`.stagger`). O Next mantém as páginas visitadas montadas e escondidas (`display: none`); quando uma volta a aparecer, o navegador reinicia a animação sozinho — sem JavaScript.
 - **Timers**: o [`TimerEngine`](src/components/timers/timer-engine.tsx) roda a cada meio segundo comparando o relógio com o horário de término salvo (em vez de "contar segundos", que atrasaria com a aba em segundo plano). O som do aviso é gerado na hora com a Web Audio API ([`src/lib/chime.ts`](src/lib/chime.ts)), sem arquivos de áudio.
 - **Ícones do app instalado**: gerados por código em [`src/app/icons/[variant]/route.tsx`](src/app/icons/[variant]/route.tsx) com `ImageResponse` (o mesmo desenho do `icon.svg`), então o projeto não guarda imagens binárias. O manifesto fica em [`src/app/manifest.ts`](src/app/manifest.ts).

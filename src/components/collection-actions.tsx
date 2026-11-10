@@ -18,12 +18,11 @@ export function CollectionPlayButtons({ ids, source }: { ids: string[]; source: 
   return (
     <>
       <Button
-        variant="brand"
         size="icon"
         disabled={!ids.length}
         aria-label={playingThis ? "Pausar" : "Tocar"}
         onClick={() => (active ? usePlayer.getState().togglePlay() : playList(ids, 0, source))}
-        className="size-14 rounded-full shadow-xl transition-transform hover:scale-105 active:scale-95 [&_svg:not([class*='size-'])]:size-6"
+        className="size-12 rounded-full shadow-md shadow-black/20 hover:scale-[1.04] [&_svg:not([class*='size-'])]:size-5"
       >
         {playingThis ? <Pause className="fill-current" /> : <Play className="ml-0.5 fill-current" />}
       </Button>
@@ -35,7 +34,7 @@ export function CollectionPlayButtons({ ids, source }: { ids: string[]; source: 
             disabled={!ids.length}
             aria-label="Tocar no aleatório"
             onClick={() => playList(ids, 0, source, true)}
-            className={cn("rounded-full text-muted-foreground hover:text-foreground [&_svg:not([class*='size-'])]:size-6", active && shuffle && "text-primary")}
+            className={cn("text-muted-foreground hover:text-foreground [&_svg:not([class*='size-'])]:size-5", active && shuffle && "text-primary")}
           >
             <Shuffle />
           </Button>

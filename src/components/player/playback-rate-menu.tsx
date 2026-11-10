@@ -32,7 +32,7 @@ export function PlaybackRateMenu({ className, showIcon = false }: { className?: 
           disabled={!hasQueue}
           aria-label={`Velocidade: ${formatRate(rate)}`}
           className={cn(
-            "h-8 min-w-11 px-2 font-semibold tabular-nums text-muted-foreground hover:text-foreground",
+            "h-8 min-w-10 px-2 text-xs font-medium tabular-nums text-muted-foreground hover:text-foreground",
             rate !== 1 && "text-primary hover:text-primary",
             className
           )}

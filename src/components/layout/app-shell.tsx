@@ -19,11 +19,17 @@ import { PlayerBar } from "@/components/player/player-bar";
 import { PlayerHost } from "@/components/player/player-host";
 import { QueueSheet } from "@/components/player/queue-sheet";
 import { TimerEngine } from "@/components/timers/timer-engine";
-import { useUi } from "@/stores/ui-store";
+import { usePlayer } from "@/stores/player-store";
+import { useSettings, useUi } from "@/stores/ui-store";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   // No modo foco (sala de aula) a página ocupa a tela toda: sem menu, topo nem barra do player.
   const focus = useUi((s) => s.focusMode);
+  // Com o mini player num canto de baixo, sobra um respiro no fim da página para o
+  // conteúdo poder rolar até ficar acima dele.
+  const miniAtBottom = usePlayer((s) => s.queue.length > 0 && s.videoMode === "mini");
+  const corner = useSettings((s) => s.miniCorner);
+  const spacer = miniAtBottom && !focus && corner.startsWith("bottom");
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
@@ -32,6 +38,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main id="main" className="relative min-w-0 flex-1 overflow-y-auto scrollbar-thin">
           {!focus && <TopBar />}
           {children}
+          {spacer && <div aria-hidden className="h-28 sm:h-44" />}
         </main>
       </div>
       {!focus && <PlayerBar />}

@@ -42,7 +42,7 @@ export function TodayStats() {
   return (
     <section
       aria-label="Seu dia"
-      className="flex flex-col gap-5 rounded-2xl border bg-card/60 p-4 backdrop-blur md:p-5 lg:flex-row lg:items-center lg:gap-8"
+      className="flex flex-col gap-5 rounded-xl border bg-card p-4 md:px-5 lg:flex-row lg:items-center lg:gap-10"
     >
       <div className="stagger grid flex-1 grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-4">
         {tiles.map((t) => (
@@ -50,15 +50,15 @@ export function TodayStats() {
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <t.icon className="size-3.5 shrink-0" /> {t.label}
             </p>
-            <p className="mt-1 truncate text-xl font-semibold tracking-tight md:text-2xl">{t.value}</p>
+            <p className="mt-1 truncate text-xl font-semibold tracking-tight">{t.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="lg:w-72">
+      <div className="lg:w-64">
         <p className="mb-2 text-xs text-muted-foreground">Últimos 7 dias</p>
         {/* Colunas finas a partir de uma linha de base; hoje em destaque, o resto discreto. */}
-        <div className="flex h-20 items-end gap-1 border-b border-foreground/10" role="list" aria-label="Minutos por dia nos últimos 7 dias">
+        <div className="flex h-14 items-end gap-1 border-b border-foreground/10" role="list" aria-label="Minutos por dia nos últimos 7 dias">
           {week.map((d, i) => {
             const isToday = i === week.length - 1;
             const value = total(d.stats);
@@ -70,7 +70,7 @@ export function TodayStats() {
                   <div role="listitem" tabIndex={0} aria-label={description} className="flex h-full flex-1 cursor-default items-end justify-center outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
                     <div
                       className={cn(
-                        "w-full max-w-6 rounded-t-[4px] transition-[height] duration-700 ease-out",
+                        "w-full max-w-5 rounded-t-[3px] transition-[height] duration-700 ease-out",
                         isToday ? "bg-primary" : "bg-foreground/20"
                       )}
                       style={{ height: value > 0 ? `max(3px, ${(value / max) * 100}%)` : 0 }}

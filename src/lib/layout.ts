@@ -4,10 +4,10 @@ import { usePlayer } from "@/stores/player-store";
 import { useUi } from "@/stores/ui-store";
 
 /** Altura da barra do topo (as páginas usam para o fundo "passar por baixo" dela). */
-export const TOP_BAR_HEIGHT = 56;
+export const TOP_BAR_HEIGHT = 52;
 
 /** Altura da barra do player (embaixo da tela) quando ela está visível. */
-export const PLAYER_BAR_HEIGHT = 72;
+export const PLAYER_BAR_HEIGHT = 68;
 
 /**
  * A barra do player só aparece quando há algo na fila e fora do modo foco.

@@ -16,7 +16,6 @@ import {
   Play,
   Plus,
   Search,
-  Sparkles,
   X,
 } from "lucide-react";
 
@@ -35,6 +34,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-state";
+import { PageIntro } from "@/components/page-header";
 import { Equalizer } from "@/components/video/equalizer";
 import { VideoThumbnail } from "@/components/video/video-thumbnail";
 import {
@@ -171,29 +171,27 @@ export function SearchView() {
 
   return (
     <div className="pb-16">
-      <section className="relative -mt-14 overflow-hidden px-4 pt-18 pb-6 md:px-8 md:pt-20">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-32 left-1/4 size-[26rem] rounded-full bg-[var(--brand-from)] opacity-20 blur-[100px]" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background" />
-        </div>
+      <PageIntro
+        title="Buscar"
+        description={
+          <>
+            {viaGoogle ? "Pesquisa no YouTube feita pelo Google, direto do seu navegador." : "Pesquisa no YouTube feita pelo servidor do app."}{" "}
+            O que você tocar daqui entra na sua biblioteca.
+          </>
+        }
+        className="pb-4"
+      />
 
-        <div className="relative max-w-3xl">
-          <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">
-            Buscar no <span className="text-gradient">YouTube</span>
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {viaGoogle ? "Pesquisa feita pelo Google, direto do seu navegador." : "Pesquisa feita pelo servidor do app."} O
-            que você tocar daqui entra na sua biblioteca.
-          </p>
-
+      <section className="px-4 pb-6 md:px-8">
+        <div className="max-w-2xl">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               submit();
             }}
-            className="group/search mt-6 flex items-center gap-2 rounded-full border bg-background/70 p-1.5 pl-5 shadow-xl shadow-black/5 backdrop-blur-xl transition-[border-color,box-shadow] focus-within:border-primary/60 focus-within:ring-4 focus-within:ring-primary/15"
+            className="flex items-center gap-2 rounded-lg border bg-card p-1.5 pl-3.5 transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/30"
           >
-            <Search className="size-5 shrink-0 text-muted-foreground transition-colors group-focus-within/search:text-primary" />
+            <Search className="size-4 shrink-0 text-muted-foreground" />
             <input
               ref={inputRef}
               autoFocus={!query}
@@ -201,7 +199,7 @@ export function SearchView() {
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ex.: lofi para estudar, jazz, chuva…"
               aria-label="Buscar vídeos no YouTube"
-              className="h-11 min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
+              className="h-9 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
             {input && (
               <button
@@ -216,19 +214,16 @@ export function SearchView() {
                 <X className="size-4" />
               </button>
             )}
-            <Button type="submit" variant="brand" size="lg" className="rounded-full" disabled={!input.trim()}>
-              <Search />
-              <span className="hidden sm:inline">Buscar</span>
+            <Button type="submit" disabled={!input.trim()}>
+              Buscar
             </Button>
           </form>
 
           {looksLikeLink && (
-            <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-4 py-2.5 text-sm">
+            <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/40 py-2 pr-2 pl-3.5 text-[13px]">
               <span>Isso parece um link do YouTube.</span>
               <Button
                 size="sm"
-                variant="brand"
-                className="rounded-full"
                 onClick={() => {
                   addVideosToLibrary(pastedIds);
                   playList(pastedIds, 0, { type: "custom", label: "Adicionado agora" });
@@ -241,25 +236,21 @@ export function SearchView() {
           )}
 
           {hydrated && (
-            <div className="mt-4 flex flex-wrap items-center gap-2">
+            <div className="mt-3 flex flex-wrap items-center gap-1.5">
               {(history.length ? history : SUGGESTIONS).slice(0, 8).map((item) => (
                 <span
                   key={item}
                   className={cn(
-                    "group/chip inline-flex items-center rounded-full border bg-card/50 text-sm transition-colors hover:border-primary/50",
-                    item === query && "border-primary/60 bg-primary/10"
+                    "group/chip inline-flex h-7 items-center rounded-md border text-[13px] text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground",
+                    item === query && "bg-accent text-foreground"
                   )}
                 >
                   <button
                     type="button"
                     onClick={() => submit(item)}
-                    className="flex cursor-pointer items-center gap-1.5 py-1 pr-1 pl-3"
+                    className="flex h-full cursor-pointer items-center gap-1.5 pr-1 pl-2.5"
                   >
-                    {history.length ? (
-                      <Clock3 className="size-3.5 text-muted-foreground" />
-                    ) : (
-                      <Sparkles className="size-3.5 text-primary" />
-                    )}
+                    {history.length > 0 && <Clock3 className="size-3 opacity-70" />}
                     {item}
                   </button>
                   {history.length > 0 ? (
@@ -267,12 +258,12 @@ export function SearchView() {
                       type="button"
                       aria-label={`Remover “${item}” do histórico`}
                       onClick={() => useSearchHistory.getState().remove(item)}
-                      className="cursor-pointer rounded-full p-1 pr-2 text-muted-foreground opacity-50 hover:text-foreground group-hover/chip:opacity-100"
+                      className="cursor-pointer p-1 pr-2 opacity-50 hover:text-foreground group-hover/chip:opacity-100"
                     >
                       <X className="size-3" />
                     </button>
                   ) : (
-                    <span className="pr-2" />
+                    <span className="pr-1.5" />
                   )}
                 </span>
               ))}
@@ -280,7 +271,7 @@ export function SearchView() {
                 <button
                   type="button"
                   onClick={() => useSearchHistory.getState().clear()}
-                  className="cursor-pointer text-xs text-muted-foreground hover:text-foreground hover:underline"
+                  className="ml-1 cursor-pointer text-xs text-muted-foreground hover:text-foreground hover:underline"
                 >
                   Limpar histórico
                 </button>
@@ -294,8 +285,8 @@ export function SearchView() {
         {status === "idle" && (
           <EmptyState
             icon={Search}
-            title="O que vamos ouvir?"
-            description="Digite o nome de uma música, artista, gênero ou clima. Os resultados aparecem aqui."
+            title="Busque qualquer vídeo"
+            description="Digite o nome de uma música, artista, gênero ou assunto. Os resultados aparecem aqui."
           />
         )}
 
@@ -314,8 +305,8 @@ export function SearchView() {
         {results.length > 0 && (
           <>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm text-muted-foreground">
-                {pluralize(results.length, "resultado", "resultados")} para <span className="text-foreground">“{query}”</span>
+              <p className="text-[13px] text-muted-foreground">
+                {pluralize(results.length, "resultado", "resultados")} para <span className="font-medium text-foreground">“{query}”</span>
               </p>
               <Button asChild variant="ghost" size="sm" className="text-muted-foreground">
                 <a href={googleWebSearchUrl(query)} target="_blank" rel="noreferrer">
@@ -323,14 +314,14 @@ export function SearchView() {
                 </a>
               </Button>
             </div>
-            <ul className="stagger grid gap-1">
+            <ul className="stagger -mx-2 grid gap-px">
               {results.map((r) => (
                 <SearchResultItem key={r.id} result={r} />
               ))}
             </ul>
             {continuation && (
               <div className="mt-6 flex justify-center">
-                <Button variant="outline" className="rounded-full" onClick={loadMore} disabled={loadingMore}>
+                <Button variant="outline" onClick={loadMore} disabled={loadingMore}>
                   {loadingMore ? <Loader2 className="animate-spin" /> : <Plus />}
                   Carregar mais
                 </Button>
@@ -357,8 +348,8 @@ function SearchResultItem({ result }: { result: SearchResult }) {
   return (
     <li
       className={cn(
-        "group/res flex gap-3 rounded-xl p-2 transition-colors hover:bg-accent/50 sm:gap-4",
-        isCurrent && "bg-primary/[0.07]"
+        "group/res flex gap-3 rounded-lg p-2 transition-colors hover:bg-accent/50 sm:gap-4",
+        isCurrent && "bg-accent/50"
       )}
       onDoubleClick={play}
     >
@@ -366,35 +357,35 @@ function SearchResultItem({ result }: { result: SearchResult }) {
         type="button"
         onClick={play}
         aria-label={`Tocar ${result.title}`}
-        className="relative w-36 shrink-0 cursor-pointer overflow-hidden rounded-lg sm:w-56 md:w-64"
+        className="relative w-36 shrink-0 cursor-pointer self-start overflow-hidden rounded-md ring-1 ring-foreground/[0.06] sm:w-48 md:w-52"
       >
         <VideoThumbnail
           id={result.id}
           alt={result.title}
           fallbackSrc={result.thumbnail}
           className="aspect-video w-full"
-          imgClassName="transition-transform duration-500 group-hover/res:scale-105"
+          imgClassName="transition-transform duration-500 group-hover/res:scale-[1.03]"
         >
           {result.isLive ? (
             <Badge variant="live" className="absolute right-1.5 bottom-1.5">
               Ao vivo
             </Badge>
           ) : result.durationText ? (
-            <span className="absolute right-1.5 bottom-1.5 rounded bg-black/75 px-1.5 py-0.5 text-[11px] font-medium text-white tabular-nums">
+            <span className="absolute right-1.5 bottom-1.5 rounded-[4px] bg-black/75 px-1 py-px text-[11px] font-medium text-white tabular-nums">
               {result.durationText}
             </span>
           ) : null}
           <span
             className={cn(
-              "absolute inset-0 grid place-items-center bg-black/40 text-white opacity-0 transition-opacity group-hover/res:opacity-100",
+              "absolute inset-0 grid place-items-center bg-black/35 opacity-0 transition-opacity group-hover/res:opacity-100",
               isCurrent && "opacity-100"
             )}
           >
-            <span className="grid size-11 place-items-center rounded-full bg-brand-gradient shadow-xl">
+            <span className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-black/30">
               {isCurrent && isPlaying ? (
-                <Pause className="size-5 fill-current" />
+                <Pause className="size-4 fill-current" />
               ) : (
-                <Play className="ml-0.5 size-5 fill-current" />
+                <Play className="ml-0.5 size-4 fill-current" />
               )}
             </span>
           </span>
@@ -404,37 +395,36 @@ function SearchResultItem({ result }: { result: SearchResult }) {
       <div className="min-w-0 flex-1 py-0.5">
         <div className="flex items-start gap-2">
           <h3
-            className={cn("line-clamp-2 flex-1 text-sm leading-snug font-semibold sm:text-base", isCurrent && "text-primary")}
+            className={cn("line-clamp-2 flex-1 text-sm leading-snug font-medium sm:text-[15px]", isCurrent && "text-primary")}
             title={result.title}
           >
             {isCurrent && <Equalizer paused={!isPlaying} className="mr-2 align-middle" />}
             {result.title}
           </h3>
         </div>
-        <p className="mt-1 line-clamp-1 text-xs text-muted-foreground sm:text-sm">{meta.join(" • ")}</p>
+        <p className="mt-1 line-clamp-1 text-xs text-muted-foreground sm:text-[13px]">{meta.join(" · ")}</p>
         {result.description && (
-          <p className="mt-2 hidden text-xs text-muted-foreground/80 md:line-clamp-2">{result.description}</p>
+          <p className="mt-1.5 hidden max-w-3xl text-xs text-pretty text-muted-foreground/80 md:line-clamp-2">{result.description}</p>
         )}
 
-        <div className="mt-2 flex flex-wrap items-center gap-1 sm:mt-3">
-          <Button size="sm" variant="ghost" className="h-8 rounded-full px-3" onClick={play}>
+        <div className="mt-2 -ml-2 flex flex-wrap items-center gap-0.5 text-muted-foreground sm:mt-2.5">
+          <Button size="sm" variant="ghost" className="h-7 px-2 text-foreground" onClick={play}>
             {isCurrent && isPlaying ? <Pause className="fill-current" /> : <Play className="fill-current" />}
             <span className="hidden sm:inline">{isCurrent && isPlaying ? "Pausar" : "Tocar"}</span>
           </Button>
           <Button
             size="sm"
-            variant={inLibrary ? "secondary" : "outline"}
-            className="h-8 rounded-full px-3"
+            variant="ghost"
+            className="h-7 px-2 text-foreground disabled:text-muted-foreground disabled:opacity-100"
             onClick={() => addSearchResultToLibrary(result)}
             disabled={inLibrary}
           >
             {inLibrary ? <Check /> : <Plus />}
-            <span className="hidden sm:inline">{inLibrary ? "Na biblioteca" : "Biblioteca"}</span>
+            <span className="hidden sm:inline">{inLibrary ? "Na biblioteca" : "Adicionar"}</span>
           </Button>
           <Button
-            size="icon-sm"
+            size="icon-xs"
             variant="ghost"
-            className="rounded-full"
             aria-label={isFavorite ? "Remover dos favoritos" : "Favoritar"}
             onClick={() => {
               saveVideoInfo(result);
@@ -445,7 +435,7 @@ function SearchResultItem({ result }: { result: SearchResult }) {
           </Button>
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-              <Button size="icon-sm" variant="ghost" className="rounded-full" aria-label="Mais opções">
+              <Button size="icon-xs" variant="ghost" aria-label="Mais opções">
                 <MoreHorizontal />
               </Button>
             </DropdownMenuTrigger>
@@ -509,7 +499,7 @@ function ResultsSkeleton() {
     <div className="grid gap-1">
       {Array.from({ length: 6 }, (_, i) => (
         <div key={i} className="flex gap-4 p-2">
-          <Skeleton className="aspect-video w-36 shrink-0 rounded-lg sm:w-56 md:w-64" />
+          <Skeleton className="aspect-video w-36 shrink-0 rounded-md sm:w-48 md:w-52" />
           <div className="flex flex-1 flex-col gap-2 py-1">
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-3 w-1/3" />
@@ -535,11 +525,11 @@ function SearchError({
   const openAddDialog = useUi((s) => s.openAddDialog);
   const setSettingsOpen = useUi((s) => s.setSettingsOpen);
   return (
-    <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6">
+    <div className="rounded-xl border p-5">
       <div className="flex items-start gap-3">
-        <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-500" />
+        <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500" />
         <div className="min-w-0">
-          <h3 className="font-semibold">A busca não funcionou</h3>
+          <h3 className="text-[15px] font-semibold">A busca não funcionou</h3>
           <p className="mt-1 text-sm text-muted-foreground">{error.message}</p>
           <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
             {viaGoogle ? (
@@ -563,18 +553,18 @@ function SearchError({
             <p className="mt-3 font-mono text-xs break-words text-muted-foreground/70">Detalhe técnico: {error.detail}</p>
           )}
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button size="sm" variant="outline" className="rounded-full" onClick={onRetry}>
+            <Button size="sm" variant="outline" onClick={onRetry}>
               Tentar de novo
             </Button>
-            <Button asChild size="sm" variant="outline" className="rounded-full">
+            <Button asChild size="sm" variant="outline">
               <a href={googleWebSearchUrl(query)} target="_blank" rel="noreferrer">
                 <ExternalLink /> Abrir no Google
               </a>
             </Button>
-            <Button size="sm" variant="ghost" className="rounded-full" onClick={() => setSettingsOpen(true)}>
+            <Button size="sm" variant="ghost" onClick={() => setSettingsOpen(true)}>
               Configurações
             </Button>
-            <Button size="sm" variant="ghost" className="rounded-full" onClick={() => openAddDialog()}>
+            <Button size="sm" variant="ghost" onClick={() => openAddDialog()}>
               <Plus /> Colar um link
             </Button>
           </div>

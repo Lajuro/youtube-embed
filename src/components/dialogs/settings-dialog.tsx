@@ -22,7 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { CREATE_ENGINE_URL, GoogleCxForm } from "@/components/search/google-setup";
-import { ACCENTS, accentGradient } from "@/lib/accents";
+import { ACCENTS, resolveAccent } from "@/lib/accents";
 import { promptInstall, useInstall } from "@/lib/pwa";
 import { downloadBackup } from "@/lib/actions";
 import { cn, pluralize } from "@/lib/utils";
@@ -35,11 +35,38 @@ function Section({ title, description, children }: { title: string; description?
   return (
     <section className="grid gap-3">
       <div>
-        <h3 className="text-sm font-semibold">{title}</h3>
-        {description && <p className="text-xs text-muted-foreground">{description}</p>}
+        <h3 className="text-[13px] font-semibold">{title}</h3>
+        {description && <p className="mt-0.5 text-xs text-pretty text-muted-foreground">{description}</p>}
       </div>
       {children}
     </section>
+  );
+}
+
+/** Linhas de opção agrupadas num cartão só (com divisórias), como nas preferências de um app desktop. */
+function SettingGroup({ children }: { children: React.ReactNode }) {
+  return <div className="divide-y rounded-lg border">{children}</div>;
+}
+
+function SettingRow({
+  title,
+  description,
+  children,
+  htmlFor,
+}: {
+  title: string;
+  description?: React.ReactNode;
+  children: React.ReactNode;
+  htmlFor?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 px-3.5 py-3">
+      <Label htmlFor={htmlFor} className="block min-w-0 cursor-pointer font-normal">
+        <span className="block text-[13px] leading-snug font-medium">{title}</span>
+        {description && <span className="mt-0.5 block text-xs leading-snug text-pretty text-muted-foreground">{description}</span>}
+      </Label>
+      <div className="shrink-0">{children}</div>
+    </div>
   );
 }
 
@@ -62,13 +89,13 @@ function OptionCard({
       onClick={onClick}
       aria-pressed={selected}
       className={cn(
-        "flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-left transition-all hover:bg-accent/50",
-        selected && "border-primary bg-primary/5 ring-1 ring-primary"
+        "flex cursor-pointer items-start gap-2.5 rounded-lg border p-3 text-left transition-colors hover:bg-accent/50",
+        selected && "border-primary bg-accent/40 ring-1 ring-primary"
       )}
     >
-      <Icon className={cn("mt-0.5 size-4 shrink-0", selected ? "text-primary" : "text-muted-foreground")} />
+      <Icon className={cn("mt-0.5 size-4 shrink-0", selected ? "text-foreground" : "text-muted-foreground")} />
       <span className="min-w-0">
-        <span className="block text-sm font-medium">{title}</span>
+        <span className="block text-[13px] font-medium">{title}</span>
         {description && <span className="block text-xs text-muted-foreground">{description}</span>}
       </span>
     </button>
@@ -126,26 +153,21 @@ export function SettingsDialog() {
       <DialogContent className="max-h-[90dvh] overflow-y-auto scrollbar-thin sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Configurações</DialogTitle>
-          <DialogDescription>Tudo fica salvo só neste navegador — nada vai para servidor nenhum.</DialogDescription>
+          <DialogDescription>Tudo fica salvo apenas neste navegador.</DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-6 py-2">
+        <div className="grid gap-6">
           <Section title="Aparência">
             <div className="grid grid-cols-3 gap-2">
               <OptionCard selected={theme === "dark"} onClick={() => setTheme("dark")} icon={Moon} title="Escuro" />
               <OptionCard selected={theme === "light"} onClick={() => setTheme("light")} icon={Sun} title="Claro" />
               <OptionCard selected={theme === "system"} onClick={() => setTheme("system")} icon={Monitor} title="Sistema" />
             </div>
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3">
-              <span>
-                <span className="block text-sm font-medium">Cor de destaque</span>
-                <span className="block text-xs text-muted-foreground">
-                  {ACCENTS.find((a) => a.id === settings.accent)?.label}
-                </span>
-              </span>
-              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Cor de destaque">
+            <SettingGroup>
+              <SettingRow title="Cor de destaque" description={resolveAccent(settings.accent).label}>
+                <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Cor de destaque">
                 {ACCENTS.map((a) => {
-                  const selected = settings.accent === a.id;
+                  const selected = resolveAccent(settings.accent).id === a.id;
                   return (
                     <button
                       key={a.id}
@@ -156,33 +178,24 @@ export function SettingsDialog() {
                       title={a.label}
                       onClick={() => settings.setAccent(a.id)}
                       className={cn(
-                        "grid size-8 cursor-pointer place-items-center rounded-full text-white ring-offset-2 ring-offset-background transition-transform outline-none hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring active:scale-95",
-                        selected && "ring-2 ring-foreground/70"
+                        "grid size-6 cursor-pointer place-items-center rounded-full text-white ring-offset-2 ring-offset-popover transition-shadow outline-none hover:ring-2 hover:ring-foreground/25 focus-visible:ring-2 focus-visible:ring-ring",
+                        selected && "ring-2 ring-foreground/60 hover:ring-foreground/60"
                       )}
-                      style={{ backgroundImage: accentGradient(a) }}
+                      style={{ backgroundColor: a.swatch }}
                     >
-                      {selected && <Check className="size-4 animate-pop-in drop-shadow" strokeWidth={3} />}
+                      {selected && <Check className="size-3.5 animate-pop-in" strokeWidth={3} />}
                     </button>
                   );
                 })}
               </div>
-            </div>
-            <Label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border p-3 font-normal">
-              <span>
-                <span className="block text-sm font-medium">Luz ambiente</span>
-                <span className="block text-xs text-muted-foreground">
-                  Fundo com as cores da capa do vídeo que está tocando.
-                </span>
-              </span>
-              <Switch checked={settings.ambient} onCheckedChange={settings.setAmbient} />
-            </Label>
-            <Label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border p-3 font-normal">
-              <span>
-                <span className="block text-sm font-medium">Menu lateral recolhido</span>
-                <span className="block text-xs text-muted-foreground">Só ícones, para sobrar mais espaço (Ctrl+B).</span>
-              </span>
-              <Switch checked={settings.sidebarCollapsed} onCheckedChange={() => settings.toggleSidebar()} />
-            </Label>
+              </SettingRow>
+              <SettingRow htmlFor="set-ambient" title="Luz ambiente" description="Fundo com as cores da capa do vídeo que está tocando.">
+                <Switch id="set-ambient" checked={settings.ambient} onCheckedChange={settings.setAmbient} />
+              </SettingRow>
+              <SettingRow htmlFor="set-sidebar" title="Menu lateral recolhido" description="Só ícones, para sobrar mais espaço (Ctrl+B).">
+                <Switch id="set-sidebar" checked={settings.sidebarCollapsed} onCheckedChange={() => settings.toggleSidebar()} />
+              </SettingRow>
+            </SettingGroup>
           </Section>
 
           <Separator />
@@ -194,22 +207,14 @@ export function SettingsDialog() {
           <Separator />
 
           <Section title="Cursos">
-            <Label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border p-3 font-normal">
-              <span>
-                <span className="block text-sm font-medium">Reprodução automática</span>
-                <span className="block text-xs text-muted-foreground">
-                  Ao terminar uma aula, a próxima começa depois de uma contagem de 5 segundos.
-                </span>
-              </span>
-              <Switch checked={settings.courseAutoplay} onCheckedChange={settings.setCourseAutoplay} />
-            </Label>
-            <Label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border p-3 font-normal">
-              <span>
-                <span className="block text-sm font-medium">Modo cinema na sala de aula</span>
-                <span className="block text-xs text-muted-foreground">Esconde o conteúdo do curso e o vídeo ocupa a largura toda (T).</span>
-              </span>
-              <Switch checked={settings.courseTheater} onCheckedChange={settings.setCourseTheater} />
-            </Label>
+            <SettingGroup>
+              <SettingRow htmlFor="set-autoplay" title="Reprodução automática" description="Ao terminar uma aula, a próxima começa depois de uma contagem de 5 segundos.">
+                <Switch id="set-autoplay" checked={settings.courseAutoplay} onCheckedChange={settings.setCourseAutoplay} />
+              </SettingRow>
+              <SettingRow htmlFor="set-theater" title="Modo cinema na sala de aula" description="Esconde o conteúdo do curso e o vídeo ocupa a largura toda (T).">
+                <Switch id="set-theater" checked={settings.courseTheater} onCheckedChange={settings.setCourseTheater} />
+              </SettingRow>
+            </SettingGroup>
           </Section>
 
           <Separator />
@@ -240,15 +245,11 @@ export function SettingsDialog() {
                 />
               ))}
             </div>
-            <Label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border p-3 font-normal">
-              <span>
-                <span className="block text-sm font-medium">Pular vídeos bloqueados</span>
-                <span className="block text-xs text-muted-foreground">
-                  Alguns donos de vídeo proíbem tocar fora do YouTube. Pula para o próximo automaticamente.
-                </span>
-              </span>
-              <Switch checked={settings.autoSkipErrors} onCheckedChange={settings.setAutoSkipErrors} />
-            </Label>
+            <SettingGroup>
+              <SettingRow htmlFor="set-skip" title="Pular vídeos bloqueados" description="Alguns donos de vídeo proíbem tocar fora do YouTube. Pula para o próximo automaticamente.">
+                <Switch id="set-skip" checked={settings.autoSkipErrors} onCheckedChange={settings.setAutoSkipErrors} />
+              </SettingRow>
+            </SettingGroup>
           </Section>
 
           <Separator />
@@ -271,9 +272,9 @@ export function SettingsDialog() {
               />
             </div>
             {settings.searchProvider === "google" && (
-              <div className="grid gap-2 rounded-xl border p-3">
+              <div className="grid gap-2.5 rounded-lg border p-3.5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-sm font-medium">ID do mecanismo de pesquisa (cx)</span>
+                  <span className="text-[13px] font-medium">ID do mecanismo de pesquisa (cx)</span>
                   <a
                     href={CREATE_ENGINE_URL}
                     target="_blank"
@@ -302,22 +303,22 @@ export function SettingsDialog() {
                 { label: "favoritos", value: favoriteCount },
                 { label: "em uso", value: open ? storageUsage() : "" },
               ].map((s) => (
-                <div key={s.label} className="rounded-xl border bg-muted/30 px-2 py-3">
-                  <p className="text-lg font-semibold tabular-nums">{s.value}</p>
+                <div key={s.label} className="rounded-lg border px-2 py-2.5">
+                  <p className="text-base font-semibold tabular-nums">{s.value}</p>
                   <p className="text-xs text-muted-foreground">{s.label}</p>
                 </div>
               ))}
             </div>
 
             {pendingBackup ? (
-              <div className="grid gap-3 rounded-xl border border-primary/40 bg-primary/5 p-3">
+              <div className="grid gap-3 rounded-lg border bg-muted/40 p-3.5">
                 <p className="text-sm">
                   Backup com <strong>{pluralize(pendingBackup.videos.length, "vídeo", "vídeos")}</strong>,{" "}
                   <strong>{pluralize(pendingBackup.playlists?.length ?? 0, "playlist", "playlists")}</strong> e{" "}
                   <strong>{pluralize(pendingBackup.courses?.length ?? 0, "curso", "cursos")}</strong>. Como importar?
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <Button size="sm" variant="brand" onClick={() => applyBackup("merge")}>
+                  <Button size="sm" onClick={() => applyBackup("merge")}>
                     Juntar com o que já tenho
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => applyBackup("replace")}>
@@ -386,12 +387,10 @@ function InstallCard() {
   const installed = useInstall((s) => s.installed);
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-xl border p-3">
-      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-        <AppWindow className="size-5" />
-      </span>
+    <div className="flex flex-wrap items-center gap-3 rounded-lg border px-3.5 py-3">
+      <AppWindow className="size-4 shrink-0 self-start text-muted-foreground mt-0.5" />
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-medium">
+        <span className="block text-[13px] font-medium">
           {installed ? "Você está usando o app instalado" : "Instalar como app"}
         </span>
         <span className="block text-xs text-muted-foreground">
@@ -405,8 +404,8 @@ function InstallCard() {
       {!installed && prompt && (
         <Button
           size="sm"
-          variant="brand"
-          className="rounded-full"
+         
+         
           onClick={async () => {
             if (await promptInstall()) toast.success("Sintonia instalado! Procure por ele no menu Iniciar.");
           }}
@@ -414,7 +413,7 @@ function InstallCard() {
           <Download /> Instalar
         </Button>
       )}
-      {installed && <Check className="size-5 text-emerald-500" />}
+      {installed && <Check className="size-4 text-success" strokeWidth={3} />}
     </div>
   );
 }

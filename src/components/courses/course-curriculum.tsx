@@ -42,18 +42,18 @@ export function CourseCurriculum({ course, activeLessonId, playing, onPlay, clas
         const stats = sectionStats(section, progress, videos);
         return (
           <AccordionItem key={section.id} value={section.id}>
-            <AccordionTrigger className="rounded-none bg-muted/40 px-4 py-3 hover:no-underline hover:bg-muted/70">
+            <AccordionTrigger className="rounded-none px-4 py-3 hover:bg-accent/40 hover:no-underline">
               <span className="min-w-0">
-                <span className="block font-semibold">
-                  Seção {sectionIndex + 1}: {section.title}
+                <span className="block text-[13px] font-semibold">
+                  <span className="font-normal text-muted-foreground">{sectionIndex + 1}.</span> {section.title}
                 </span>
                 <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
-                  {stats.completed}/{stats.total}
-                  {stats.duration > 0 && ` | ${formatTotalDuration(stats.duration)}`}
+                  {stats.completed} de {stats.total}
+                  {stats.duration > 0 && ` · ${formatTotalDuration(stats.duration)}`}
                 </span>
               </span>
             </AccordionTrigger>
-            <AccordionContent className="pb-0">
+            <AccordionContent className="pb-1.5">
               {section.lessons.length === 0 && (
                 <p className="px-4 py-3 text-xs text-muted-foreground">Nenhuma aula nesta seção.</p>
               )}
@@ -75,8 +75,8 @@ export function CourseCurriculum({ course, activeLessonId, playing, onPlay, clas
                           if (e.key === "Enter") onPlay(lesson.id);
                         }}
                         className={cn(
-                          "group/lesson flex cursor-pointer gap-3 px-4 py-2.5 transition-colors outline-none hover:bg-accent/50 focus-visible:bg-accent/60",
-                          active && "bg-primary/10 hover:bg-primary/15"
+                          "group/lesson relative flex cursor-pointer gap-3 px-4 py-2.5 transition-colors outline-none hover:bg-accent/50 focus-visible:bg-accent/60",
+                          active && "bg-accent/70 hover:bg-accent/70"
                         )}
                       >
                         <Checkbox
@@ -89,21 +89,21 @@ export function CourseCurriculum({ course, activeLessonId, playing, onPlay, clas
                         <div className="min-w-0 flex-1">
                           <p
                             className={cn(
-                              "text-sm leading-snug",
-                              active && "font-medium text-primary",
+                              "text-[13px] leading-snug",
+                              active && "font-medium",
                               video?.titleSource === "pending" && !lesson.title && "text-muted-foreground italic"
                             )}
                           >
                             {counter}. {lessonTitle(lesson, videos)}
                           </p>
-                          <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground tabular-nums">
                             {video?.unavailable ? (
                               <>
                                 <TriangleAlert className="size-3.5 text-amber-500" /> Bloqueado fora do YouTube
                               </>
                             ) : (
                               <>
-                                <CirclePlay className="size-3.5" />
+                                <CirclePlay className="size-3" />
                                 {duration ? formatTime(duration) : "—"}
                                 {partial > 0 && p && <span>· parou em {formatTime(p.position)}</span>}
                               </>

@@ -70,7 +70,7 @@ function ActiveDot({ show }: { show: boolean }) {
   return (
     <span
       className={cn(
-        "absolute bottom-0.5 left-1/2 size-1 -translate-x-1/2 rounded-full bg-primary transition-opacity",
+        "absolute bottom-0.5 left-1/2 size-[3px] -translate-x-1/2 rounded-full bg-primary transition-opacity",
         show ? "opacity-100" : "opacity-0"
       )}
     />
@@ -99,7 +99,7 @@ export function PlayerBar() {
 
   return (
     <footer
-      className="relative z-40 flex shrink-0 items-center gap-3 border-t bg-background/80 px-3 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4 duration-300 md:gap-4 md:px-4"
+      className="relative z-40 flex shrink-0 items-center gap-3 border-t bg-background px-3 animate-in fade-in slide-in-from-bottom-2 duration-200 md:gap-4 md:px-4"
       style={{ height: PLAYER_BAR_HEIGHT }}
     >
       <SeekBar />
@@ -109,28 +109,28 @@ export function PlayerBar() {
         <button
           type="button"
           onClick={() => player.setExpanded(!expanded)}
-          className="group/thumb relative shrink-0 cursor-pointer overflow-hidden rounded-md focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+          className="group/thumb relative shrink-0 cursor-pointer overflow-hidden rounded-[5px] ring-1 ring-foreground/[0.08] focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
           aria-label={expanded ? "Fechar “Tocando agora”" : "Abrir “Tocando agora”"}
         >
-          <VideoThumbnail id={currentId} className="aspect-video h-11" />
+          <VideoThumbnail id={currentId} className="aspect-video h-10" />
           <span className="absolute inset-0 grid place-items-center bg-black/50 text-white opacity-0 transition-opacity group-hover/thumb:opacity-100">
             {expanded ? <ChevronDown className="size-5" /> : <Maximize2 className="size-4" />}
           </span>
         </button>
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium" title={video?.title}>
+          <p className="truncate text-[13px] leading-tight font-medium" title={video?.title}>
             {video?.title ?? "Carregando…"}
           </p>
           {source?.type === "course" && source.id ? (
             <Link
               href={`/courses/${source.id}`}
-              className="flex items-center gap-1 truncate text-xs text-muted-foreground hover:text-foreground hover:underline"
+              className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground hover:text-foreground hover:underline"
             >
-              <GraduationCap className="size-3.5 shrink-0 text-primary" />
+              <GraduationCap className="size-3.5 shrink-0" />
               <span className="truncate">{source.label}</span>
             </Link>
           ) : (
-            <p className="truncate text-xs text-muted-foreground">{video?.author ?? "Canal desconhecido"}</p>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">{video?.author ?? "Canal desconhecido"}</p>
           )}
         </div>
         <IconButton
@@ -164,14 +164,14 @@ export function PlayerBar() {
               size="icon"
               aria-label={isPlaying ? "Pausar" : "Tocar"}
               onClick={player.togglePlay}
-              className="size-10 rounded-full bg-foreground text-background shadow-md transition-transform hover:scale-105 hover:bg-foreground active:scale-95"
+              className="size-9 rounded-full bg-foreground text-background shadow-none hover:scale-[1.04] hover:bg-foreground"
             >
               {isLoading && !isPlaying ? (
-                <Loader2 key="loading" className="size-5 animate-spin" />
+                <Loader2 key="loading" className="size-4 animate-spin" />
               ) : isPlaying ? (
-                <Pause key="pause" className="size-5 fill-current animate-in zoom-in-50 fade-in duration-200" />
+                <Pause key="pause" className="size-4 fill-current animate-in zoom-in-75 fade-in duration-150" />
               ) : (
-                <Play key="play" className="ml-0.5 size-5 fill-current animate-in zoom-in-50 fade-in duration-200" />
+                <Play key="play" className="ml-0.5 size-4 fill-current animate-in zoom-in-75 fade-in duration-150" />
               )}
             </Button>
           </TooltipTrigger>
@@ -261,7 +261,7 @@ function SeekBar() {
 
   if (isLive) {
     return (
-      <div className="absolute inset-x-0 top-0 h-[3px] -translate-y-1/2 bg-red-500/80">
+      <div className="absolute inset-x-0 top-0 h-[2px] -translate-y-1/2 bg-red-500/80">
         <div className="h-full w-full animate-pulse bg-red-500" />
       </div>
     );
@@ -294,8 +294,8 @@ function SeekBar() {
           usePlayer.getState().seek(v);
           setDragValue(null);
         }}
-        trackClassName="rounded-none bg-foreground/10 data-[orientation=horizontal]:h-[3px] group-hover/seek:data-[orientation=horizontal]:h-[5px] group-hover/slider:data-[orientation=horizontal]:h-[5px]"
-        rangeClassName="bg-brand-gradient group-hover/slider:bg-brand-gradient"
+        trackClassName="rounded-none bg-foreground/10 data-[orientation=horizontal]:h-[2px] group-hover/seek:data-[orientation=horizontal]:h-1 group-hover/slider:data-[orientation=horizontal]:h-1"
+        rangeClassName="bg-primary group-hover/slider:bg-primary"
         thumbClassName="size-3"
       />
       {hover && duration > 0 && (

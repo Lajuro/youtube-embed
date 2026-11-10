@@ -40,8 +40,8 @@ export async function GET(_request: Request, { params }: RouteContext<"/icons/[v
           alignItems: "center",
           justifyContent: "center",
           gap: 4.5 * unit,
-          backgroundImage: "linear-gradient(135deg, #8b5cf6, #ec4899)",
-          borderRadius: maskable ? 0 : size * 0.25,
+          background: "#4f6bed",
+          borderRadius: maskable ? 0 : size * 0.235,
         }}
       >
         {BARS.map((height, i) => (

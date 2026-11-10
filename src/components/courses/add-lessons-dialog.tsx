@@ -125,7 +125,7 @@ function LinksTab({ inCourse, onAdd }: { inCourse: Set<string>; onAdd: (ids: str
             ? `${pluralize(fresh.length, "aula nova", "aulas novas")}${ids.length > fresh.length ? ` (${ids.length - fresh.length} já no curso)` : ""}`
             : "Aceita links do YouTube, do Google ou só o ID."}
         </p>
-        <Button variant="brand" disabled={!fresh.length} onClick={() => onAdd(fresh)}>
+        <Button disabled={!fresh.length} onClick={() => onAdd(fresh)}>
           <Plus /> Adicionar {fresh.length > 0 && pluralize(fresh.length, "aula", "aulas")}
         </Button>
       </div>
@@ -198,7 +198,7 @@ function PlaylistTab({ courseId, sectionId, onDone }: { courseId: string; sectio
       </p>
       {error && <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}</p>}
       <div className="flex justify-end">
-        <Button variant="brand" disabled={!listId || state.phase === "reading"} onClick={run}>
+        <Button disabled={!listId || state.phase === "reading"} onClick={run}>
           {state.phase === "reading" ? <Loader2 className="animate-spin" /> : <ListVideo />}
           {state.phase === "reading" ? "Lendo a playlist…" : "Importar playlist"}
         </Button>
@@ -217,7 +217,7 @@ function SearchTab({ inCourse, onAdd }: { inCourse: Set<string>; onAdd: (ids: st
 
   if (provider === "google" && !cx) {
     return (
-      <div className="rounded-xl border bg-muted/30 p-4 text-sm">
+      <div className="rounded-lg border p-3.5 text-[13px]">
         Para buscar daqui, configure primeiro a busca pelo Google na tela{" "}
         <Link href="/search" className="font-medium text-primary hover:underline">
           Buscar
@@ -251,7 +251,7 @@ function SearchTab({ inCourse, onAdd }: { inCourse: Set<string>; onAdd: (ids: st
     <div className="grid gap-3">
       <form onSubmit={search} className="flex gap-2">
         <Input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Ex.: Devin tutorial" />
-        <Button type="submit" variant="brand" disabled={!query.trim() || loading}>
+        <Button type="submit" disabled={!query.trim() || loading}>
           {loading ? <Loader2 className="animate-spin" /> : <Search />} Buscar
         </Button>
       </form>
@@ -322,7 +322,7 @@ function LibraryTab({ inCourse, onAdd }: { inCourse: Set<string>; onAdd: (ids: s
                 onClick={() => setSelected((s) => (s.includes(id) ? s.filter((v) => v !== id) : [...s, id]))}
                 className={cn(
                   "flex w-full cursor-pointer items-center gap-3 rounded-lg p-1.5 text-left hover:bg-accent/50 disabled:cursor-default disabled:opacity-50",
-                  checked && !added && "bg-primary/10"
+                  checked && !added && "bg-accent/60"
                 )}
               >
                 <span
@@ -346,7 +346,7 @@ function LibraryTab({ inCourse, onAdd }: { inCourse: Set<string>; onAdd: (ids: s
         })}
       </ul>
       <div className="sticky bottom-0 flex justify-end bg-popover pt-2">
-        <Button variant="brand" disabled={!selected.length} onClick={() => onAdd(selected)}>
+        <Button disabled={!selected.length} onClick={() => onAdd(selected)}>
           <Plus /> Adicionar {selected.length > 0 && pluralize(selected.length, "aula", "aulas")}
         </Button>
       </div>

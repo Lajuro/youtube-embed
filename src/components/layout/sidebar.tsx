@@ -31,11 +31,11 @@ import { useHydration, useSettings, useUi } from "@/stores/ui-store";
 
 export function Logo({ className, compact = false }: { className?: string; compact?: boolean }) {
   return (
-    <Link href="/" className={cn("group/logo flex items-center gap-2.5", className)} aria-label="Sintonia — início">
-      <span className="relative grid size-8 shrink-0 place-items-center rounded-[10px] bg-brand-gradient text-white shadow-md shadow-[color-mix(in_oklch,var(--brand-from)_35%,transparent)] transition-transform group-hover/logo:scale-105 group-hover/logo:-rotate-3">
-        <AudioLines className="size-[18px]" />
+    <Link href="/" className={cn("flex items-center gap-2.5", className)} aria-label="Sintonia — início">
+      <span className="grid size-7 shrink-0 place-items-center rounded-[7px] bg-primary text-primary-foreground">
+        <AudioLines className="size-4" strokeWidth={2.25} />
       </span>
-      {!compact && <span className="text-[17px] font-semibold tracking-tight">Sintonia</span>}
+      {!compact && <span className="text-[15px] font-semibold tracking-tight">Sintonia</span>}
     </Link>
   );
 }
@@ -104,7 +104,7 @@ function SidebarBody({ pathname, collapsed = false, onNavigate }: ContentProps &
 
   return (
     <div className="flex h-full flex-col">
-      <div className={cn("flex h-14 shrink-0 items-center", collapsed ? "justify-center" : "justify-between pr-2 pl-4")}>
+      <div className={cn("flex h-13 shrink-0 items-center", collapsed ? "justify-center" : "justify-between pr-2 pl-4")}>
         <Logo compact={collapsed} />
         {!collapsed && !onNavigate && (
           <Tooltip>
@@ -130,7 +130,7 @@ function SidebarBody({ pathname, collapsed = false, onNavigate }: ContentProps &
         )}
       </div>
 
-      <nav className={cn("grid gap-0.5", collapsed ? "justify-items-center px-2" : "px-2.5")}>
+      <nav className={cn("grid gap-px", collapsed ? "justify-items-center px-2" : "px-2")}>
         {NAV.map(({ href, label, icon: Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
           const count = hydrated ? counts[href] : undefined;
@@ -141,26 +141,16 @@ function SidebarBody({ pathname, collapsed = false, onNavigate }: ContentProps &
                 onClick={onNavigate}
                 aria-label={label}
                 className={cn(
-                  "group/nav relative flex items-center rounded-lg text-sm font-medium text-sidebar-foreground/65 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                  collapsed ? "size-10 justify-center" : "h-9 gap-3 px-2.5",
+                  "flex items-center rounded-md text-[13px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                  collapsed ? "size-9 justify-center" : "h-8 gap-2.5 px-2.5",
                   active && "bg-sidebar-accent text-sidebar-foreground"
                 )}
               >
-                {active && (
-                  <span
-                    className={cn(
-                      "absolute top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full bg-brand-gradient",
-                      collapsed ? "-left-2" : "-left-2.5"
-                    )}
-                  />
-                )}
-                <Icon
-                  className={cn("size-[18px] shrink-0", active && "text-primary", href === "/favorites" && active && "fill-primary")}
-                />
+                <Icon className="size-4 shrink-0" strokeWidth={active ? 2.25 : 2} />
                 {!collapsed && (
                   <>
                     <span className="truncate">{label}</span>
-                    {count ? <span className="ml-auto text-xs text-muted-foreground/80 tabular-nums">{count}</span> : null}
+                    {count ? <span className="ml-auto text-xs font-normal text-muted-foreground/70 tabular-nums">{count}</span> : null}
                   </>
                 )}
               </Link>
@@ -169,11 +159,11 @@ function SidebarBody({ pathname, collapsed = false, onNavigate }: ContentProps &
         })}
       </nav>
 
-      <div className={cn("mt-5 flex items-center", collapsed ? "flex-col gap-2 px-2" : "justify-between pr-2 pl-5")}>
+      <div className={cn("mt-6 flex items-center", collapsed ? "flex-col gap-2 px-2" : "justify-between pr-2 pl-4.5")}>
         {collapsed ? (
           <div className="h-px w-8 bg-sidebar-border" />
         ) : (
-          <h2 className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Playlists</h2>
+          <h2 className="text-xs font-medium text-muted-foreground">Playlists</h2>
         )}
         <RailTip show={collapsed} label="Nova playlist">
           <Button
@@ -188,18 +178,18 @@ function SidebarBody({ pathname, collapsed = false, onNavigate }: ContentProps &
         </RailTip>
       </div>
 
-      <div className={cn("mt-1.5 min-h-0 flex-1 overflow-y-auto scrollbar-none pb-3", collapsed ? "px-2" : "px-2.5")}>
+      <div className={cn("mt-1 min-h-0 flex-1 overflow-y-auto scrollbar-none pb-3", collapsed ? "px-2" : "px-2")}>
         {hydrated && playlists.length === 0 && !collapsed && (
           <button
             type="button"
             onClick={() => openPlaylistDialog()}
-            className="mt-1 flex w-full cursor-pointer flex-col items-start gap-1 rounded-xl border border-dashed p-3 text-left text-sm transition-colors hover:border-primary/60 hover:bg-sidebar-accent/50"
+            className="mt-1 flex w-full cursor-pointer flex-col items-start gap-0.5 rounded-lg border border-dashed px-3 py-2.5 text-left transition-colors hover:border-foreground/25 hover:bg-sidebar-accent/60"
           >
-            <span className="font-medium">Crie sua primeira playlist</span>
-            <span className="text-xs text-muted-foreground">Ex.: “Foco”, “Lofi da manhã”.</span>
+            <span className="text-[13px] font-medium">Criar playlist</span>
+            <span className="text-xs text-muted-foreground">Agrupe vídeos por momento ou clima.</span>
           </button>
         )}
-        <ul className={cn("grid gap-0.5", collapsed && "justify-items-center")}>
+        <ul className={cn("grid gap-px", collapsed && "justify-items-center")}>
           {playlists.map((p) => {
             const href = `/playlists/${p.id}`;
             const active = pathname === href;
@@ -212,16 +202,16 @@ function SidebarBody({ pathname, collapsed = false, onNavigate }: ContentProps &
                     onClick={onNavigate}
                     aria-label={p.name}
                     className={cn(
-                      "relative flex items-center rounded-lg transition-colors hover:bg-sidebar-accent",
-                      collapsed ? "p-1" : "gap-2.5 p-1.5 pr-2",
+                      "relative flex items-center rounded-md transition-colors hover:bg-sidebar-accent",
+                      collapsed ? "p-1" : "gap-2.5 px-2 py-1.5",
                       active && "bg-sidebar-accent"
                     )}
                   >
                     <PlaylistCover
                       seed={p.id}
                       videoIds={p.videoIds}
-                      className={cn("shrink-0 rounded-md", collapsed ? "size-9" : "size-9")}
-                      iconClassName="size-4"
+                      className={cn("shrink-0 rounded-[5px]", collapsed ? "size-7" : "size-8")}
+                      iconClassName="size-3.5"
                     />
                     {collapsed ? (
                       playingThis && (
@@ -232,10 +222,10 @@ function SidebarBody({ pathname, collapsed = false, onNavigate }: ContentProps &
                     ) : (
                       <>
                         <span className="min-w-0 flex-1">
-                          <span className={cn("block truncate text-[13px] font-medium", playingThis && "text-primary")}>
+                          <span className={cn("block truncate text-[13px] leading-tight font-medium", playingThis && "text-primary")}>
                             {p.name}
                           </span>
-                          <span className="block truncate text-xs text-muted-foreground">
+                          <span className="mt-0.5 block truncate text-[11px] leading-tight text-muted-foreground">
                             {pluralize(p.videoIds.length, "vídeo", "vídeos")}
                           </span>
                         </span>
@@ -253,14 +243,14 @@ function SidebarBody({ pathname, collapsed = false, onNavigate }: ContentProps &
       <div
         className={cn(
           "flex shrink-0 border-t border-sidebar-border",
-          collapsed ? "flex-col items-center gap-1 py-3" : "items-center gap-1 px-2 py-2"
+          collapsed ? "flex-col items-center gap-1 py-2" : "items-center gap-1 p-2"
         )}
       >
         <RailTip show={collapsed} label="Configurações">
           <Button
             variant="ghost"
             size={collapsed ? "icon-sm" : "sm"}
-            className={cn("text-muted-foreground", !collapsed && "flex-1 justify-start")}
+            className={cn("text-muted-foreground", !collapsed && "flex-1 justify-start px-2.5")}
             onClick={() => setSettingsOpen(true)}
             aria-label="Configurações"
           >
@@ -303,7 +293,7 @@ export function Sidebar() {
     <aside
       className={cn(
         "hidden shrink-0 overflow-hidden border-r border-sidebar-border bg-sidebar transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] lg:block",
-        collapsed ? "w-[68px]" : "w-60"
+        collapsed ? "w-[52px]" : "w-60"
       )}
     >
       <SidebarContent collapsed={collapsed} />
